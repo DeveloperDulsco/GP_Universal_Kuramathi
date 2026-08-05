@@ -1,0 +1,398 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="(Inclusive of 10 % service charge and prevailing government taxes)" xml:space="preserve">
+    <value>(Inclus 10% de Frais de service et taxes gouvernementales en vigueur)</value>
+  </data>
+  <data name="(Inclusive of Charges to Tax)" xml:space="preserve">
+    <value>(y compris les frais d'imposition)</value>
+  </data>
+  <data name="Address" xml:space="preserve">
+    <value>Adresse</value>
+  </data>
+  <data name="Adult/Child" xml:space="preserve">
+    <value>ADULTES / ENFANTS</value>
+  </data>
+  <data name="Agree" xml:space="preserve">
+    <value>Valider</value>
+  </data>
+  <data name="ALL Membership Number" xml:space="preserve">
+    <value>Numéro de Membre ALL</value>
+  </data>
+  <data name="Are you sure you want to discard this option?" xml:space="preserve">
+    <value>Voulez-vous vraiment supprimer cette option ?</value>
+  </data>
+  <data name="AUTHORISATION DETAILS" xml:space="preserve">
+    <value>DÉTAILS DE L'AUTORISATION</value>
+  </data>
+  <data name="AVAILABLE ROOM UPGRADE" xml:space="preserve">
+    <value>Option de surclassement disponible</value>
+  </data>
+  <data name="Back" xml:space="preserve">
+    <value>Retour</value>
+  </data>
+  <data name="Balance Amount" xml:space="preserve">
+    <value>Montant du solde</value>
+  </data>
+  <data name="BEGIN SELF CHECK-OUT" xml:space="preserve">
+    <value>Démarrer votre Check-out</value>
+  </data>
+  <data name="BREAKFAST" xml:space="preserve">
+    <value>PETIT-DÉJEUNER</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>Annuler</value>
+  </data>
+  <data name="Card Number" xml:space="preserve">
+    <value>Numéro de carte</value>
+  </data>
+  <data name="CHECK-IN DATE" xml:space="preserve">
+    <value>DATE D’ARRIVÉE</value>
+  </data>
+  <data name="CHECK-OUT DATE" xml:space="preserve">
+    <value>DATE DE DÉPART</value>
+  </data>
+  <data name="City" xml:space="preserve">
+    <value>Ville</value>
+  </data>
+  <data name="Clear" xml:space="preserve">
+    <value>Effacer</value>
+  </data>
+  <data name="Confirm" xml:space="preserve">
+    <value>Confirmer</value>
+  </data>
+  <data name="confirmation" xml:space="preserve">
+    <value>confirmation</value>
+  </data>
+  <data name="CONFIRMATION NUMBER" xml:space="preserve">
+    <value>NUMÉRO DE CONFIRMATION</value>
+  </data>
+  <data name="Country" xml:space="preserve">
+    <value>Pays</value>
+  </data>
+  <data name="Customers Privacy Policy" xml:space="preserve">
+    <value>Politique de confidentialité des clients</value>
+  </data>
+  <data name="Date Of Birth" xml:space="preserve">
+    <value>Date de naissance</value>
+  </data>
+  <data name="DETAILS" xml:space="preserve">
+    <value>Détails</value>
+  </data>
+  <data name="Document Details" xml:space="preserve">
+    <value>Détails du document</value>
+  </data>
+  <data name="Email  Address" xml:space="preserve">
+    <value>E-mail</value>
+  </data>
+  <data name="Enrollment Message" xml:space="preserve">
+    <value>Je souhaite m'inscrire pour une adhésion gratuite à ALL.</value>
+  </data>
+  <data name="ESTIMATED INCIDENTAL CHARGES" xml:space="preserve">
+    <value>ESTIMATION DES FRAIS ACCESSOIRES</value>
+  </data>
+  <data name="Expected Arrival Time (Hotel)" xml:space="preserve">
+    <value>Heure estimée d’arrivée (Hôtel)</value>
+  </data>
+  <data name="Expiry Date" xml:space="preserve">
+    <value>Date d’expiration</value>
+  </data>
+  <data name="Follow us on Facebook and Instagram for exclusive offers and updates." xml:space="preserve">
+    <value>Suivez-nous sur Facebook et Instagram pour des offres exclusives et des mises à jour.</value>
+  </data>
+  <data name="GUEST DETAILS" xml:space="preserve">
+    <value>Information Client</value>
+  </data>
+  <data name="I agree to the charges stated on the Tax Invoice.(Please review your invoice now but only proceed to tick before you leave your room. Otherwise your room key will be disabled.)" xml:space="preserve">
+    <value>J’accepte le montant indiqué sur la facture 
+. (Veuillez vérifier votre facture maintenant, mais ne cochez qu'avant de quitter votre chambre. Sinon, la clé de votre chambre sera désactivée.)</value>
+  </data>
+  <data name="I agree to the charges stated on the Tax Invoice.Please review your invoice now but only proceed to tick before you leave your room. Otherwise your room key will be disabled." xml:space="preserve">
+    <value>J’accepte le montant indiqué sur la facture 
+. (Veuillez vérifier votre facture maintenant, mais ne cochez qu'avant de quitter votre chambre. Sinon, la clé de votre chambre sera désactivée.)</value>
+  </data>
+  <data name="I would like to receive marketing information from Novotel Paris Vaugirard* related to our services, including dedicated offers and promotions, on the provided email address or by sms to a given mobile phone number." xml:space="preserve">
+    <value>Je souhaite recevoir des informations commerciales du Novotel Paris Vaugirard relatives à ses services, notamment des offres et promotions dédiées, sur l'adresse e-mail renseignée ou par sms.</value>
+  </data>
+  <data name="Included" xml:space="preserve">
+    <value>inclus</value>
+  </data>
+  <data name="Languages" xml:space="preserve">
+    <value>Langues</value>
+  </data>
+  <data name="Message" xml:space="preserve">
+    <value>Message</value>
+  </data>
+  <data name="Nationality" xml:space="preserve">
+    <value>Nationalité</value>
+  </data>
+  <data name="Next" xml:space="preserve">
+    <value>Suivant</value>
+  </data>
+  <data name="No" xml:space="preserve">
+    <value>Non</value>
+  </data>
+  <data name="Not Included" xml:space="preserve">
+    <value>Non inclus</value>
+  </data>
+  <data name="Novotel Paris Vaugirard wishes you a pleasant day ahead!" xml:space="preserve">
+    <value>Le Novotel Paris Vaugirard vous souhaite une agréable journée !</value>
+  </data>
+  <data name="OK" xml:space="preserve">
+    <value>d'accord</value>
+  </data>
+  <data name="Passport Number" xml:space="preserve">
+    <value>Passeport n° / CNI</value>
+  </data>
+  <data name="Payment" xml:space="preserve">
+    <value>Règlement</value>
+  </data>
+  <data name="Payment process failed" xml:space="preserve">
+    <value>Échec du processus de paiement</value>
+  </data>
+  <data name="per room per night" xml:space="preserve">
+    <value>par chambre par nuit</value>
+  </data>
+  <data name="Personal Information" xml:space="preserve">
+    <value>INFORMATIONS PERSONELLES</value>
+  </data>
+  <data name="Phone Number" xml:space="preserve">
+    <value>Téléphone</value>
+  </data>
+  <data name="Place Of Birth" xml:space="preserve">
+    <value>Lieu de naissance</value>
+  </data>
+  <data name="Place Of Issue" xml:space="preserve">
+    <value>Lieu d’émission</value>
+  </data>
+  <data name="Please accept the terms and conditions" xml:space="preserve">
+    <value>Veuillez accepter les termes et conditions</value>
+  </data>
+  <data name="Please be informed, that by completing this pre-arrival registration you also accept hotels regulations that might apply to your stay depending on a hotel you choose. For any further information with this regard, please contact with a reception desk of hotel your are staying with." xml:space="preserve">
+    <value>Veuillez noter qu'en complétant ce formulaire de pré-enregistrement , vous acceptez également les règlements de l'hôtel qui pourraient s'appliquer à votre séjour en fonction de l'hôtel que vous choisissez. Pour toute information complémentaire à ce sujet, veuillez-vous adresser à la réception de l'hôtel.</value>
+  </data>
+  <data name="Please be informed, that by completing this pre-arrival registration you also accept our" xml:space="preserve">
+    <value>Veuillez noter qu'en complétant ce formulaire de pré-enregistrement, vous acceptez également notre</value>
+  </data>
+  <data name="Please contact front desk for assistance." xml:space="preserve">
+    <value>Veuillez contacter la réception pour obtenir de l'aide.</value>
+  </data>
+  <data name="Please enter email address" xml:space="preserve">
+    <value>Veuillez saisir l'adresse e-mail</value>
+  </data>
+  <data name="Please select card to proceed" xml:space="preserve">
+    <value>Veuillez sélectionner la carte pour continuer</value>
+  </data>
+  <data name="Please verify your authorisation details" xml:space="preserve">
+    <value>Veuillez vérifier les détails de votre autorisation</value>
+  </data>
+  <data name="Policies" xml:space="preserve">
+    <value>Récapitulatif</value>
+  </data>
+  <data name="Postal code" xml:space="preserve">
+    <value>Code postal</value>
+  </data>
+  <data name="Request for Specials is confirmed instantly and your card will be charged in the next page." xml:space="preserve">
+    <value>La demande de promotions est confirmée instantanément et votre carte sera débitée à la page suivante.</value>
+  </data>
+  <data name="ROOM TYPE" xml:space="preserve">
+    <value>TYPE DE CHAMBRE</value>
+  </data>
+  <data name="SEND" xml:space="preserve">
+    <value>ENVOYER</value>
+  </data>
+  <data name="Sign above" xml:space="preserve">
+    <value>Signez ci-dessus</value>
+  </data>
+  <data name="Specials" xml:space="preserve">
+    <value>Autres  prestations</value>
+  </data>
+  <data name="Start" xml:space="preserve">
+    <value>Démarrer</value>
+  </data>
+  <data name="State" xml:space="preserve">
+    <value>Etat</value>
+  </data>
+  <data name="String" xml:space="preserve">
+    <value>. (Veuillez vérifier votre facture maintenant, mais ne cochez qu'avant de quitter votre chambre. Sinon, la clé de votre chambre sera désactivée.)</value>
+  </data>
+  <data name="String1" xml:space="preserve">
+    <value>. (Veuillez vérifier votre facture maintenant, mais ne cochez qu'avant de quitter votre chambre. Sinon, la clé de votre chambre sera désactivée.)</value>
+  </data>
+  <data name="Subscribe to our mailing list or follow us on Facebook and Instagram for exclusive offers and updates." xml:space="preserve">
+    <value>Abonnez-vous à notre liste de diffusion ou suivez-nous sur Facebook et Instagram pour des offres exclusives</value>
+  </data>
+  <data name="Tax Invoice" xml:space="preserve">
+    <value>Facture</value>
+  </data>
+  <data name="Thank You" xml:space="preserve">
+    <value>Merci</value>
+  </data>
+  <data name="Thank you for taking the time to complete the PRE-ARRIVAL REGISTRATION. Please find the attached QR code and confirmation number, and save it for presentation at the hotel to collect your room key." xml:space="preserve">
+    <value>Merci d'avoir pris le temps de compléter votre pré-enregistrement. Veuillez trouver ci-joint votre QR code et votre numéro de confirmation. Enregistrez-le et présenter le à l'hôtel afin de récupérer la clé de votre chambre.</value>
+  </data>
+  <data name="Thank you once again for choosing Novotel Paris Vaugirard. We look forward to welcome you back soon." xml:space="preserve">
+    <value>Merci encore d'avoir choisi le Novotel Paris Vaugirard. Nous sommes impatients de vous accueillir à nouveau bientôt.</value>
+  </data>
+  <data name="The Room Key will be disabled." xml:space="preserve">
+    <value>La clé de la chambre sera désactivée.</value>
+  </data>
+  <data name="The selected upgrade option is subject to availability at the time of reservation. Our team will be in touch shortly to confirm." xml:space="preserve">
+    <value>L’option de surclassement selectionnée est soumise à disponibilité au moment de la réservation. Notre équipe vous contactera prochainement pour confirmation.</value>
+  </data>
+  <data name="To receive a copy of your invoice via email" xml:space="preserve">
+    <value>Pour recevoir une copie de votre facture par e-mail</value>
+  </data>
+  <data name="To receive copy of your invoice to another email" xml:space="preserve">
+    <value>Si vous souhaitez recevoir une copie de votre facture vers un autre email</value>
+  </data>
+  <data name="TOTAL ROOM CHARGES" xml:space="preserve">
+    <value>Montant total de la chambre</value>
+  </data>
+  <data name="Unable to process payment" xml:space="preserve">
+    <value>Impossible de traiter le paiement</value>
+  </data>
+  <data name="Upgrade" xml:space="preserve">
+    <value>Surclassement</value>
+  </data>
+  <data name="We have sent your invoice to the email provided. You will receive it within 15 minutes." xml:space="preserve">
+    <value>Nous avons envoyé votre facture à l'adresse e-mail fournie. Vous le recevrez dans les 15 minutes.</value>
+  </data>
+  <data name="We have successfully processed your check-out request." xml:space="preserve">
+    <value>Nous avons traité avec succès votre demande de départ.</value>
+  </data>
+  <data name="which includes all relevant information regarding processing of your personal data by our hotel." xml:space="preserve">
+    <value>qui comprend les informations relatives au traitement de vos données personnelles par l’hôtel.</value>
+  </data>
+  <data name="Would you like to use the existing card?" xml:space="preserve">
+    <value>Souhaitez-vous utiliser la carte existante ?</value>
+  </data>
+  <data name="Yes" xml:space="preserve">
+    <value>Oui</value>
+  </data>
+  <data name="You have successfully checked out." xml:space="preserve">
+    <value>Vous avez vérifié avec succès.</value>
+  </data>
+  <data name="Your payment was successful" xml:space="preserve">
+    <value>Votre paiement a été effectué avec succès</value>
+  </data>
+  <data name="Your Room Key will now be disabled." xml:space="preserve">
+    <value>Votre clé de chambre sera maintenant désactivée.</value>
+  </data>
+</root>

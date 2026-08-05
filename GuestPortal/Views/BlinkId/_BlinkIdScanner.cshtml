@@ -1,0 +1,15 @@
+﻿
+@{
+    Layout = null;
+}
+
+@* BlinkID Partial Scanner *@
+
+<div id="blinkid-root"></div>
+
+<script>
+    // License from Web.config
+    const licenseKey = '@System.Configuration.ConfigurationManager.AppSettings["BlinkIDLicenseKey"]';
+</script>
+
+<script type="module" crossorigin src="@Url.Content("~/Content/BlinkId/assets/index-Dhi_EG1n.js")"></script>

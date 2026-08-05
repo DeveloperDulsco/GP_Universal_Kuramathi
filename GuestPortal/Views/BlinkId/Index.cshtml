@@ -1,0 +1,43 @@
+﻿
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#000000" />
+    <link rel="shortcut icon" type="image/ico" href="/assets/favicon-mtvwWgEY.ico" />
+    <meta http-equiv="Content-Security-Policy"
+          content="worker-src 'self' blob:" />
+    <title>BlinkID Simple Example</title>
+    <script>
+        const licenseKey = '@System.Configuration.ConfigurationManager.AppSettings["BlinkIDLicenseKey"]';
+        window.BlinkIDLicenseKey ='@System.Configuration.ConfigurationManager.AppSettings["BlinkIDLicenseKey"]';
+    </script>
+    <script type="module" crossorigin src="~/Content/BlinkId/assets/index-Dhi_EG1n.js"></script>
+    <script type="module" src="~/Content/BlinkId/assets/upload_processing.js"></script>
+    <script>
+        setTimeout(() => {
+           // console.log("AFTER LOADING index-Dhi_EG1n.js: window.BlinkID =", window.BlinkID);
+        }, 5000);
+    </script>
+</head>
+<body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+
+</body>
+</html>
+<script>
+    
+    
+    window.addEventListener("message", (event) => {
+       /* alert("Content")*/
+        console.log("IFRAME received:", event.data);
+    });
+    
+</script>

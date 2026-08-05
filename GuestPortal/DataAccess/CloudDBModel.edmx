@@ -1,0 +1,2236 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="3.0" xmlns:edmx="http://schemas.microsoft.com/ado/2009/11/edmx">
+  <!-- EF Runtime content -->
+  <edmx:Runtime>
+    <!-- SSDL content -->
+    <edmx:StorageModels>
+    <Schema Namespace="CloudDBModel.Store" Provider="System.Data.SqlClient" ProviderManifestToken="2012.Azure" Alias="Self" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm/ssdl">
+        <EntityType Name="tbCountryMaster">
+          <Key>
+            <PropertyRef Name="CountryMasterID" />
+          </Key>
+          <Property Name="CountryMasterID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="Country_Full_name" Type="varchar" MaxLength="300" />
+          <Property Name="Country_3Char_code" Type="char" MaxLength="3" />
+          <Property Name="Country_2Char_code" Type="char" MaxLength="2" />
+        </EntityType>
+        <EntityType Name="tbDocumentMaster">
+          <Key>
+            <PropertyRef Name="DocumentMasterID" />
+          </Key>
+          <Property Name="DocumentMasterID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="DocumentCode" Type="varchar" MaxLength="100" />
+          <Property Name="DocumentType" Type="varchar" MaxLength="300" />
+        </EntityType>
+        <EntityType Name="tbEventModuleMaster">
+          <Key>
+            <PropertyRef Name="EventModuleID" />
+          </Key>
+          <Property Name="EventModuleID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="EventModuleName" Type="varchar" MaxLength="300" />
+        </EntityType>
+        <EntityType Name="tbEventSubModuleMaster">
+          <Key>
+            <PropertyRef Name="EventSubModuleID" />
+          </Key>
+          <Property Name="EventSubModuleID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="EventModuleID" Type="int" />
+          <Property Name="EventModuleName" Type="varchar" MaxLength="300" />
+          <Property Name="ActionType" Type="varchar" MaxLength="500" />
+        </EntityType>
+        <EntityType Name="tbEventTrackingDetails">
+          <Key>
+            <PropertyRef Name="EventTrackingID" />
+          </Key>
+          <Property Name="EventTrackingID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="ReservationID" Type="int" />
+          <Property Name="EventSubModuleID" Type="int" />
+          <Property Name="StatusType" Type="varchar" MaxLength="300" />
+        </EntityType>
+        <EntityType Name="tbFeedBackResult">
+          <Key>
+            <PropertyRef Name="FeedBackID" />
+          </Key>
+          <Property Name="FeedBackID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="ReservationID" Type="int" />
+          <Property Name="QuestionID" Type="int" />
+          <Property Name="Answer" Type="varchar" MaxLength="400" />
+        </EntityType>
+        <EntityType Name="tbKeyStorageManagement">
+          <Key>
+            <PropertyRef Name="ID" />
+          </Key>
+          <Property Name="ID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="KeyPass" Type="nvarchar(max)" />
+          <Property Name="CreatedDateTime" Type="datetime" />
+          <Property Name="IsActive" Type="bit" />
+        </EntityType>
+        <EntityType Name="tbOperaPaymentTypeCodeWeb">
+          <Key>
+            <PropertyRef Name="ID" />
+          </Key>
+          <Property Name="ID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="OperaPaymentTypeCode" Type="varchar" MaxLength="100" />
+          <Property Name="VendorPaymentTypeCode" Type="varchar" MaxLength="100" />
+        </EntityType>
+        <EntityType Name="tbPackageMaster">
+          <Key>
+            <PropertyRef Name="PackageID" />
+          </Key>
+          <Property Name="PackageID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="PackageCode" Type="varchar" MaxLength="100" />
+          <Property Name="PackageName" Type="varchar" MaxLength="300" />
+          <Property Name="PackageAmount" Type="decimal" Precision="18" Scale="2" />
+          <Property Name="PackageDesc" Type="varchar" MaxLength="500" />
+          <Property Name="PackageImage" Type="varbinary(max)" />
+          <Property Name="isActive" Type="bit" />
+          <Property Name="IsRoomUpsell" Type="bit" />
+          <Property Name="Units" Type="varchar" MaxLength="100" />
+        </EntityType>
+        <EntityType Name="tbPaymentAdditionalInfo">
+          <Key>
+            <PropertyRef Name="PaymentAddInforID" />
+          </Key>
+          <Property Name="PaymentAddInforID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="PaymentID" Type="int" />
+          <Property Name="KeyHeader" Type="nvarchar(max)" />
+          <Property Name="KeyValue" Type="nvarchar(max)" />
+        </EntityType>
+        <EntityType Name="tbPaymentHeader">
+          <Key>
+            <PropertyRef Name="PaymentID" />
+          </Key>
+          <Property Name="PaymentID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="TransactionID" Type="nvarchar(max)" />
+          <Property Name="ReservationNumber" Type="varchar" MaxLength="300" />
+          <Property Name="ReservationNameID" Type="varchar" MaxLength="50" />
+          <Property Name="MaskedCardNumber" Type="nvarchar(max)" />
+          <Property Name="ExpiryDate" Type="nvarchar(max)" />
+          <Property Name="FundingSource" Type="nvarchar(max)" />
+          <Property Name="Amount" Type="nvarchar(max)" />
+          <Property Name="Currency" Type="nvarchar(max)" />
+          <Property Name="RecurringIdentifier" Type="nvarchar(max)" />
+          <Property Name="AuthorisationCode" Type="nvarchar(max)" />
+          <Property Name="pspReferenceNumber" Type="nvarchar(max)" />
+          <Property Name="ParentPspRefereceNumber" Type="nvarchar(max)" />
+          <Property Name="TransactionType" Type="varchar" MaxLength="200" />
+          <Property Name="ResultCode" Type="varchar" MaxLength="100" />
+          <Property Name="ResponseMessage" Type="nvarchar(max)" />
+          <Property Name="CreatedDateTime" Type="datetime" />
+          <Property Name="UpdatedDateTime" Type="datetime" />
+          <Property Name="IsActive" Type="bit" />
+          <Property Name="StatusType" Type="varchar" MaxLength="100" />
+          <Property Name="CardType" Type="varchar" MaxLength="200" />
+        </EntityType>
+        <EntityType Name="tbPaymentHistory">
+          <Key>
+            <PropertyRef Name="PaymentHistoryID" />
+          </Key>
+          <Property Name="PaymentHistoryID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="TransactionID" Type="nvarchar(max)" />
+          <Property Name="ReservationNameID" Type="varchar" MaxLength="100" />
+          <Property Name="ReservationNumber" Type="varchar" MaxLength="50" />
+          <Property Name="PData" Type="nvarchar(max)" />
+          <Property Name="MDData" Type="nvarchar(max)" />
+          <Property Name="PaRes" Type="nvarchar(max)" />
+          <Property Name="CreatedDatetime" Type="datetime" />
+          <Property Name="UpdateDatetime" Type="datetime" />
+          <Property Name="PSPReference" Type="nvarchar" MaxLength="100" />
+          <Property Name="ResultCode" Type="varchar" MaxLength="100" />
+          <Property Name="RefusalReason" Type="nvarchar(max)" />
+          <Property Name="TransactionType" Type="varchar" MaxLength="200" />
+        </EntityType>
+        <EntityType Name="tbProfileDetails">
+          <Key>
+            <PropertyRef Name="ProfileDetailID" />
+          </Key>
+          <Property Name="ProfileDetailID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="ProfileID" Type="varchar" MaxLength="100" />
+          <Property Name="ReservationDetailID" Type="int" />
+          <Property Name="FirstName" Type="nvarchar(max)" />
+          <Property Name="MiddleName" Type="nvarchar(max)" />
+          <Property Name="LastName" Type="nvarchar(max)" />
+          <Property Name="Email" Type="nvarchar(max)" />
+          <Property Name="Phone" Type="nvarchar(max)" />
+          <Property Name="BirthDate" Type="datetime" />
+          <Property Name="Nationality" Type="int" />
+          <Property Name="AddressLine1" Type="nvarchar" MaxLength="300" />
+          <Property Name="AddressLine2" Type="nvarchar" MaxLength="300" />
+          <Property Name="City" Type="varchar" MaxLength="300" />
+          <Property Name="StateMasterID" Type="int" />
+          <Property Name="PostalCode" Type="varchar" MaxLength="100" />
+          <Property Name="CountryMasterID" Type="int" />
+          <Property Name="CreatedDateTime" Type="datetime" />
+          <Property Name="LastModifiedDateTime" Type="datetime" />
+          <Property Name="Gender" Type="varchar" MaxLength="12" />
+        </EntityType>
+        <EntityType Name="tbProfileDocuments">
+          <Key>
+            <PropertyRef Name="ProfileDocID" />
+          </Key>
+          <Property Name="ProfileDocID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="ProfileDetailID" Type="int" />
+          <Property Name="DocumentMasterID" Type="int" />
+          <Property Name="DocumentNumber" Type="nvarchar(max)" />
+          <Property Name="ExpiryDate" Type="datetime" />
+          <Property Name="IssueDate" Type="datetime" />
+          <Property Name="DocumentImage1" Type="varbinary(max)" />
+          <Property Name="DocumentImage2" Type="varbinary(max)" />
+          <Property Name="DocumentImage3" Type="varbinary(max)" />
+          <Property Name="FaceImage" Type="varbinary(max)" />
+          <Property Name="CreatedDateTime" Type="datetime" />
+          <Property Name="lastModifiedDateTime" Type="datetime" />
+          <Property Name="IssueCountry" Type="varchar" MaxLength="250" />
+        </EntityType>
+        <EntityType Name="tbQuestionMaster">
+          <Key>
+            <PropertyRef Name="QuestionID" />
+          </Key>
+          <Property Name="QuestionID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="Question" Type="varchar" MaxLength="500" />
+          <Property Name="QuestionType" Type="varchar" MaxLength="200" />
+          <Property Name="QuestionHint" Type="varchar" MaxLength="500" />
+        </EntityType>
+        <EntityType Name="tbRequestDetails">
+          <Key>
+            <PropertyRef Name="ReqDetailID" />
+          </Key>
+          <Property Name="ReqDetailID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="ReqTypeMasterID" Type="int" />
+          <Property Name="ReservationDetailID" Type="int" />
+          <Property Name="ReqStatus" Type="bit" />
+          <Property Name="ReqCreatedDateTime" Type="datetime" />
+          <Property Name="ReqUpdatedDateTime" Type="datetime" />
+          <Property Name="ReqUserComment" Type="varchar(max)" />
+          <Property Name="UserID" Type="int" />
+        </EntityType>
+        <EntityType Name="tbRequestMaster">
+          <Key>
+            <PropertyRef Name="ReqTypeMasterID" />
+          </Key>
+          <Property Name="ReqTypeMasterID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="ReqType" Type="varchar" MaxLength="300" />
+        </EntityType>
+        <EntityType Name="tbReservationDetails">
+          <Key>
+            <PropertyRef Name="ReservationDetailID" />
+          </Key>
+          <Property Name="ReservationDetailID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="ReservationNameID" Type="varchar" MaxLength="100" />
+          <Property Name="ReservationNumber" Type="varchar" MaxLength="100" />
+          <Property Name="ArrivalDate" Type="datetime" />
+          <Property Name="DepartureDate" Type="datetime" />
+          <Property Name="Adultcount" Type="int" />
+          <Property Name="Childcount" Type="int" />
+          <Property Name="MembershipNo" Type="varchar" MaxLength="200" />
+          <Property Name="MembershipType" Type="varchar" MaxLength="200" />
+          <Property Name="IsDepositAvailable" Type="bit" />
+          <Property Name="IsCardDetailPresent" Type="bit" />
+          <Property Name="IsSaavyPaid" Type="bit" />
+          <Property Name="DataInsertedDate" Type="datetime" />
+          <Property Name="Dataupdateddate" Type="datetime" />
+          <Property Name="IsLocallySynced" Type="bit" />
+          <Property Name="LocallySyncedDateTime" Type="datetime" />
+          <Property Name="IsPreCheckedInPMS" Type="bit" />
+          <Property Name="FlightNo" Type="varchar" MaxLength="100" />
+          <Property Name="ETA" Type="datetime" />
+          <Property Name="ReservationSource" Type="varchar" MaxLength="300" />
+          <Property Name="SignatureImage" Type="varbinary(max)" />
+          <Property Name="StatusDescription" Type="varchar" MaxLength="500" />
+          <Property Name="IsMemberShipEnrolled" Type="bit" />
+          <Property Name="RoomType" Type="varchar" MaxLength="100" />
+          <Property Name="RoomTypeDescription" Type="varchar" MaxLength="500" />
+          <Property Name="IsPreCheckedOutPMS" Type="bit" />
+          <Property Name="EcomPaymentStatus" Type="bit" />
+          <Property Name="IsCheckOutFlag" Type="bit" />
+        </EntityType>
+        <EntityType Name="tbReservationDocuments">
+          <Key>
+            <PropertyRef Name="ReservationdocumentID" />
+          </Key>
+          <Property Name="ReservationdocumentID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="ReservationDetailID" Type="int" />
+          <Property Name="ReseDocTypeMasterID" Type="int" />
+          <Property Name="Document" Type="varbinary(max)" />
+        </EntityType>
+        <EntityType Name="tbReservationDocumentTypeMaster">
+          <Key>
+            <PropertyRef Name="ReseDocTypeMasterID" />
+          </Key>
+          <Property Name="ReseDocTypeMasterID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="DocumentTypeCode" Type="varchar" MaxLength="50" />
+          <Property Name="DocumentType" Type="varchar" MaxLength="300" />
+        </EntityType>
+        <EntityType Name="tbReservationPackageDetails">
+          <Key>
+            <PropertyRef Name="ResPackageID" />
+          </Key>
+          <Property Name="ResPackageID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="ReservationDetailID" Type="int" />
+          <Property Name="PackageID" Type="int" />
+        </EntityType>
+        <EntityType Name="tbReservationRateDetails">
+          <Key>
+            <PropertyRef Name="ReservationRateDetailID" />
+          </Key>
+          <Property Name="ReservationRateDetailID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="ReservationDetailID" Type="int" />
+          <Property Name="AverageRoomRate" Type="decimal" Precision="18" Scale="2" />
+          <Property Name="TotalTax" Type="decimal" Precision="18" Scale="2" />
+          <Property Name="TotalAmount" Type="decimal" Precision="18" Scale="2" />
+          <Property Name="PaidAmount" Type="decimal" Precision="18" Scale="2" />
+          <Property Name="BalanceAmount" Type="decimal" Precision="18" Scale="2" />
+        </EntityType>
+        <EntityType Name="tbRoomTypeMapping">
+          <Key>
+            <PropertyRef Name="RoomTypeMappingID" />
+          </Key>
+          <Property Name="RoomTypeMappingID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="RoomTypeID" Type="int" />
+          <Property Name="PackageTypeID" Type="int" />
+        </EntityType>
+        <EntityType Name="tbRoomTypeMaster">
+          <Key>
+            <PropertyRef Name="RoomTypeID" />
+          </Key>
+          <Property Name="RoomTypeID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="RoomTypeCode" Type="varchar" MaxLength="100" />
+          <Property Name="RoomTypeDescription" Type="varchar" MaxLength="300" />
+        </EntityType>
+        <EntityType Name="tbStateMaster">
+          <Key>
+            <PropertyRef Name="StateMasterID" />
+          </Key>
+          <Property Name="StateMasterID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="StateCode" Type="varchar" MaxLength="100" />
+          <Property Name="StateName" Type="varchar" MaxLength="300" />
+          <Property Name="CountryMasterID" Type="int" />
+        </EntityType>
+        <Association Name="FK_tbEventSubModuleMaster_tbEventModuleMaster">
+          <End Role="tbEventModuleMaster" Type="Self.tbEventModuleMaster" Multiplicity="0..1" />
+          <End Role="tbEventSubModuleMaster" Type="Self.tbEventSubModuleMaster" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="tbEventModuleMaster">
+              <PropertyRef Name="EventModuleID" />
+            </Principal>
+            <Dependent Role="tbEventSubModuleMaster">
+              <PropertyRef Name="EventModuleID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_tbEventTrackingDetails_tbEventSubModuleMaster">
+          <End Role="tbEventSubModuleMaster" Type="Self.tbEventSubModuleMaster" Multiplicity="0..1" />
+          <End Role="tbEventTrackingDetails" Type="Self.tbEventTrackingDetails" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="tbEventSubModuleMaster">
+              <PropertyRef Name="EventSubModuleID" />
+            </Principal>
+            <Dependent Role="tbEventTrackingDetails">
+              <PropertyRef Name="EventSubModuleID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_tbEventTrackingDetails_tbReservationDetails">
+          <End Role="tbReservationDetails" Type="Self.tbReservationDetails" Multiplicity="0..1" />
+          <End Role="tbEventTrackingDetails" Type="Self.tbEventTrackingDetails" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="tbReservationDetails">
+              <PropertyRef Name="ReservationDetailID" />
+            </Principal>
+            <Dependent Role="tbEventTrackingDetails">
+              <PropertyRef Name="ReservationID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Function Name="CloseKeys" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo" />
+        <Function Name="fn_diagramobjects" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="true" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo" ReturnType="int" />
+        <Function Name="OpenKeys" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo" />
+        <Function Name="sp_alterdiagram" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+          <Parameter Name="diagramname" Type="nvarchar" Mode="In" />
+          <Parameter Name="owner_id" Type="int" Mode="In" />
+          <Parameter Name="version" Type="int" Mode="In" />
+          <Parameter Name="definition" Type="varbinary(max)" Mode="In" />
+        </Function>
+        <Function Name="sp_creatediagram" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+          <Parameter Name="diagramname" Type="nvarchar" Mode="In" />
+          <Parameter Name="owner_id" Type="int" Mode="In" />
+          <Parameter Name="version" Type="int" Mode="In" />
+          <Parameter Name="definition" Type="varbinary(max)" Mode="In" />
+        </Function>
+        <Function Name="sp_dropdiagram" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+          <Parameter Name="diagramname" Type="nvarchar" Mode="In" />
+          <Parameter Name="owner_id" Type="int" Mode="In" />
+        </Function>
+        <Function Name="sp_helpdiagramdefinition" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+          <Parameter Name="diagramname" Type="nvarchar" Mode="In" />
+          <Parameter Name="owner_id" Type="int" Mode="In" />
+        </Function>
+        <Function Name="sp_helpdiagrams" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+          <Parameter Name="diagramname" Type="nvarchar" Mode="In" />
+          <Parameter Name="owner_id" Type="int" Mode="In" />
+        </Function>
+        <Function Name="sp_renamediagram" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+          <Parameter Name="diagramname" Type="nvarchar" Mode="In" />
+          <Parameter Name="owner_id" Type="int" Mode="In" />
+          <Parameter Name="new_diagramname" Type="nvarchar" Mode="In" />
+        </Function>
+        <Function Name="sp_upgraddiagrams" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo" />
+        <Function Name="Usp_BulkUpdateCheckOutReservations" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo" />
+        <Function Name="Usp_BulkUpdateLocallyPushedReservations" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo" />
+        <Function Name="Usp_ClearCloudData" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo" />
+        <Function Name="usp_DeleteTransactionsByReservationID" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+          <Parameter Name="ReservationNumber" Type="varchar" Mode="In" />
+        </Function>
+        <Function Name="usp_FetchPaymentAdditionalInfoforLocalPush" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+          <Parameter Name="ReservationNameID" Type="varchar" Mode="In" />
+        </Function>
+        <Function Name="usp_FetchPaymentforLocalPush" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+          <Parameter Name="ReservationNameID" Type="varchar" Mode="In" />
+        </Function>
+        <Function Name="usp_FetchPaymentHistoryforLocalPush" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+          <Parameter Name="ReservationNameID" Type="varchar" Mode="In" />
+        </Function>
+        <Function Name="usp_FetchProfileDocumentsforLocalPush" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+          <Parameter Name="ReservationNameID" Type="varchar" Mode="In" />
+        </Function>
+        <Function Name="usp_FetchReservationDocumentsforLocalPushCheckOut" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+          <Parameter Name="ReservationNameID" Type="varchar" Mode="In" />
+        </Function>
+        <Function Name="usp_FetchReservationFeedBackforLocalPush" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo" />
+        <Function Name="usp_FetchReservationforLocalPush" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+          <Parameter Name="ReservationNameID" Type="varchar" Mode="In" />
+        </Function>
+        <Function Name="usp_FetchReservationforLocalPushCheckOut" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+          <Parameter Name="ReservationNameID" Type="varchar" Mode="In" />
+        </Function>
+        <Function Name="usp_FetchReservationPackageforLocalPush" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo" />
+        <Function Name="Usp_GetActivePaymentTransctions" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+          <Parameter Name="ReservationNumber" Type="varchar" Mode="In" />
+        </Function>
+        <Function Name="Usp_GetPackageMaster" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+          <Parameter Name="RoomTypeCode" Type="varchar" Mode="In" />
+        </Function>
+        <Function Name="USp_GetPackageMasterDetailedList" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+          <Parameter Name="PackageID" Type="int" Mode="In" />
+        </Function>
+        <Function Name="Usp_GetPaymentHistory" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+          <Parameter Name="ReservationNumber" Type="varchar" Mode="In" />
+        </Function>
+        <Function Name="Usp_GetProfileDocumentsByReservationID" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+          <Parameter Name="ReservationDetailID" Type="int" Mode="In" />
+        </Function>
+        <Function Name="Usp_GetProfileInformationByReservationID" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+          <Parameter Name="ReservationDetailID" Type="int" Mode="In" />
+        </Function>
+        <Function Name="Usp_GetQuestionMaster" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo" />
+        <Function Name="usp_GetReservationDetails" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+          <Parameter Name="ReservationNumber" Type="varchar" Mode="In" />
+        </Function>
+        <Function Name="Usp_GetRoomTypeMaster" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo" />
+        <Function Name="Usp_InsertEventsTracking" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+          <Parameter Name="ReservationID" Type="int" Mode="In" />
+          <Parameter Name="EventSubModule" Type="varchar" Mode="In" />
+        </Function>
+        <Function Name="Usp_InsertFeedbackData" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+          <Parameter Name="ReservationID" Type="int" Mode="In" />
+          <Parameter Name="QuestionID" Type="int" Mode="In" />
+          <Parameter Name="Answer" Type="varchar" Mode="In" />
+        </Function>
+        <Function Name="Usp_InsertPackageMaster" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+          <Parameter Name="PackageID" Type="int" Mode="In" />
+          <Parameter Name="PackageCode" Type="varchar" Mode="In" />
+          <Parameter Name="PackageName" Type="varchar" Mode="In" />
+          <Parameter Name="PackageAmount" Type="decimal" Mode="In" />
+          <Parameter Name="PackageDesc" Type="varchar" Mode="In" />
+          <Parameter Name="PackageImage" Type="varbinary(max)" Mode="In" />
+          <Parameter Name="isActive" Type="bit" Mode="In" />
+          <Parameter Name="IsRoomUpsell" Type="bit" Mode="In" />
+          <Parameter Name="Units" Type="varchar" Mode="In" />
+        </Function>
+        <Function Name="Usp_InsertPaymentDetails" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+          <Parameter Name="TransactionID" Type="nvarchar(max)" Mode="In" />
+          <Parameter Name="ReservationNumber" Type="varchar" Mode="In" />
+          <Parameter Name="ReservationNameID" Type="varchar" Mode="In" />
+          <Parameter Name="MaskedCardNumber" Type="nvarchar(max)" Mode="In" />
+          <Parameter Name="ExpiryDate" Type="nvarchar(max)" Mode="In" />
+          <Parameter Name="FundingSource" Type="nvarchar(max)" Mode="In" />
+          <Parameter Name="Amount" Type="nvarchar(max)" Mode="In" />
+          <Parameter Name="Currency" Type="nvarchar(max)" Mode="In" />
+          <Parameter Name="RecurringIdentifier" Type="nvarchar(max)" Mode="In" />
+          <Parameter Name="AuthorisationCode" Type="nvarchar(max)" Mode="In" />
+          <Parameter Name="pspReferenceNumber" Type="nvarchar(max)" Mode="In" />
+          <Parameter Name="ParentPspRefereceNumber" Type="nvarchar(max)" Mode="In" />
+          <Parameter Name="TransactionType" Type="varchar" Mode="In" />
+          <Parameter Name="ResultCode" Type="varchar" Mode="In" />
+          <Parameter Name="ResponseMessage" Type="varchar(max)" Mode="In" />
+          <Parameter Name="CardType" Type="varchar" Mode="In" />
+        </Function>
+        <Function Name="usp_InsertPaymentHistory" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+          <Parameter Name="TransactionID" Type="nvarchar(max)" Mode="In" />
+          <Parameter Name="ReservationNameID" Type="varchar" Mode="In" />
+          <Parameter Name="ReservationNumber" Type="varchar" Mode="In" />
+          <Parameter Name="PData" Type="nvarchar(max)" Mode="In" />
+          <Parameter Name="MDData" Type="nvarchar(max)" Mode="In" />
+          <Parameter Name="PaRes" Type="nvarchar(max)" Mode="In" />
+          <Parameter Name="PSPReference" Type="nvarchar" Mode="In" />
+          <Parameter Name="ResultCode" Type="nvarchar" Mode="In" />
+          <Parameter Name="RefusalReason" Type="nvarchar(max)" Mode="In" />
+          <Parameter Name="TransactionType" Type="varchar" Mode="In" />
+        </Function>
+        <Function Name="Usp_InsertPaymentTransactionsFromLocal" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo" />
+        <Function Name="usp_InsertReservationDetails" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo" />
+        <Function Name="usp_InsertReservationDetailsCheckOut" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo" />
+        <Function Name="Usp_InsertReservationPackageDetails" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+          <Parameter Name="ReservationDetailID" Type="int" Mode="In" />
+          <Parameter Name="PackageID" Type="int" Mode="In" />
+        </Function>
+        <Function Name="Usp_InsertRoomTypeMaster" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+          <Parameter Name="RoomTypeCode" Type="varchar" Mode="In" />
+          <Parameter Name="RoomTypeDescription" Type="varchar" Mode="In" />
+        </Function>
+        <Function Name="Usp_UpdateEmailIDByReservationID" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+          <Parameter Name="ReservationID" Type="int" Mode="In" />
+          <Parameter Name="Email" Type="nvarchar" Mode="In" />
+        </Function>
+        <Function Name="Usp_UpdatePaymentHeader" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+          <Parameter Name="TransactionID" Type="nvarchar(max)" Mode="In" />
+          <Parameter Name="IsActive" Type="bit" Mode="In" />
+          <Parameter Name="ResultCode" Type="varchar" Mode="In" />
+          <Parameter Name="ResponseMessage" Type="nvarchar(max)" Mode="In" />
+          <Parameter Name="TransactionType" Type="varchar" Mode="In" />
+        </Function>
+        <Function Name="Usp_UpdatePreCheckOutFlag" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+          <Parameter Name="ReservationDetailID" Type="int" Mode="In" />
+        </Function>
+        <Function Name="Usp_UpdateReservationByGuest" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+          <Parameter Name="ReservationID" Type="int" Mode="In" />
+          <Parameter Name="ETA" Type="varchar" Mode="In" />
+          <Parameter Name="FlightNo" Type="varchar" Mode="In" />
+          <Parameter Name="ProfileDetailID" Type="int" Mode="In" />
+          <Parameter Name="MembershipNo" Type="varchar" Mode="In" />
+          <Parameter Name="Email" Type="nvarchar(max)" Mode="In" />
+          <Parameter Name="Phone" Type="nvarchar(max)" Mode="In" />
+          <Parameter Name="AddressLine1" Type="nvarchar" Mode="In" />
+          <Parameter Name="AddressLine2" Type="nvarchar" Mode="In" />
+          <Parameter Name="City" Type="varchar" Mode="In" />
+          <Parameter Name="StateMasterID" Type="int" Mode="In" />
+          <Parameter Name="PostalCode" Type="varchar" Mode="In" />
+          <Parameter Name="CountryMasterID" Type="int" Mode="In" />
+          <Parameter Name="SignatureImage" Type="varbinary(max)" Mode="In" />
+          <Parameter Name="DocumentImage1" Type="varbinary(max)" Mode="In" />
+          <Parameter Name="DocumentImage2" Type="varbinary(max)" Mode="In" />
+          <Parameter Name="DocumentImage3" Type="varbinary(max)" Mode="In" />
+          <Parameter Name="FaceImage" Type="varbinary(max)" Mode="In" />
+          <Parameter Name="IsMemberShipEnrolled" Type="bit" Mode="In" />
+          <Parameter Name="Type" Type="varchar" Mode="In" />
+          <Parameter Name="DocumentID" Type="int" Mode="In" />
+          <Parameter Name="DocumentNumber" Type="varchar" Mode="In" />
+          <Parameter Name="ExpiryDate" Type="datetime" Mode="In" />
+          <Parameter Name="IssueDate" Type="datetime" Mode="In" />
+          <Parameter Name="Gender" Type="varchar" Mode="In" />
+          <Parameter Name="IssueCountry" Type="varchar" Mode="In" />
+        </Function>
+        <Function Name="Usp_usp_FetchReservationPaymentAdditionalInfoforLocalPush" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo" />
+        <Function Name="Usp_usp_FetchReservationPaymentHeaderforLocalPush" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo" />
+        <Function Name="Usp_usp_FetchReservationPaymentHistoryforLocalPush" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo" />
+        <EntityContainer Name="CloudDBModelStoreContainer">
+          <EntitySet Name="tbCountryMaster" EntityType="Self.tbCountryMaster" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="tbDocumentMaster" EntityType="Self.tbDocumentMaster" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="tbEventModuleMaster" EntityType="Self.tbEventModuleMaster" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="tbEventSubModuleMaster" EntityType="Self.tbEventSubModuleMaster" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="tbEventTrackingDetails" EntityType="Self.tbEventTrackingDetails" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="tbFeedBackResult" EntityType="Self.tbFeedBackResult" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="tbKeyStorageManagement" EntityType="Self.tbKeyStorageManagement" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="tbOperaPaymentTypeCodeWeb" EntityType="Self.tbOperaPaymentTypeCodeWeb" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="tbPackageMaster" EntityType="Self.tbPackageMaster" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="tbPaymentAdditionalInfo" EntityType="Self.tbPaymentAdditionalInfo" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="tbPaymentHeader" EntityType="Self.tbPaymentHeader" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="tbPaymentHistory" EntityType="Self.tbPaymentHistory" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="tbProfileDetails" EntityType="Self.tbProfileDetails" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="tbProfileDocuments" EntityType="Self.tbProfileDocuments" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="tbQuestionMaster" EntityType="Self.tbQuestionMaster" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="tbRequestDetails" EntityType="Self.tbRequestDetails" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="tbRequestMaster" EntityType="Self.tbRequestMaster" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="tbReservationDetails" EntityType="Self.tbReservationDetails" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="tbReservationDocuments" EntityType="Self.tbReservationDocuments" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="tbReservationDocumentTypeMaster" EntityType="Self.tbReservationDocumentTypeMaster" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="tbReservationPackageDetails" EntityType="Self.tbReservationPackageDetails" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="tbReservationRateDetails" EntityType="Self.tbReservationRateDetails" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="tbRoomTypeMapping" EntityType="Self.tbRoomTypeMapping" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="tbRoomTypeMaster" EntityType="Self.tbRoomTypeMaster" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="tbStateMaster" EntityType="Self.tbStateMaster" Schema="dbo" store:Type="Tables" />
+          <AssociationSet Name="FK_tbEventSubModuleMaster_tbEventModuleMaster" Association="Self.FK_tbEventSubModuleMaster_tbEventModuleMaster">
+            <End Role="tbEventModuleMaster" EntitySet="tbEventModuleMaster" />
+            <End Role="tbEventSubModuleMaster" EntitySet="tbEventSubModuleMaster" />
+          </AssociationSet>
+          <AssociationSet Name="FK_tbEventTrackingDetails_tbEventSubModuleMaster" Association="Self.FK_tbEventTrackingDetails_tbEventSubModuleMaster">
+            <End Role="tbEventSubModuleMaster" EntitySet="tbEventSubModuleMaster" />
+            <End Role="tbEventTrackingDetails" EntitySet="tbEventTrackingDetails" />
+          </AssociationSet>
+          <AssociationSet Name="FK_tbEventTrackingDetails_tbReservationDetails" Association="Self.FK_tbEventTrackingDetails_tbReservationDetails">
+            <End Role="tbReservationDetails" EntitySet="tbReservationDetails" />
+            <End Role="tbEventTrackingDetails" EntitySet="tbEventTrackingDetails" />
+          </AssociationSet>
+        </EntityContainer>
+      </Schema></edmx:StorageModels>
+    <!-- CSDL content -->
+    <edmx:ConceptualModels>
+      <Schema Namespace="CloudDBModel" Alias="Self" annotation:UseStrongSpatialTypes="false" xmlns:annotation="http://schemas.microsoft.com/ado/2009/02/edm/annotation" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm">
+        <EntityContainer Name="SwissotelStamfordEntities" annotation:LazyLoadingEnabled="true">
+          <FunctionImport Name="CloseKeys" />
+          <FunctionImport Name="OpenKeys" />
+          <FunctionImport Name="sp_alterdiagram">
+            <Parameter Name="diagramname" Mode="In" Type="String" />
+            <Parameter Name="owner_id" Mode="In" Type="Int32" />
+            <Parameter Name="version" Mode="In" Type="Int32" />
+            <Parameter Name="definition" Mode="In" Type="Binary" />
+          </FunctionImport>
+          <FunctionImport Name="sp_creatediagram">
+            <Parameter Name="diagramname" Mode="In" Type="String" />
+            <Parameter Name="owner_id" Mode="In" Type="Int32" />
+            <Parameter Name="version" Mode="In" Type="Int32" />
+            <Parameter Name="definition" Mode="In" Type="Binary" />
+          </FunctionImport>
+          <FunctionImport Name="sp_dropdiagram">
+            <Parameter Name="diagramname" Mode="In" Type="String" />
+            <Parameter Name="owner_id" Mode="In" Type="Int32" />
+          </FunctionImport>
+          <FunctionImport Name="sp_helpdiagramdefinition" ReturnType="Collection(CloudDBModel.sp_helpdiagramdefinition_Result)">
+            <Parameter Name="diagramname" Mode="In" Type="String" />
+            <Parameter Name="owner_id" Mode="In" Type="Int32" />
+          </FunctionImport>
+          <FunctionImport Name="sp_helpdiagrams" ReturnType="Collection(CloudDBModel.sp_helpdiagrams_Result)">
+            <Parameter Name="diagramname" Mode="In" Type="String" />
+            <Parameter Name="owner_id" Mode="In" Type="Int32" />
+          </FunctionImport>
+          <FunctionImport Name="sp_renamediagram">
+            <Parameter Name="diagramname" Mode="In" Type="String" />
+            <Parameter Name="owner_id" Mode="In" Type="Int32" />
+            <Parameter Name="new_diagramname" Mode="In" Type="String" />
+          </FunctionImport>
+          <FunctionImport Name="sp_upgraddiagrams" />
+          <FunctionImport Name="Usp_BulkUpdateLocallyPushedReservations" />
+          <FunctionImport Name="usp_DeleteTransactionsByReservationID">
+          <Parameter Name="ReservationNumber" Mode="In" Type="String" />
+          </FunctionImport>
+          <FunctionImport Name="usp_FetchReservationforLocalPush" ReturnType="Collection(CloudDBModel.usp_FetchReservationforLocalPush_Result)">
+          <Parameter Name="ReservationNameID" Mode="In" Type="String" />
+          </FunctionImport>
+          <FunctionImport Name="Usp_InsertFeedbackData" ReturnType="Collection(CloudDBModel.Usp_InsertFeedbackData_Result)">
+            <Parameter Name="ReservationID" Mode="In" Type="Int32" />
+            <Parameter Name="QuestionID" Mode="In" Type="Int32" />
+            <Parameter Name="Answer" Mode="In" Type="String" />
+          </FunctionImport>
+          <FunctionImport Name="usp_InsertReservationDetails" />
+          <FunctionImport Name="Usp_UpdateReservationByGuest">
+            <Parameter Name="ReservationID" Mode="In" Type="Int32" />
+            <Parameter Name="ETA" Mode="In" Type="String" />
+            <Parameter Name="FlightNo" Mode="In" Type="String" />
+            <Parameter Name="ProfileDetailID" Mode="In" Type="Int32" />
+            <Parameter Name="MembershipNo" Mode="In" Type="String" />
+            <Parameter Name="Email" Mode="In" Type="String" />
+            <Parameter Name="Phone" Mode="In" Type="String" />
+            <Parameter Name="AddressLine1" Mode="In" Type="String" />
+            <Parameter Name="AddressLine2" Mode="In" Type="String" />
+            <Parameter Name="City" Mode="In" Type="String" />
+            <Parameter Name="StateMasterID" Mode="In" Type="Int32" />
+            <Parameter Name="PostalCode" Mode="In" Type="String" />
+            <Parameter Name="CountryMasterID" Mode="In" Type="Int32" />
+            <Parameter Name="SignatureImage" Mode="In" Type="Binary" />
+            <Parameter Name="DocumentImage1" Mode="In" Type="Binary" />
+            <Parameter Name="DocumentImage2" Mode="In" Type="Binary" />
+            <Parameter Name="DocumentImage3" Mode="In" Type="Binary" />
+            <Parameter Name="FaceImage" Mode="In" Type="Binary" />
+            <Parameter Name="IsMemberShipEnrolled" Mode="In" Type="Boolean" />
+            <Parameter Name="Type" Mode="In" Type="String" />
+            <Parameter Name="DocumentID" Mode="In" Type="Int32" />
+            <Parameter Name="DocumentNumber" Mode="In" Type="String" />
+            <Parameter Name="ExpiryDate" Mode="In" Type="DateTime" />
+            <Parameter Name="IssueDate" Mode="In" Type="DateTime" />
+            <Parameter Name="Gender" Mode="In" Type="String" />
+            <Parameter Name="IssueCountry" Mode="In" Type="String" />
+          </FunctionImport>
+          <FunctionImport Name="usp_GetReservationDetails" ReturnType="Collection(CloudDBModel.usp_GetReservationDetails_Result)">
+          <Parameter Name="ReservationNumber" Mode="In" Type="String" />
+          </FunctionImport>
+          <FunctionImport Name="Usp_GetQuestionMaster" ReturnType="Collection(CloudDBModel.Usp_GetQuestionMaster_Result)" />
+          <FunctionImport Name="Usp_GetProfileInformationByReservationID" ReturnType="Collection(CloudDBModel.Usp_GetProfileInformationByReservationID_Result)">
+          <Parameter Name="ReservationDetailID" Mode="In" Type="Int32" />
+          </FunctionImport>
+          <FunctionImport Name="Usp_GetPackageMaster" ReturnType="Collection(CloudDBModel.Usp_GetPackageMaster_Result)" >
+          <Parameter Name="RoomTypeCode" Mode="In" Type="String" />
+          </FunctionImport>
+          <FunctionImport Name="Usp_GetProfileDocumentsByReservationID" ReturnType="Collection(CloudDBModel.Usp_GetProfileDocumentsByReservationID_Result)">
+          <Parameter Name="ReservationDetailID" Mode="In" Type="Int32" />
+          </FunctionImport>
+          <FunctionImport Name="Usp_InsertPackageMaster" ReturnType="Collection(CloudDBModel.Usp_InsertPackageMaster_Result)">
+            <Parameter Name="PackageID" Mode="In" Type="Int32" />
+            <Parameter Name="PackageCode" Mode="In" Type="String" />
+            <Parameter Name="PackageName" Mode="In" Type="String" />
+            <Parameter Name="PackageAmount" Mode="In" Type="Decimal" />
+            <Parameter Name="PackageDesc" Mode="In" Type="String" />
+            <Parameter Name="PackageImage" Mode="In" Type="Binary" />
+            <Parameter Name="isActive" Mode="In" Type="Boolean" />
+            <Parameter Name="IsRoomUpsell" Mode="In" Type="Boolean" />
+            <Parameter Name="Units" Mode="In" Type="String" />
+          </FunctionImport>
+          <FunctionImport Name="Usp_InsertReservationPackageDetails" ReturnType="Collection(CloudDBModel.Usp_InsertReservationPackageDetails_Result)">
+            <Parameter Name="ReservationDetailID" Mode="In" Type="Int32" />
+            <Parameter Name="PackageID" Mode="In" Type="Int32" />
+          </FunctionImport>
+          <FunctionImport Name="usp_FetchProfileDocumentsforLocalPush" ReturnType="Collection(CloudDBModel.usp_FetchProfileDocumentsforLocalPush_Result)">
+          <Parameter Name="ReservationNameID" Mode="In" Type="String" />
+          </FunctionImport>
+          <FunctionImport Name="usp_FetchReservationFeedBackforLocalPush" ReturnType="Collection(CloudDBModel.usp_FetchReservationFeedBackforLocalPush_Result)" />
+          <FunctionImport Name="usp_FetchReservationPackageforLocalPush" ReturnType="Collection(CloudDBModel.usp_FetchReservationPackageforLocalPush_Result)" />
+          <FunctionImport Name="Usp_InsertEventsTracking" ReturnType="Collection(CloudDBModel.Usp_InsertEventsTracking_Result)">
+            <Parameter Name="ReservationID" Mode="In" Type="Int32" />
+            <Parameter Name="EventSubModule" Mode="In" Type="String" />
+          </FunctionImport>
+          <FunctionImport Name="Usp_BulkUpdateCheckOutReservations" />
+          <FunctionImport Name="usp_InsertReservationDetailsCheckOut" />
+          <FunctionImport Name="Usp_UpdatePreCheckOutFlag">
+          <Parameter Name="ReservationDetailID" Mode="In" Type="Int32" />
+          </FunctionImport>
+          <EntitySet Name="tbCountryMasters" EntityType="CloudDBModel.tbCountryMaster" />
+          <EntitySet Name="tbDocumentMasters" EntityType="CloudDBModel.tbDocumentMaster" />
+          <EntitySet Name="tbEventModuleMasters" EntityType="CloudDBModel.tbEventModuleMaster" />
+          <EntitySet Name="tbEventSubModuleMasters" EntityType="CloudDBModel.tbEventSubModuleMaster" />
+          <EntitySet Name="tbEventTrackingDetails" EntityType="CloudDBModel.tbEventTrackingDetail" />
+          <EntitySet Name="tbFeedBackResults" EntityType="CloudDBModel.tbFeedBackResult" />
+          <EntitySet Name="tbKeyStorageManagements" EntityType="CloudDBModel.tbKeyStorageManagement" />
+          <EntitySet Name="tbPackageMasters" EntityType="CloudDBModel.tbPackageMaster" />
+          <EntitySet Name="tbProfileDetails" EntityType="CloudDBModel.tbProfileDetail" />
+          <EntitySet Name="tbProfileDocuments" EntityType="CloudDBModel.tbProfileDocument" />
+          <EntitySet Name="tbQuestionMasters" EntityType="CloudDBModel.tbQuestionMaster" />
+          <EntitySet Name="tbRequestDetails" EntityType="CloudDBModel.tbRequestDetail" />
+          <EntitySet Name="tbRequestMasters" EntityType="CloudDBModel.tbRequestMaster" />
+          <EntitySet Name="tbReservationDetails" EntityType="CloudDBModel.tbReservationDetail" />
+          <EntitySet Name="tbReservationDocuments" EntityType="CloudDBModel.tbReservationDocument" />
+          <EntitySet Name="tbReservationDocumentTypeMasters" EntityType="CloudDBModel.tbReservationDocumentTypeMaster" />
+          <EntitySet Name="tbReservationPackageDetails" EntityType="CloudDBModel.tbReservationPackageDetail" />
+          <EntitySet Name="tbReservationRateDetails" EntityType="CloudDBModel.tbReservationRateDetail" />
+          <EntitySet Name="tbStateMasters" EntityType="CloudDBModel.tbStateMaster" />
+          <AssociationSet Name="FK_tbEventSubModuleMaster_tbEventModuleMaster" Association="CloudDBModel.FK_tbEventSubModuleMaster_tbEventModuleMaster">
+            <End Role="tbEventModuleMaster" EntitySet="tbEventModuleMasters" />
+            <End Role="tbEventSubModuleMaster" EntitySet="tbEventSubModuleMasters" />
+          </AssociationSet>
+          <AssociationSet Name="FK_tbEventTrackingDetails_tbEventSubModuleMaster" Association="CloudDBModel.FK_tbEventTrackingDetails_tbEventSubModuleMaster">
+            <End Role="tbEventSubModuleMaster" EntitySet="tbEventSubModuleMasters" />
+            <End Role="tbEventTrackingDetail" EntitySet="tbEventTrackingDetails" />
+          </AssociationSet>
+          <AssociationSet Name="FK_tbEventTrackingDetails_tbReservationDetails" Association="CloudDBModel.FK_tbEventTrackingDetails_tbReservationDetails">
+            <End Role="tbReservationDetail" EntitySet="tbReservationDetails" />
+            <End Role="tbEventTrackingDetail" EntitySet="tbEventTrackingDetails" />
+          </AssociationSet>
+          <EntitySet Name="tbPaymentAdditionalInfoes" EntityType="CloudDBModel.tbPaymentAdditionalInfo" />
+          <EntitySet Name="tbPaymentHistories" EntityType="CloudDBModel.tbPaymentHistory" />
+          <EntitySet Name="tbRoomTypeMappings" EntityType="CloudDBModel.tbRoomTypeMapping" />
+          <EntitySet Name="tbRoomTypeMasters" EntityType="CloudDBModel.tbRoomTypeMaster" />
+          <FunctionImport Name="Usp_ClearCloudData" ReturnType="Collection(CloudDBModel.Usp_ClearCloudData_Result)" />
+          <FunctionImport Name="usp_FetchReservationDocumentsforLocalPushCheckOut" ReturnType="Collection(CloudDBModel.usp_FetchReservationDocumentsforLocalPushCheckOut_Result)">
+          <Parameter Name="ReservationNameID" Mode="In" Type="String" />
+          </FunctionImport>
+          <FunctionImport Name="usp_FetchReservationforLocalPushCheckOut" ReturnType="Collection(CloudDBModel.usp_FetchReservationforLocalPushCheckOut_Result)">
+          <Parameter Name="ReservationNameID" Mode="In" Type="String" />
+          </FunctionImport>
+          <FunctionImport Name="USp_GetPackageMasterDetailedList" ReturnType="Collection(CloudDBModel.USp_GetPackageMasterDetailedList_Result)">
+          <Parameter Name="PackageID" Mode="In" Type="Int32" />
+          </FunctionImport>
+          <FunctionImport Name="Usp_GetRoomTypeMaster" ReturnType="Collection(CloudDBModel.Usp_GetRoomTypeMaster_Result)" />
+          <FunctionImport Name="Usp_InsertPaymentDetails">
+            <Parameter Name="TransactionID" Mode="In" Type="String" />
+            <Parameter Name="ReservationNumber" Mode="In" Type="String" />
+            <Parameter Name="ReservationNameID" Mode="In" Type="String" />
+            <Parameter Name="MaskedCardNumber" Mode="In" Type="String" />
+            <Parameter Name="ExpiryDate" Mode="In" Type="String" />
+            <Parameter Name="FundingSource" Mode="In" Type="String" />
+            <Parameter Name="Amount" Mode="In" Type="String" />
+            <Parameter Name="Currency" Mode="In" Type="String" />
+            <Parameter Name="RecurringIdentifier" Mode="In" Type="String" />
+            <Parameter Name="AuthorisationCode" Mode="In" Type="String" />
+            <Parameter Name="pspReferenceNumber" Mode="In" Type="String" />
+            <Parameter Name="ParentPspRefereceNumber" Mode="In" Type="String" />
+            <Parameter Name="TransactionType" Mode="In" Type="String" />
+            <Parameter Name="ResultCode" Mode="In" Type="String" />
+            <Parameter Name="ResponseMessage" Mode="In" Type="String" />
+            <Parameter Name="CardType" Mode="In" Type="String" />
+          </FunctionImport>
+          <FunctionImport Name="Usp_InsertRoomTypeMaster" ReturnType="Collection(CloudDBModel.Usp_InsertRoomTypeMaster_Result)">
+            <Parameter Name="RoomTypeCode" Mode="In" Type="String" />
+            <Parameter Name="RoomTypeDescription" Mode="In" Type="String" />
+          </FunctionImport>
+          <FunctionImport Name="Usp_GetPaymentHistory" ReturnType="Collection(CloudDBModel.Usp_GetPaymentHistory_Result)">
+          <Parameter Name="ReservationNumber" Mode="In" Type="String" />
+          </FunctionImport>
+          <FunctionImport Name="usp_InsertPaymentHistory" ReturnType="Collection(CloudDBModel.usp_InsertPaymentHistory_Result)">
+            <Parameter Name="TransactionID" Mode="In" Type="String" />
+            <Parameter Name="ReservationNameID" Mode="In" Type="String" />
+            <Parameter Name="ReservationNumber" Mode="In" Type="String" />
+            <Parameter Name="PData" Mode="In" Type="String" />
+            <Parameter Name="MDData" Mode="In" Type="String" />
+            <Parameter Name="PaRes" Mode="In" Type="String" />
+            <Parameter Name="PSPReference" Mode="In" Type="String" />
+            <Parameter Name="ResultCode" Mode="In" Type="String" />
+            <Parameter Name="RefusalReason" Mode="In" Type="String" />
+            <Parameter Name="TransactionType" Mode="In" Type="String" />
+          </FunctionImport>
+          <FunctionImport Name="usp_FetchPaymentAdditionalInfoforLocalPush" ReturnType="Collection(CloudDBModel.usp_FetchPaymentAdditionalInfoforLocalPush_Result)" >
+          <Parameter Name="ReservationNameID" Mode="In" Type="String" />
+          </FunctionImport>
+          <FunctionImport Name="usp_FetchPaymentforLocalPush" >
+          <Parameter Name="ReservationNameID" Mode="In" Type="String" />
+          </FunctionImport>
+          <FunctionImport Name="usp_FetchPaymentHistoryforLocalPush" ReturnType="Collection(CloudDBModel.usp_FetchPaymentHistoryforLocalPush_Result)" >
+          <Parameter Name="ReservationNameID" Mode="In" Type="String" />
+          </FunctionImport>
+          <FunctionImport Name="Usp_usp_FetchReservationPaymentAdditionalInfoforLocalPush" ReturnType="Collection(CloudDBModel.Usp_usp_FetchReservationPaymentAdditionalInfoforLocalPush_Result)" />
+          <FunctionImport Name="Usp_usp_FetchReservationPaymentHeaderforLocalPush" ReturnType="Collection(CloudDBModel.Usp_usp_FetchReservationPaymentHeaderforLocalPush_Result)" />
+          <FunctionImport Name="Usp_usp_FetchReservationPaymentHistoryforLocalPush" ReturnType="Collection(CloudDBModel.Usp_usp_FetchReservationPaymentHistoryforLocalPush_Result)" />
+          <EntitySet Name="tbPaymentHeaders" EntityType="CloudDBModel.tbPaymentHeader" />
+          <EntitySet Name="tbOperaPaymentTypeCodeWebs" EntityType="CloudDBModel.tbOperaPaymentTypeCodeWeb" />
+          <FunctionImport Name="Usp_GetActivePaymentTransctions" ReturnType="Collection(CloudDBModel.Usp_GetActivePaymentTransctions_Result)">
+          <Parameter Name="ReservationNumber" Mode="In" Type="String" />
+          </FunctionImport>
+          <FunctionImport Name="Usp_InsertPaymentTransactionsFromLocal" />
+          <FunctionImport Name="Usp_UpdateEmailIDByReservationID">
+            <Parameter Name="ReservationID" Mode="In" Type="Int32" />
+            <Parameter Name="Email" Mode="In" Type="String" />
+          </FunctionImport>
+          <FunctionImport Name="Usp_UpdatePaymentHeader" ReturnType="Collection(CloudDBModel.Usp_UpdatePaymentHeader_Result)">
+            <Parameter Name="TransactionID" Mode="In" Type="String" />
+            <Parameter Name="IsActive" Mode="In" Type="Boolean" />
+            <Parameter Name="ResultCode" Mode="In" Type="String" />
+            <Parameter Name="ResponseMessage" Mode="In" Type="String" />
+            <Parameter Name="TransactionType" Mode="In" Type="String" />
+          </FunctionImport>
+        </EntityContainer>
+        <ComplexType Name="sp_helpdiagramdefinition_Result">
+          <Property Type="Int32" Name="version" Nullable="true" />
+          <Property Type="Binary" Name="definition" Nullable="true" />
+        </ComplexType>
+        <ComplexType Name="sp_helpdiagrams_Result">
+          <Property Type="String" Name="Database" Nullable="true" MaxLength="128" />
+          <Property Type="String" Name="Name" Nullable="false" MaxLength="128" />
+          <Property Type="Int32" Name="ID" Nullable="false" />
+          <Property Type="String" Name="Owner" Nullable="true" MaxLength="128" />
+          <Property Type="Int32" Name="OwnerID" Nullable="false" />
+        </ComplexType>
+        <ComplexType Name="usp_FetchReservationforLocalPush_Result">
+          <Property Type="String" Name="ReservationNameID" Nullable="true" MaxLength="100" />
+          <Property Type="String" Name="ReservationNumber" Nullable="true" MaxLength="100" />
+          <Property Type="DateTime" Name="ArrivalDate" Nullable="true" Precision="23" />
+          <Property Type="DateTime" Name="DepartureDate" Nullable="true" Precision="23" />
+          <Property Type="Int32" Name="Adultcount" Nullable="true" />
+          <Property Type="Int32" Name="Childcount" Nullable="true" />
+          <Property Type="String" Name="MembershipNo" Nullable="true" MaxLength="200" />
+          <Property Type="String" Name="MembershipType" Nullable="true" MaxLength="200" />
+          <Property Type="Boolean" Name="IsDepositAvailable" Nullable="true" />
+          <Property Type="Boolean" Name="IsCardDetailPresent" Nullable="true" />
+          <Property Type="Int32" Name="CardDetailID" Nullable="true" />
+          <Property Type="Boolean" Name="IsSaavyPaid" Nullable="true" />
+          <Property Type="DateTime" Name="DataInsertedDate" Nullable="true" Precision="23" />
+          <Property Type="DateTime" Name="Dataupdateddate" Nullable="true" Precision="23" />
+          <Property Type="Boolean" Name="IsPreCheckedInPMS" Nullable="true" />
+          <Property Type="String" Name="FlightNo" Nullable="true" MaxLength="100" />
+          <Property Type="DateTime" Name="ETA" Nullable="true" Precision="23" />
+          <Property Type="String" Name="ProfileID" Nullable="true" MaxLength="100" />
+          <Property Type="String" Name="FirstName" Nullable="true" />
+          <Property Type="String" Name="MiddleName" Nullable="true" />
+          <Property Type="String" Name="LastName" Nullable="true" />
+          <Property Type="String" Name="Email" Nullable="true" />
+          <Property Type="String" Name="Phone" Nullable="true" />
+          <Property Type="DateTime" Name="BirthDate" Nullable="true" Precision="23" />
+          <Property Type="String" Name="AddressLine1" Nullable="true" MaxLength="300" />
+          <Property Type="String" Name="AddressLine2" Nullable="true" MaxLength="300" />
+          <Property Type="String" Name="City" Nullable="true" MaxLength="300" />
+          <Property Type="String" Name="PostalCode" Nullable="true" MaxLength="100" />
+          <Property Type="String" Name="NationalityCode" Nullable="true" MaxLength="3" />
+          <Property Type="String" Name="SiteCode" Nullable="true" MaxLength="300" />
+          <Property Type="String" Name="CountryCode" Nullable="true" MaxLength="3" />
+          </ComplexType>
+        <ComplexType Name="Usp_InsertFeedbackData_Result">
+          <Property Type="Int32" Name="Result" Nullable="false" />
+          <Property Type="String" Name="Message" Nullable="false" MaxLength="7" />
+        </ComplexType>
+        <ComplexType Name="usp_GetReservationDetails_Result">
+          <Property Type="Int32" Name="ReservationDetailID" Nullable="false" />
+          <Property Type="String" Name="ReservationNameID" Nullable="true" MaxLength="100" />
+          <Property Type="String" Name="ReservationNumber" Nullable="true" MaxLength="100" />
+          <Property Type="DateTime" Name="ArrivalDate" Nullable="true" Precision="23" />
+          <Property Type="DateTime" Name="DepartureDate" Nullable="true" Precision="23" />
+          <Property Type="Int32" Name="Adultcount" Nullable="true" />
+          <Property Type="Int32" Name="Childcount" Nullable="true" />
+          <Property Type="String" Name="MembershipNo" Nullable="true" MaxLength="200" />
+          <Property Type="String" Name="MembershipType" Nullable="true" MaxLength="200" />
+          <Property Type="Boolean" Name="IsDepositAvailable" Nullable="true" />
+          <Property Type="Boolean" Name="IsCardDetailPresent" Nullable="true" />
+          <Property Type="Boolean" Name="IsSaavyPaid" Nullable="true" />
+          <Property Type="Boolean" Name="IsPreCheckedInPMS" Nullable="true" />
+          <Property Type="String" Name="FlightNo" Nullable="true" MaxLength="100" />
+          <Property Type="DateTime" Name="ETA" Nullable="true" Precision="23" />
+          <Property Type="Decimal" Name="AverageRoomRate" Nullable="true" Precision="18" Scale="2" />
+          <Property Type="Decimal" Name="TotalTax" Nullable="true" Precision="18" Scale="2" />
+          <Property Type="String" Name="RoomType" Nullable="true" MaxLength="100" />
+          <Property Type="String" Name="RoomTypeDescription" Nullable="true" MaxLength="500" />
+          <Property Type="Decimal" Name="TotalAmount" Nullable="true" Precision="18" Scale="2" />
+          <Property Type="Binary" Name="FolioDocument" Nullable="true" />
+          <Property Type="Boolean" Name="EcomPaymentStatus" Nullable="true" />
+          <Property Type="Decimal" Name="PaidAmount" Nullable="true" Precision="18" Scale="2" />
+          <Property Type="Decimal" Name="BalanceAmount" Nullable="true" Precision="18" Scale="2" />
+          <Property Type="String" Name="ReservationSource" Nullable="true" MaxLength="300" />
+          <Property Type="Boolean" Name="IsBreakFastAvailable" Nullable="true" />
+          <Property Type="Boolean" Name="IsMemberShipEnrolled" Nullable="true" />
+        </ComplexType>
+        <ComplexType Name="Usp_GetQuestionMaster_Result">
+          <Property Type="Int32" Name="QuestionID" Nullable="false" />
+          <Property Type="String" Name="Question" Nullable="true" MaxLength="500" />
+          <Property Type="String" Name="QuestionType" Nullable="true" MaxLength="200" />
+          <Property Type="String" Name="QuestionHint" Nullable="true" MaxLength="500" />
+        </ComplexType>
+        <ComplexType Name="Usp_GetProfileInformationByReservationID_Result">
+          <Property Type="Int32" Name="ProfileDetailID" Nullable="false" />
+          <Property Type="String" Name="ProfileID" Nullable="true" MaxLength="100" />
+          <Property Type="Int32" Name="ReservationDetailID" Nullable="true" />
+          <Property Type="String" Name="FirstName" Nullable="true" />
+          <Property Type="String" Name="MiddleName" Nullable="true" />
+          <Property Type="String" Name="LastName" Nullable="true" />
+          <Property Type="String" Name="Email" Nullable="true" />
+          <Property Type="String" Name="Phone" Nullable="true" />
+          <Property Type="DateTime" Name="BirthDate" Nullable="true" Precision="23" />
+          <Property Type="Int32" Name="Nationality" Nullable="true" />
+          <Property Type="String" Name="AddressLine1" Nullable="true" MaxLength="300" />
+          <Property Type="String" Name="AddressLine2" Nullable="true" MaxLength="300" />
+          <Property Type="String" Name="City" Nullable="true" MaxLength="300" />
+          <Property Type="Int32" Name="StateMasterID" Nullable="true" />
+          <Property Type="String" Name="PostalCode" Nullable="true" MaxLength="100" />
+          <Property Type="Int32" Name="CountryMasterID" Nullable="true" />
+          <Property Type="DateTime" Name="CreatedDateTime" Nullable="true" Precision="23" />
+          <Property Type="DateTime" Name="LastModifiedDateTime" Nullable="true" Precision="23" />
+        </ComplexType>
+        <ComplexType Name="Usp_GetPackageMaster_Result">
+          <Property Type="String" Name="PackageCode" Nullable="true" MaxLength="100" />
+          <Property Type="String" Name="PackageName" Nullable="true" MaxLength="300" />
+          <Property Type="Decimal" Name="PackageAmount" Nullable="true" Precision="18" Scale="2" />
+          <Property Type="String" Name="PackageDesc" Nullable="true" MaxLength="500" />
+          <Property Type="Binary" Name="PackageImage" Nullable="true" />
+          <Property Type="Boolean" Name="isActive" Nullable="true" />
+          <Property Type="Int32" Name="PackageID" Nullable="false" />
+        </ComplexType>
+        <ComplexType Name="Usp_GetProfileDocumentsByReservationID_Result">
+          <Property Type="Int32" Name="ProfileDocID" Nullable="false" />
+          <Property Type="String" Name="ProfileID" Nullable="true" MaxLength="100" />
+          <Property Type="Int32" Name="ProfileDetailID" Nullable="true" />
+          <Property Type="Int32" Name="DocumentMasterID" Nullable="true" />
+          <Property Type="String" Name="DocumentNumber" Nullable="true" MaxLength="100" />
+          <Property Type="DateTime" Name="ExpiryDate" Nullable="true" Precision="23" />
+          <Property Type="DateTime" Name="IssueDate" Nullable="true" Precision="23" />
+          <Property Type="Binary" Name="DocumentImage1" Nullable="true" />
+          <Property Type="Binary" Name="DocumentImage2" Nullable="true" />
+          <Property Type="Binary" Name="DocumentImage3" Nullable="true" />
+          <Property Type="Binary" Name="FaceImage" Nullable="true" />
+        </ComplexType>
+        <ComplexType Name="Usp_InsertPackageMaster_Result">
+          <Property Type="Int32" Name="Result" Nullable="true" />
+          <Property Type="String" Name="Message" Nullable="false" MaxLength="7" />
+        </ComplexType>
+        <ComplexType Name="Usp_InsertReservationPackageDetails_Result">
+          <Property Type="Int32" Name="Result" Nullable="true" />
+          <Property Type="String" Name="Message" Nullable="false" MaxLength="7" />
+        </ComplexType>
+        <ComplexType Name="usp_FetchProfileDocumentsforLocalPush_Result">
+          <Property Type="String" Name="ReservationNameID" Nullable="true" MaxLength="100" />
+          <Property Type="String" Name="ProfileID" Nullable="true" MaxLength="100" />
+          <Property Type="Int32" Name="DocumentMasterID" Nullable="true" />
+          <Property Type="String" Name="DocumentNumber" Nullable="true" MaxLength="100" />
+          <Property Type="DateTime" Name="ExpiryDate" Nullable="true" Precision="23" />
+          <Property Type="DateTime" Name="IssueDate" Nullable="true" Precision="23" />
+          <Property Type="Binary" Name="DocumentImage1" Nullable="true" />
+          <Property Type="Binary" Name="DocumentImage2" Nullable="true" />
+          <Property Type="Binary" Name="DocumentImage3" Nullable="true" />
+          <Property Type="Binary" Name="FaceImage" Nullable="true" />
+        </ComplexType>
+        <ComplexType Name="usp_FetchReservationFeedBackforLocalPush_Result">
+          <Property Type="String" Name="ReservationNameID" Nullable="true" MaxLength="100" />
+          <Property Type="Int32" Name="QuestionID" Nullable="true" />
+          <Property Type="String" Name="Answer" Nullable="true" MaxLength="400" />
+        </ComplexType>
+        <ComplexType Name="usp_FetchReservationPackageforLocalPush_Result">
+          <Property Type="String" Name="ReservationNameID" Nullable="true" MaxLength="100" />
+          <Property Type="Int32" Name="PackageID" Nullable="false" />
+        </ComplexType>
+        <ComplexType Name="Usp_InsertEventsTracking_Result">
+          <Property Type="Int32" Name="Result" Nullable="false" />
+          <Property Type="String" Name="Message" Nullable="false" MaxLength="7" />
+        </ComplexType>
+        <EntityType Name="tbCountryMaster">
+          <Key>
+            <PropertyRef Name="CountryMasterID" />
+          </Key>
+          <Property Name="CountryMasterID" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="Country_Full_name" Type="String" MaxLength="300" FixedLength="false" Unicode="false" />
+          <Property Name="Country_3Char_code" Type="String" MaxLength="3" FixedLength="true" Unicode="false" />
+          <Property Name="Country_2Char_code" Type="String" MaxLength="2" FixedLength="true" Unicode="false" />
+        </EntityType>
+        <EntityType Name="tbDocumentMaster">
+          <Key>
+            <PropertyRef Name="DocumentMasterID" />
+          </Key>
+          <Property Name="DocumentMasterID" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="DocumentCode" Type="String" MaxLength="100" FixedLength="false" Unicode="false" />
+          <Property Name="DocumentType" Type="String" MaxLength="300" FixedLength="false" Unicode="false" />
+        </EntityType>
+        <EntityType Name="tbEventModuleMaster">
+          <Key>
+            <PropertyRef Name="EventModuleID" />
+          </Key>
+          <Property Name="EventModuleID" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="EventModuleName" Type="String" MaxLength="300" FixedLength="false" Unicode="false" />
+          <NavigationProperty Name="tbEventSubModuleMasters" Relationship="CloudDBModel.FK_tbEventSubModuleMaster_tbEventModuleMaster" FromRole="tbEventModuleMaster" ToRole="tbEventSubModuleMaster" />
+        </EntityType>
+        <EntityType Name="tbEventSubModuleMaster">
+          <Key>
+            <PropertyRef Name="EventSubModuleID" />
+          </Key>
+          <Property Name="EventSubModuleID" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="EventModuleID" Type="Int32" />
+          <Property Name="EventModuleName" Type="String" MaxLength="300" FixedLength="false" Unicode="false" />
+          <Property Name="ActionType" Type="String" MaxLength="500" FixedLength="false" Unicode="false" />
+          <NavigationProperty Name="tbEventModuleMaster" Relationship="CloudDBModel.FK_tbEventSubModuleMaster_tbEventModuleMaster" FromRole="tbEventSubModuleMaster" ToRole="tbEventModuleMaster" />
+          <NavigationProperty Name="tbEventTrackingDetails" Relationship="CloudDBModel.FK_tbEventTrackingDetails_tbEventSubModuleMaster" FromRole="tbEventSubModuleMaster" ToRole="tbEventTrackingDetail" />
+        </EntityType>
+        <EntityType Name="tbEventTrackingDetail">
+          <Key>
+            <PropertyRef Name="EventTrackingID" />
+          </Key>
+          <Property Name="EventTrackingID" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="ReservationID" Type="Int32" />
+          <Property Name="EventSubModuleID" Type="Int32" />
+          <Property Name="StatusType" Type="String" MaxLength="300" FixedLength="false" Unicode="false" />
+          <NavigationProperty Name="tbEventSubModuleMaster" Relationship="CloudDBModel.FK_tbEventTrackingDetails_tbEventSubModuleMaster" FromRole="tbEventTrackingDetail" ToRole="tbEventSubModuleMaster" />
+          <NavigationProperty Name="tbReservationDetail" Relationship="CloudDBModel.FK_tbEventTrackingDetails_tbReservationDetails" FromRole="tbEventTrackingDetail" ToRole="tbReservationDetail" />
+        </EntityType>
+        <EntityType Name="tbFeedBackResult">
+          <Key>
+            <PropertyRef Name="FeedBackID" />
+          </Key>
+          <Property Name="FeedBackID" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="ReservationID" Type="Int32" />
+          <Property Name="QuestionID" Type="Int32" />
+          <Property Name="Answer" Type="String" MaxLength="400" FixedLength="false" Unicode="false" />
+        </EntityType>
+        <EntityType Name="tbKeyStorageManagement">
+          <Key>
+            <PropertyRef Name="ID" />
+          </Key>
+          <Property Name="ID" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="KeyPass" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <Property Name="CreatedDateTime" Type="DateTime" Precision="3" />
+          <Property Name="IsActive" Type="Boolean" />
+        </EntityType>
+        <EntityType Name="tbPackageMaster">
+          <Key>
+            <PropertyRef Name="PackageID" />
+          </Key>
+          <Property Name="PackageID" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="PackageCode" Type="String" MaxLength="100" FixedLength="false" Unicode="false" />
+          <Property Name="PackageName" Type="String" MaxLength="300" FixedLength="false" Unicode="false" />
+          <Property Name="PackageAmount" Type="Decimal" Precision="18" Scale="2" />
+          <Property Name="PackageDesc" Type="String" MaxLength="500" FixedLength="false" Unicode="false" />
+          <Property Name="PackageImage" Type="Binary" MaxLength="Max" FixedLength="false" />
+          <Property Name="isActive" Type="Boolean" />
+          <Property Name="IsRoomUpsell" Type="Boolean" />
+          <Property Name="Units" Type="String" MaxLength="100" FixedLength="false" Unicode="false" />
+        </EntityType>
+        <EntityType Name="tbProfileDetail">
+          <Key>
+            <PropertyRef Name="ProfileDetailID" />
+          </Key>
+          <Property Name="ProfileDetailID" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="ProfileID" Type="String" MaxLength="100" FixedLength="false" Unicode="false" />
+          <Property Name="ReservationDetailID" Type="Int32" />
+          <Property Name="FirstName" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <Property Name="MiddleName" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <Property Name="LastName" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <Property Name="Email" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <Property Name="Phone" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <Property Name="BirthDate" Type="DateTime" Precision="3" />
+          <Property Name="Nationality" Type="Int32" />
+          <Property Name="AddressLine1" Type="String" MaxLength="300" FixedLength="false" Unicode="true" />
+          <Property Name="AddressLine2" Type="String" MaxLength="300" FixedLength="false" Unicode="true" />
+          <Property Name="City" Type="String" MaxLength="300" FixedLength="false" Unicode="false" />
+          <Property Name="StateMasterID" Type="Int32" />
+          <Property Name="PostalCode" Type="String" MaxLength="100" FixedLength="false" Unicode="false" />
+          <Property Name="CountryMasterID" Type="Int32" />
+          <Property Name="CreatedDateTime" Type="DateTime" Precision="3" />
+          <Property Name="LastModifiedDateTime" Type="DateTime" Precision="3" />
+          <Property Name="Gender" Type="String" MaxLength="12" FixedLength="false" Unicode="false" />
+        </EntityType>
+        <EntityType Name="tbProfileDocument">
+          <Key>
+            <PropertyRef Name="ProfileDocID" />
+          </Key>
+          <Property Name="ProfileDocID" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="ProfileDetailID" Type="Int32" />
+          <Property Name="DocumentMasterID" Type="Int32" />
+          <Property Name="DocumentNumber" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <Property Name="ExpiryDate" Type="DateTime" Precision="3" />
+          <Property Name="IssueDate" Type="DateTime" Precision="3" />
+          <Property Name="DocumentImage1" Type="Binary" MaxLength="Max" FixedLength="false" />
+          <Property Name="DocumentImage2" Type="Binary" MaxLength="Max" FixedLength="false" />
+          <Property Name="DocumentImage3" Type="Binary" MaxLength="Max" FixedLength="false" />
+          <Property Name="FaceImage" Type="Binary" MaxLength="Max" FixedLength="false" />
+          <Property Name="CreatedDateTime" Type="DateTime" Precision="3" />
+          <Property Name="lastModifiedDateTime" Type="DateTime" Precision="3" />
+          <Property Name="IssueCountry" Type="String" MaxLength="250" FixedLength="false" Unicode="false" />
+        </EntityType>
+        <EntityType Name="tbQuestionMaster">
+          <Key>
+            <PropertyRef Name="QuestionID" />
+          </Key>
+          <Property Name="QuestionID" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="Question" Type="String" MaxLength="500" FixedLength="false" Unicode="false" />
+          <Property Name="QuestionType" Type="String" MaxLength="200" FixedLength="false" Unicode="false" />
+          <Property Name="QuestionHint" Type="String" MaxLength="500" FixedLength="false" Unicode="false" />
+        </EntityType>
+        <EntityType Name="tbRequestDetail">
+          <Key>
+            <PropertyRef Name="ReqDetailID" />
+          </Key>
+          <Property Name="ReqDetailID" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="ReqTypeMasterID" Type="Int32" />
+          <Property Name="ReservationDetailID" Type="Int32" />
+          <Property Name="ReqStatus" Type="Boolean" />
+          <Property Name="ReqCreatedDateTime" Type="DateTime" Precision="3" />
+          <Property Name="ReqUpdatedDateTime" Type="DateTime" Precision="3" />
+          <Property Name="ReqUserComment" Type="String" MaxLength="Max" FixedLength="false" Unicode="false" />
+          <Property Name="UserID" Type="Int32" />
+        </EntityType>
+        <EntityType Name="tbRequestMaster">
+          <Key>
+            <PropertyRef Name="ReqTypeMasterID" />
+          </Key>
+          <Property Name="ReqTypeMasterID" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="ReqType" Type="String" MaxLength="300" FixedLength="false" Unicode="false" />
+        </EntityType>
+        <EntityType Name="tbReservationDetail">
+          <Key>
+            <PropertyRef Name="ReservationDetailID" />
+          </Key>
+          <Property Name="ReservationDetailID" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="ReservationNameID" Type="String" MaxLength="100" FixedLength="false" Unicode="false" />
+          <Property Name="ReservationNumber" Type="String" MaxLength="100" FixedLength="false" Unicode="false" />
+          <Property Name="ArrivalDate" Type="DateTime" Precision="3" />
+          <Property Name="DepartureDate" Type="DateTime" Precision="3" />
+          <Property Name="Adultcount" Type="Int32" />
+          <Property Name="Childcount" Type="Int32" />
+          <Property Name="MembershipNo" Type="String" MaxLength="200" FixedLength="false" Unicode="false" />
+          <Property Name="MembershipType" Type="String" MaxLength="200" FixedLength="false" Unicode="false" />
+          <Property Name="IsDepositAvailable" Type="Boolean" />
+          <Property Name="IsCardDetailPresent" Type="Boolean" />
+          <Property Name="IsSaavyPaid" Type="Boolean" />
+          <Property Name="DataInsertedDate" Type="DateTime" Precision="3" />
+          <Property Name="Dataupdateddate" Type="DateTime" Precision="3" />
+          <Property Name="IsLocallySynced" Type="Boolean" />
+          <Property Name="LocallySyncedDateTime" Type="DateTime" Precision="3" />
+          <Property Name="IsPreCheckedInPMS" Type="Boolean" />
+          <Property Name="FlightNo" Type="String" MaxLength="100" FixedLength="false" Unicode="false" />
+          <Property Name="ETA" Type="DateTime" Precision="3" />
+          <Property Name="ReservationSource" Type="String" MaxLength="300" FixedLength="false" Unicode="false" />
+          <Property Name="SignatureImage" Type="Binary" MaxLength="Max" FixedLength="false" />
+          <Property Name="StatusDescription" Type="String" MaxLength="500" FixedLength="false" Unicode="false" />
+          <Property Name="IsMemberShipEnrolled" Type="Boolean" />
+          <Property Name="RoomType" Type="String" MaxLength="100" FixedLength="false" Unicode="false" />
+          <Property Name="RoomTypeDescription" Type="String" MaxLength="500" FixedLength="false" Unicode="false" />
+          <Property Name="IsPreCheckedOutPMS" Type="Boolean" />
+          <NavigationProperty Name="tbEventTrackingDetails" Relationship="CloudDBModel.FK_tbEventTrackingDetails_tbReservationDetails" FromRole="tbReservationDetail" ToRole="tbEventTrackingDetail" />
+          <Property Name="EcomPaymentStatus" Type="Boolean" />
+          <Property Name="IsCheckOutFlag" Type="Boolean" />
+        </EntityType>
+        <EntityType Name="tbReservationDocument">
+          <Key>
+            <PropertyRef Name="ReservationdocumentID" />
+          </Key>
+          <Property Name="ReservationdocumentID" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="ReservationDetailID" Type="Int32" />
+          <Property Name="ReseDocTypeMasterID" Type="Int32" />
+          <Property Name="Document" Type="Binary" MaxLength="Max" FixedLength="false" />
+        </EntityType>
+        <EntityType Name="tbReservationDocumentTypeMaster">
+          <Key>
+            <PropertyRef Name="ReseDocTypeMasterID" />
+          </Key>
+          <Property Name="ReseDocTypeMasterID" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="DocumentTypeCode" Type="String" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Name="DocumentType" Type="String" MaxLength="300" FixedLength="false" Unicode="false" />
+        </EntityType>
+        <EntityType Name="tbReservationPackageDetail">
+          <Key>
+            <PropertyRef Name="ResPackageID" />
+          </Key>
+          <Property Name="ResPackageID" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="ReservationDetailID" Type="Int32" />
+          <Property Name="PackageID" Type="Int32" />
+        </EntityType>
+        <EntityType Name="tbReservationRateDetail">
+          <Key>
+            <PropertyRef Name="ReservationRateDetailID" />
+          </Key>
+          <Property Name="ReservationRateDetailID" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="ReservationDetailID" Type="Int32" />
+          <Property Name="AverageRoomRate" Type="Decimal" Precision="18" Scale="2" />
+          <Property Name="TotalTax" Type="Decimal" Precision="18" Scale="2" />
+          <Property Name="TotalAmount" Type="Decimal" Precision="18" Scale="2" />
+          <Property Name="PaidAmount" Type="Decimal" Precision="18" Scale="2" />
+          <Property Name="BalanceAmount" Type="Decimal" Precision="18" Scale="2" />
+        </EntityType>
+        <EntityType Name="tbStateMaster">
+          <Key>
+            <PropertyRef Name="StateMasterID" />
+          </Key>
+          <Property Name="StateMasterID" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="StateCode" Type="String" MaxLength="100" FixedLength="false" Unicode="false" />
+          <Property Name="StateName" Type="String" MaxLength="300" FixedLength="false" Unicode="false" />
+          <Property Name="CountryMasterID" Type="Int32" />
+        </EntityType>
+        <Association Name="FK_tbEventSubModuleMaster_tbEventModuleMaster">
+          <End Type="CloudDBModel.tbEventModuleMaster" Role="tbEventModuleMaster" Multiplicity="0..1" />
+          <End Type="CloudDBModel.tbEventSubModuleMaster" Role="tbEventSubModuleMaster" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="tbEventModuleMaster">
+              <PropertyRef Name="EventModuleID" />
+            </Principal>
+            <Dependent Role="tbEventSubModuleMaster">
+              <PropertyRef Name="EventModuleID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_tbEventTrackingDetails_tbEventSubModuleMaster">
+          <End Type="CloudDBModel.tbEventSubModuleMaster" Role="tbEventSubModuleMaster" Multiplicity="0..1" />
+          <End Type="CloudDBModel.tbEventTrackingDetail" Role="tbEventTrackingDetail" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="tbEventSubModuleMaster">
+              <PropertyRef Name="EventSubModuleID" />
+            </Principal>
+            <Dependent Role="tbEventTrackingDetail">
+              <PropertyRef Name="EventSubModuleID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_tbEventTrackingDetails_tbReservationDetails">
+          <End Type="CloudDBModel.tbReservationDetail" Role="tbReservationDetail" Multiplicity="0..1" />
+          <End Type="CloudDBModel.tbEventTrackingDetail" Role="tbEventTrackingDetail" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="tbReservationDetail">
+              <PropertyRef Name="ReservationDetailID" />
+            </Principal>
+            <Dependent Role="tbEventTrackingDetail">
+              <PropertyRef Name="ReservationID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <EntityType Name="tbPaymentAdditionalInfo">
+          <Key>
+            <PropertyRef Name="PaymentAddInforID" />
+          </Key>
+          <Property Name="PaymentAddInforID" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="PaymentID" Type="Int32" />
+          <Property Name="KeyHeader" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <Property Name="KeyValue" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
+        </EntityType>
+        <EntityType Name="tbPaymentHistory">
+          <Key>
+            <PropertyRef Name="PaymentHistoryID" />
+          </Key>
+          <Property Name="PaymentHistoryID" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="ReservationNumber" Type="String" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Name="PData" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <Property Name="MDData" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <Property Name="PaRes" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <Property Name="CreatedDatetime" Type="DateTime" Precision="3" />
+          <Property Name="UpdateDatetime" Type="DateTime" Precision="3" />
+          <Property Name="PSPReference" Type="String" MaxLength="100" FixedLength="false" Unicode="true" />
+          <Property Name="ResultCode" Type="String" MaxLength="100" FixedLength="false" Unicode="false" />
+          <Property Name="RefusalReason" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <Property Name="TransactionID" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <Property Name="ReservationNameID" Type="String" MaxLength="100" FixedLength="false" Unicode="false" />
+          <Property Name="TransactionType" Type="String" MaxLength="200" FixedLength="false" Unicode="false" />
+        </EntityType>
+        <EntityType Name="tbRoomTypeMapping">
+          <Key>
+            <PropertyRef Name="RoomTypeMappingID" />
+          </Key>
+          <Property Name="RoomTypeMappingID" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="RoomTypeID" Type="Int32" />
+          <Property Name="PackageTypeID" Type="Int32" />
+        </EntityType>
+        <EntityType Name="tbRoomTypeMaster">
+          <Key>
+            <PropertyRef Name="RoomTypeID" />
+          </Key>
+          <Property Name="RoomTypeID" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="RoomTypeCode" Type="String" MaxLength="100" FixedLength="false" Unicode="false" />
+          <Property Name="RoomTypeDescription" Type="String" MaxLength="300" FixedLength="false" Unicode="false" />
+        </EntityType>
+        <ComplexType Name="Usp_ClearCloudData_Result">
+          <Property Type="Int32" Name="Result" Nullable="false" />
+          <Property Type="String" Name="ResultMessage" Nullable="false" MaxLength="7" />
+        </ComplexType>
+        <ComplexType Name="usp_FetchReservationDocumentsforLocalPushCheckOut_Result">
+          <Property Type="String" Name="ReservationNameID" Nullable="true" MaxLength="100" />
+          <Property Type="Binary" Name="Document" Nullable="true" />
+          <Property Type="String" Name="DocumentType" Nullable="true" MaxLength="300" />
+        </ComplexType>
+        <ComplexType Name="usp_FetchReservationforLocalPushCheckOut_Result">
+          <Property Type="String" Name="ReservationNameID" Nullable="true" MaxLength="100" />
+          <Property Type="String" Name="ReservationNumber" Nullable="true" MaxLength="100" />
+          <Property Type="DateTime" Name="ArrivalDate" Nullable="true" Precision="23" />
+          <Property Type="DateTime" Name="DepartureDate" Nullable="true" Precision="23" />
+          <Property Type="Int32" Name="Adultcount" Nullable="true" />
+          <Property Type="Int32" Name="Childcount" Nullable="true" />
+          <Property Type="String" Name="MembershipNo" Nullable="true" MaxLength="200" />
+          <Property Type="String" Name="MembershipType" Nullable="true" MaxLength="200" />
+          <Property Type="Boolean" Name="IsDepositAvailable" Nullable="true" />
+          <Property Type="Boolean" Name="IsCardDetailPresent" Nullable="true" />
+          <Property Type="Boolean" Name="IsSaavyPaid" Nullable="true" />
+          <Property Type="Boolean" Name="IsPreCheckedInPMS" Nullable="true" />
+          <Property Type="String" Name="FlightNo" Nullable="true" MaxLength="100" />
+          <Property Type="DateTime" Name="ETA" Nullable="true" Precision="23" />
+          <Property Type="Boolean" Name="IsMemberShipEnrolled" Nullable="true" />
+        </ComplexType>
+        <ComplexType Name="USp_GetPackageMasterDetailedList_Result">
+          <Property Type="Int64" Name="UniquePackageFlag" Nullable="true" />
+          <Property Type="Int32" Name="PackageID" Nullable="false" />
+          <Property Type="String" Name="PackageCode" Nullable="true" MaxLength="100" />
+          <Property Type="String" Name="PackageName" Nullable="true" MaxLength="300" />
+          <Property Type="Decimal" Name="PackageAmount" Nullable="true" Precision="18" Scale="2" />
+          <Property Type="String" Name="PackageDesc" Nullable="true" MaxLength="500" />
+          <Property Type="Binary" Name="PackageImage" Nullable="true" />
+          <Property Type="Boolean" Name="isActive" Nullable="true" />
+          <Property Type="Boolean" Name="IsRoomUpsell" Nullable="true" />
+          <Property Type="Int32" Name="RoomTypeID" Nullable="true" />
+          <Property Type="String" Name="RoomTypeCode" Nullable="true" MaxLength="100" />
+          <Property Type="String" Name="RoomTypeDescription" Nullable="false" MaxLength="300" />
+        </ComplexType>
+        <ComplexType Name="Usp_GetRoomTypeMaster_Result">
+          <Property Type="Int32" Name="RoomTypeID" Nullable="false" />
+          <Property Type="String" Name="RoomTypeCode" Nullable="true" MaxLength="100" />
+          <Property Type="String" Name="RoomTypeDescription" Nullable="true" MaxLength="300" />
+        </ComplexType>
+        <ComplexType Name="Usp_InsertRoomTypeMaster_Result">
+          <Property Type="Int32" Name="Result" Nullable="true" />
+          <Property Type="String" Name="Message" Nullable="false" MaxLength="7" />
+        </ComplexType>
+        <ComplexType Name="Usp_GetPaymentHistory_Result">
+          <Property Type="Int64" Name="RecordDescOrder" Nullable="true" />
+          <Property Type="Int32" Name="PaymentHistoryID" Nullable="false" />
+          <Property Type="String" Name="ReservationNumber" Nullable="true" MaxLength="50" />
+          <Property Type="String" Name="PData" Nullable="true" />
+          <Property Type="String" Name="MDData" Nullable="true" />
+          <Property Type="String" Name="PaRes" Nullable="true" />
+          <Property Type="DateTime" Name="CreatedDatetime" Nullable="true" Precision="23" />
+          <Property Type="DateTime" Name="UpdateDatetime" Nullable="true" Precision="23" />
+          <Property Type="String" Name="PSPReference" Nullable="true" MaxLength="100" />
+          <Property Type="String" Name="ResultCode" Nullable="true" MaxLength="100" />
+          <Property Type="String" Name="RefusalReason" Nullable="true" />
+        </ComplexType>
+        <ComplexType Name="usp_InsertPaymentHistory_Result">
+          <Property Type="Int32" Name="Result" Nullable="true" />
+          <Property Type="String" Name="Message" Nullable="false" MaxLength="7" />
+        </ComplexType>
+        <ComplexType Name="usp_FetchPaymentAdditionalInfoforLocalPush_Result">
+          <Property Type="Int32" Name="PaymentID" Nullable="false" />
+          <Property Type="String" Name="KeyHeader" Nullable="true" />
+          <Property Type="String" Name="KeyValue" Nullable="true" />
+        </ComplexType>
+        <ComplexType Name="usp_FetchPaymentHistoryforLocalPush_Result">
+          <Property Type="Int32" Name="PaymentHistoryID" Nullable="false" />
+          <Property Type="String" Name="ReservationNumber" Nullable="true" MaxLength="50" />
+          <Property Type="String" Name="PData" Nullable="true" />
+          <Property Type="String" Name="MDData" Nullable="true" />
+          <Property Type="String" Name="PaRes" Nullable="true" />
+          <Property Type="String" Name="PSPReference" Nullable="true" />
+          <Property Type="String" Name="ResultCode" Nullable="true" MaxLength="100" />
+          <Property Type="String" Name="RefusalReason" Nullable="true" />
+        </ComplexType>
+        <ComplexType Name="Usp_usp_FetchReservationPaymentAdditionalInfoforLocalPush_Result">
+          <Property Type="String" Name="TransactionID" Nullable="true" />
+          <Property Type="String" Name="KeyHeader" Nullable="true" />
+          <Property Type="String" Name="KeyValue" Nullable="true" />
+        </ComplexType>
+        <ComplexType Name="Usp_usp_FetchReservationPaymentHeaderforLocalPush_Result">
+          <Property Type="String" Name="TransactionID" Nullable="true" />
+          <Property Type="String" Name="ReservationNumber" Nullable="true" MaxLength="300" />
+          <Property Type="String" Name="ReservationNameID" Nullable="true" MaxLength="50" />
+          <Property Type="String" Name="MaskedCardNumber" Nullable="true" />
+          <Property Type="String" Name="ExpiryDate" Nullable="true" />
+          <Property Type="String" Name="FundingSource" Nullable="true" />
+          <Property Type="String" Name="Amount" Nullable="true" />
+          <Property Type="String" Name="Currency" Nullable="true" />
+          <Property Type="String" Name="RecurringIdentifier" Nullable="true" />
+          <Property Type="String" Name="AuthorisationCode" Nullable="true" />
+          <Property Type="String" Name="pspReferenceNumber" Nullable="true" />
+          <Property Type="String" Name="ParentPspRefereceNumber" Nullable="true" />
+          <Property Type="String" Name="TransactionType" Nullable="true" MaxLength="200" />
+          <Property Type="String" Name="ResultCode" Nullable="true" MaxLength="100" />
+          <Property Type="String" Name="ResponseMessage" Nullable="true" />
+        </ComplexType>
+        <ComplexType Name="Usp_usp_FetchReservationPaymentHistoryforLocalPush_Result">
+          <Property Type="String" Name="TransactionID" Nullable="true" />
+          <Property Type="String" Name="ReservationNumber" Nullable="true" MaxLength="50" />
+          <Property Type="String" Name="PData" Nullable="true" />
+          <Property Type="String" Name="MDData" Nullable="true" />
+          <Property Type="String" Name="PaRes" Nullable="true" />
+          <Property Type="String" Name="PSPReference" Nullable="true" />
+          <Property Type="String" Name="ResultCode" Nullable="true" MaxLength="100" />
+          <Property Type="String" Name="RefusalReason" Nullable="true" />
+          <Property Type="String" Name="TransactionType" Nullable="true" MaxLength="200" />
+        </ComplexType>
+        <EntityType Name="tbPaymentHeader">
+          <Key>
+            <PropertyRef Name="PaymentID" />
+          </Key>
+          <Property Name="PaymentID" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="TransactionID" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <Property Name="ReservationNumber" Type="String" MaxLength="300" FixedLength="false" Unicode="false" />
+          <Property Name="ReservationNameID" Type="String" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Name="MaskedCardNumber" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <Property Name="ExpiryDate" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <Property Name="FundingSource" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <Property Name="Amount" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <Property Name="Currency" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <Property Name="RecurringIdentifier" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <Property Name="AuthorisationCode" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <Property Name="pspReferenceNumber" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <Property Name="ParentPspRefereceNumber" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <Property Name="TransactionType" Type="String" MaxLength="200" FixedLength="false" Unicode="false" />
+          <Property Name="ResultCode" Type="String" MaxLength="100" FixedLength="false" Unicode="false" />
+          <Property Name="ResponseMessage" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <Property Name="CreatedDateTime" Type="DateTime" Precision="3" />
+          <Property Name="UpdatedDateTime" Type="DateTime" Precision="3" />
+          <Property Name="IsActive" Type="Boolean" />
+          <Property Name="StatusType" Type="String" MaxLength="100" FixedLength="false" Unicode="false" />
+          <Property Name="CardType" Type="String" MaxLength="200" FixedLength="false" Unicode="false" />
+        </EntityType>
+        <EntityType Name="tbOperaPaymentTypeCodeWeb">
+          <Key>
+            <PropertyRef Name="ID" />
+          </Key>
+          <Property Name="ID" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="OperaPaymentTypeCode" Type="String" MaxLength="100" FixedLength="false" Unicode="false" />
+          <Property Name="VendorPaymentTypeCode" Type="String" MaxLength="100" FixedLength="false" Unicode="false" />
+        </EntityType>
+        <ComplexType Name="Usp_GetActivePaymentTransctions_Result">
+          <Property Type="String" Name="TransactionID" Nullable="true" />
+          <Property Type="String" Name="ReservationNumber" Nullable="true" MaxLength="100" />
+          <Property Type="String" Name="ReservationNameID" Nullable="true" MaxLength="100" />
+          <Property Type="String" Name="MaskedCardNumber" Nullable="true" />
+          <Property Type="String" Name="ExpiryDate" Nullable="true" />
+          <Property Type="String" Name="FundingSource" Nullable="true" />
+          <Property Type="String" Name="Amount" Nullable="true" />
+          <Property Type="String" Name="Currency" Nullable="true" />
+          <Property Type="String" Name="RecurringIdentifier" Nullable="true" />
+          <Property Type="String" Name="AuthorisationCode" Nullable="true" />
+          <Property Type="String" Name="pspReferenceNumber" Nullable="true" />
+          <Property Type="String" Name="ParentPspRefereceNumber" Nullable="true" />
+          <Property Type="String" Name="TransactionType" Nullable="true" MaxLength="200" />
+          <Property Type="String" Name="ResultCode" Nullable="true" MaxLength="100" />
+          <Property Type="String" Name="ResponseMessage" Nullable="true" />
+          <Property Type="Boolean" Name="IsActive" Nullable="true" />
+          <Property Type="String" Name="StatusType" Nullable="true" MaxLength="100" />
+          <Property Type="String" Name="CardType" Nullable="true" MaxLength="200" />
+        </ComplexType>
+        <ComplexType Name="Usp_UpdatePaymentHeader_Result">
+          <Property Type="Int32" Name="Result" Nullable="false" />
+          <Property Type="String" Name="ResultMessage" Nullable="false" MaxLength="7" />
+        </ComplexType>
+      </Schema>
+    </edmx:ConceptualModels>
+    <!-- C-S mapping content -->
+    <edmx:Mappings>
+      <Mapping Space="C-S" xmlns="http://schemas.microsoft.com/ado/2009/11/mapping/cs">
+        <EntityContainerMapping StorageEntityContainer="CloudDBModelStoreContainer" CdmEntityContainer="SwissotelStamfordEntities">
+          <FunctionImportMapping FunctionImportName="CloseKeys" FunctionName="CloudDBModel.Store.CloseKeys" />
+          <FunctionImportMapping FunctionImportName="OpenKeys" FunctionName="CloudDBModel.Store.OpenKeys" />
+          <FunctionImportMapping FunctionImportName="sp_alterdiagram" FunctionName="CloudDBModel.Store.sp_alterdiagram" />
+          <FunctionImportMapping FunctionImportName="sp_creatediagram" FunctionName="CloudDBModel.Store.sp_creatediagram" />
+          <FunctionImportMapping FunctionImportName="sp_dropdiagram" FunctionName="CloudDBModel.Store.sp_dropdiagram" />
+          <FunctionImportMapping FunctionImportName="sp_helpdiagramdefinition" FunctionName="CloudDBModel.Store.sp_helpdiagramdefinition">
+            <ResultMapping>
+              <ComplexTypeMapping TypeName="CloudDBModel.sp_helpdiagramdefinition_Result">
+                <ScalarProperty Name="version" ColumnName="version" />
+                <ScalarProperty Name="definition" ColumnName="definition" />
+              </ComplexTypeMapping>
+            </ResultMapping>
+          </FunctionImportMapping>
+          <FunctionImportMapping FunctionImportName="sp_helpdiagrams" FunctionName="CloudDBModel.Store.sp_helpdiagrams">
+            <ResultMapping>
+              <ComplexTypeMapping TypeName="CloudDBModel.sp_helpdiagrams_Result">
+                <ScalarProperty Name="Database" ColumnName="Database" />
+                <ScalarProperty Name="Name" ColumnName="Name" />
+                <ScalarProperty Name="ID" ColumnName="ID" />
+                <ScalarProperty Name="Owner" ColumnName="Owner" />
+                <ScalarProperty Name="OwnerID" ColumnName="OwnerID" />
+              </ComplexTypeMapping>
+            </ResultMapping>
+          </FunctionImportMapping>
+          <FunctionImportMapping FunctionImportName="sp_renamediagram" FunctionName="CloudDBModel.Store.sp_renamediagram" />
+          <FunctionImportMapping FunctionImportName="sp_upgraddiagrams" FunctionName="CloudDBModel.Store.sp_upgraddiagrams" />
+          <FunctionImportMapping FunctionImportName="Usp_BulkUpdateLocallyPushedReservations" FunctionName="CloudDBModel.Store.Usp_BulkUpdateLocallyPushedReservations" />
+          <FunctionImportMapping FunctionImportName="usp_DeleteTransactionsByReservationID" FunctionName="CloudDBModel.Store.usp_DeleteTransactionsByReservationID" />
+          <FunctionImportMapping FunctionImportName="usp_FetchReservationforLocalPush" FunctionName="CloudDBModel.Store.usp_FetchReservationforLocalPush">
+            <ResultMapping>
+              <ComplexTypeMapping TypeName="CloudDBModel.usp_FetchReservationforLocalPush_Result">
+                <ScalarProperty Name="ReservationNameID" ColumnName="ReservationNameID" />
+                <ScalarProperty Name="ReservationNumber" ColumnName="ReservationNumber" />
+                <ScalarProperty Name="ArrivalDate" ColumnName="ArrivalDate" />
+                <ScalarProperty Name="DepartureDate" ColumnName="DepartureDate" />
+                <ScalarProperty Name="Adultcount" ColumnName="Adultcount" />
+                <ScalarProperty Name="Childcount" ColumnName="Childcount" />
+                <ScalarProperty Name="MembershipNo" ColumnName="MembershipNo" />
+                <ScalarProperty Name="MembershipType" ColumnName="MembershipType" />
+                <ScalarProperty Name="IsDepositAvailable" ColumnName="IsDepositAvailable" />
+                <ScalarProperty Name="IsCardDetailPresent" ColumnName="IsCardDetailPresent" />
+                <ScalarProperty Name="CardDetailID" ColumnName="CardDetailID" />
+                <ScalarProperty Name="IsSaavyPaid" ColumnName="IsSaavyPaid" />
+                <ScalarProperty Name="DataInsertedDate" ColumnName="DataInsertedDate" />
+                <ScalarProperty Name="Dataupdateddate" ColumnName="Dataupdateddate" />
+                <ScalarProperty Name="IsPreCheckedInPMS" ColumnName="IsPreCheckedInPMS" />
+                <ScalarProperty Name="FlightNo" ColumnName="FlightNo" />
+                <ScalarProperty Name="ETA" ColumnName="ETA" />
+                <ScalarProperty Name="ProfileID" ColumnName="ProfileID" />
+                <ScalarProperty Name="FirstName" ColumnName="FirstName" />
+                <ScalarProperty Name="MiddleName" ColumnName="MiddleName" />
+                <ScalarProperty Name="LastName" ColumnName="LastName" />
+                <ScalarProperty Name="Email" ColumnName="Email" />
+                <ScalarProperty Name="Phone" ColumnName="Phone" />
+                <ScalarProperty Name="BirthDate" ColumnName="BirthDate" />
+                <ScalarProperty Name="AddressLine1" ColumnName="AddressLine1" />
+                <ScalarProperty Name="AddressLine2" ColumnName="AddressLine2" />
+                <ScalarProperty Name="City" ColumnName="City" />
+                <ScalarProperty Name="PostalCode" ColumnName="PostalCode" />
+                <ScalarProperty Name="NationalityCode" ColumnName="NationalityCode" />
+                <ScalarProperty Name="SiteCode" ColumnName="SiteCode" />
+                <ScalarProperty Name="CountryCode" ColumnName="CountryCode" />
+                </ComplexTypeMapping>
+            </ResultMapping>
+          </FunctionImportMapping>
+          <FunctionImportMapping FunctionImportName="Usp_InsertFeedbackData" FunctionName="CloudDBModel.Store.Usp_InsertFeedbackData">
+            <ResultMapping>
+              <ComplexTypeMapping TypeName="CloudDBModel.Usp_InsertFeedbackData_Result">
+                <ScalarProperty Name="Result" ColumnName="Result" />
+                <ScalarProperty Name="Message" ColumnName="Message" />
+              </ComplexTypeMapping>
+            </ResultMapping>
+          </FunctionImportMapping>
+          <FunctionImportMapping FunctionImportName="usp_InsertReservationDetails" FunctionName="CloudDBModel.Store.usp_InsertReservationDetails" />
+          <FunctionImportMapping FunctionImportName="Usp_UpdateReservationByGuest" FunctionName="CloudDBModel.Store.Usp_UpdateReservationByGuest" />
+          <FunctionImportMapping FunctionImportName="usp_GetReservationDetails" FunctionName="CloudDBModel.Store.usp_GetReservationDetails">
+            <ResultMapping>
+              <ComplexTypeMapping TypeName="CloudDBModel.usp_GetReservationDetails_Result">
+                <ScalarProperty Name="ReservationDetailID" ColumnName="ReservationDetailID" />
+                <ScalarProperty Name="ReservationNameID" ColumnName="ReservationNameID" />
+                <ScalarProperty Name="ReservationNumber" ColumnName="ReservationNumber" />
+                <ScalarProperty Name="ArrivalDate" ColumnName="ArrivalDate" />
+                <ScalarProperty Name="DepartureDate" ColumnName="DepartureDate" />
+                <ScalarProperty Name="Adultcount" ColumnName="Adultcount" />
+                <ScalarProperty Name="Childcount" ColumnName="Childcount" />
+                <ScalarProperty Name="MembershipNo" ColumnName="MembershipNo" />
+                <ScalarProperty Name="MembershipType" ColumnName="MembershipType" />
+                <ScalarProperty Name="IsDepositAvailable" ColumnName="IsDepositAvailable" />
+                <ScalarProperty Name="IsCardDetailPresent" ColumnName="IsCardDetailPresent" />
+                <ScalarProperty Name="IsSaavyPaid" ColumnName="IsSaavyPaid" />
+                <ScalarProperty Name="IsPreCheckedInPMS" ColumnName="IsPreCheckedInPMS" />
+                <ScalarProperty Name="FlightNo" ColumnName="FlightNo" />
+                <ScalarProperty Name="ETA" ColumnName="ETA" />
+                <ScalarProperty Name="AverageRoomRate" ColumnName="AverageRoomRate" />
+                <ScalarProperty Name="TotalTax" ColumnName="TotalTax" />
+                <ScalarProperty Name="RoomType" ColumnName="RoomType" />
+                <ScalarProperty Name="RoomTypeDescription" ColumnName="RoomTypeDescription" />
+                <ScalarProperty Name="TotalAmount" ColumnName="TotalAmount" />
+                <ScalarProperty Name="FolioDocument" ColumnName="FolioDocument" />
+                <ScalarProperty Name="EcomPaymentStatus" ColumnName="EcomPaymentStatus" />
+                <ScalarProperty Name="PaidAmount" ColumnName="PaidAmount" />
+                <ScalarProperty Name="BalanceAmount" ColumnName="BalanceAmount" />
+                <ScalarProperty Name="ReservationSource" ColumnName="ReservationSource" />
+                <ScalarProperty Name="IsBreakFastAvailable" ColumnName="IsBreakFastAvailable" />
+                <ScalarProperty Name="IsMemberShipEnrolled" ColumnName="IsMemberShipEnrolled" />
+              </ComplexTypeMapping>
+            </ResultMapping>
+          </FunctionImportMapping>
+          <FunctionImportMapping FunctionImportName="Usp_GetQuestionMaster" FunctionName="CloudDBModel.Store.Usp_GetQuestionMaster">
+            <ResultMapping>
+              <ComplexTypeMapping TypeName="CloudDBModel.Usp_GetQuestionMaster_Result">
+                <ScalarProperty Name="QuestionID" ColumnName="QuestionID" />
+                <ScalarProperty Name="Question" ColumnName="Question" />
+                <ScalarProperty Name="QuestionType" ColumnName="QuestionType" />
+                <ScalarProperty Name="QuestionHint" ColumnName="QuestionHint" />
+              </ComplexTypeMapping>
+            </ResultMapping>
+          </FunctionImportMapping>
+          <FunctionImportMapping FunctionImportName="Usp_GetProfileInformationByReservationID" FunctionName="CloudDBModel.Store.Usp_GetProfileInformationByReservationID">
+            <ResultMapping>
+              <ComplexTypeMapping TypeName="CloudDBModel.Usp_GetProfileInformationByReservationID_Result">
+                <ScalarProperty Name="ProfileDetailID" ColumnName="ProfileDetailID" />
+                <ScalarProperty Name="ProfileID" ColumnName="ProfileID" />
+                <ScalarProperty Name="ReservationDetailID" ColumnName="ReservationDetailID" />
+                <ScalarProperty Name="FirstName" ColumnName="FirstName" />
+                <ScalarProperty Name="MiddleName" ColumnName="MiddleName" />
+                <ScalarProperty Name="LastName" ColumnName="LastName" />
+                <ScalarProperty Name="Email" ColumnName="Email" />
+                <ScalarProperty Name="Phone" ColumnName="Phone" />
+                <ScalarProperty Name="BirthDate" ColumnName="BirthDate" />
+                <ScalarProperty Name="Nationality" ColumnName="Nationality" />
+                <ScalarProperty Name="AddressLine1" ColumnName="AddressLine1" />
+                <ScalarProperty Name="AddressLine2" ColumnName="AddressLine2" />
+                <ScalarProperty Name="City" ColumnName="City" />
+                <ScalarProperty Name="StateMasterID" ColumnName="StateMasterID" />
+                <ScalarProperty Name="PostalCode" ColumnName="PostalCode" />
+                <ScalarProperty Name="CountryMasterID" ColumnName="CountryMasterID" />
+                <ScalarProperty Name="CreatedDateTime" ColumnName="CreatedDateTime" />
+                <ScalarProperty Name="LastModifiedDateTime" ColumnName="LastModifiedDateTime" />
+              </ComplexTypeMapping>
+            </ResultMapping>
+          </FunctionImportMapping>
+          <FunctionImportMapping FunctionImportName="Usp_GetPackageMaster" FunctionName="CloudDBModel.Store.Usp_GetPackageMaster">
+            <ResultMapping>
+              <ComplexTypeMapping TypeName="CloudDBModel.Usp_GetPackageMaster_Result">
+                <ScalarProperty Name="PackageCode" ColumnName="PackageCode" />
+                <ScalarProperty Name="PackageName" ColumnName="PackageName" />
+                <ScalarProperty Name="PackageAmount" ColumnName="PackageAmount" />
+                <ScalarProperty Name="PackageDesc" ColumnName="PackageDesc" />
+                <ScalarProperty Name="PackageImage" ColumnName="PackageImage" />
+                <ScalarProperty Name="isActive" ColumnName="isActive" />
+                <ScalarProperty Name="PackageID" ColumnName="PackageID" />
+              </ComplexTypeMapping>
+            </ResultMapping>
+          </FunctionImportMapping>
+          <FunctionImportMapping FunctionImportName="Usp_GetProfileDocumentsByReservationID" FunctionName="CloudDBModel.Store.Usp_GetProfileDocumentsByReservationID">
+            <ResultMapping>
+              <ComplexTypeMapping TypeName="CloudDBModel.Usp_GetProfileDocumentsByReservationID_Result">
+                <ScalarProperty Name="ProfileDocID" ColumnName="ProfileDocID" />
+                <ScalarProperty Name="ProfileID" ColumnName="ProfileID" />
+                <ScalarProperty Name="ProfileDetailID" ColumnName="ProfileDetailID" />
+                <ScalarProperty Name="DocumentMasterID" ColumnName="DocumentMasterID" />
+                <ScalarProperty Name="DocumentNumber" ColumnName="DocumentNumber" />
+                <ScalarProperty Name="ExpiryDate" ColumnName="ExpiryDate" />
+                <ScalarProperty Name="IssueDate" ColumnName="IssueDate" />
+                <ScalarProperty Name="DocumentImage1" ColumnName="DocumentImage1" />
+                <ScalarProperty Name="DocumentImage2" ColumnName="DocumentImage2" />
+                <ScalarProperty Name="DocumentImage3" ColumnName="DocumentImage3" />
+                <ScalarProperty Name="FaceImage" ColumnName="FaceImage" />
+              </ComplexTypeMapping>
+            </ResultMapping>
+          </FunctionImportMapping>
+          <FunctionImportMapping FunctionImportName="Usp_InsertPackageMaster" FunctionName="CloudDBModel.Store.Usp_InsertPackageMaster">
+            <ResultMapping>
+              <ComplexTypeMapping TypeName="CloudDBModel.Usp_InsertPackageMaster_Result">
+                <ScalarProperty Name="Result" ColumnName="Result" />
+                <ScalarProperty Name="Message" ColumnName="Message" />
+              </ComplexTypeMapping>
+            </ResultMapping>
+          </FunctionImportMapping>
+          <FunctionImportMapping FunctionImportName="Usp_InsertReservationPackageDetails" FunctionName="CloudDBModel.Store.Usp_InsertReservationPackageDetails">
+            <ResultMapping>
+              <ComplexTypeMapping TypeName="CloudDBModel.Usp_InsertReservationPackageDetails_Result">
+                <ScalarProperty Name="Result" ColumnName="Result" />
+                <ScalarProperty Name="Message" ColumnName="Message" />
+              </ComplexTypeMapping>
+            </ResultMapping>
+          </FunctionImportMapping>
+          <FunctionImportMapping FunctionImportName="usp_FetchProfileDocumentsforLocalPush" FunctionName="CloudDBModel.Store.usp_FetchProfileDocumentsforLocalPush">
+            <ResultMapping>
+              <ComplexTypeMapping TypeName="CloudDBModel.usp_FetchProfileDocumentsforLocalPush_Result">
+                <ScalarProperty Name="ReservationNameID" ColumnName="ReservationNameID" />
+                <ScalarProperty Name="ProfileID" ColumnName="ProfileID" />
+                <ScalarProperty Name="DocumentMasterID" ColumnName="DocumentMasterID" />
+                <ScalarProperty Name="DocumentNumber" ColumnName="DocumentNumber" />
+                <ScalarProperty Name="ExpiryDate" ColumnName="ExpiryDate" />
+                <ScalarProperty Name="IssueDate" ColumnName="IssueDate" />
+                <ScalarProperty Name="DocumentImage1" ColumnName="DocumentImage1" />
+                <ScalarProperty Name="DocumentImage2" ColumnName="DocumentImage2" />
+                <ScalarProperty Name="DocumentImage3" ColumnName="DocumentImage3" />
+                <ScalarProperty Name="FaceImage" ColumnName="FaceImage" />
+              </ComplexTypeMapping>
+            </ResultMapping>
+          </FunctionImportMapping>
+          <FunctionImportMapping FunctionImportName="usp_FetchReservationFeedBackforLocalPush" FunctionName="CloudDBModel.Store.usp_FetchReservationFeedBackforLocalPush">
+            <ResultMapping>
+              <ComplexTypeMapping TypeName="CloudDBModel.usp_FetchReservationFeedBackforLocalPush_Result">
+                <ScalarProperty Name="ReservationNameID" ColumnName="ReservationNameID" />
+                <ScalarProperty Name="QuestionID" ColumnName="QuestionID" />
+                <ScalarProperty Name="Answer" ColumnName="Answer" />
+              </ComplexTypeMapping>
+            </ResultMapping>
+          </FunctionImportMapping>
+          <FunctionImportMapping FunctionImportName="usp_FetchReservationPackageforLocalPush" FunctionName="CloudDBModel.Store.usp_FetchReservationPackageforLocalPush">
+            <ResultMapping>
+              <ComplexTypeMapping TypeName="CloudDBModel.usp_FetchReservationPackageforLocalPush_Result">
+                <ScalarProperty Name="ReservationNameID" ColumnName="ReservationNameID" />
+                <ScalarProperty Name="PackageID" ColumnName="PackageID" />
+              </ComplexTypeMapping>
+            </ResultMapping>
+          </FunctionImportMapping>
+          <FunctionImportMapping FunctionImportName="Usp_InsertEventsTracking" FunctionName="CloudDBModel.Store.Usp_InsertEventsTracking">
+            <ResultMapping>
+              <ComplexTypeMapping TypeName="CloudDBModel.Usp_InsertEventsTracking_Result">
+                <ScalarProperty Name="Result" ColumnName="Result" />
+                <ScalarProperty Name="Message" ColumnName="Message" />
+              </ComplexTypeMapping>
+            </ResultMapping>
+          </FunctionImportMapping>
+          <FunctionImportMapping FunctionImportName="Usp_BulkUpdateCheckOutReservations" FunctionName="CloudDBModel.Store.Usp_BulkUpdateCheckOutReservations" />
+          <FunctionImportMapping FunctionImportName="usp_InsertReservationDetailsCheckOut" FunctionName="CloudDBModel.Store.usp_InsertReservationDetailsCheckOut" />
+          <FunctionImportMapping FunctionImportName="Usp_UpdatePreCheckOutFlag" FunctionName="CloudDBModel.Store.Usp_UpdatePreCheckOutFlag" />
+          <EntitySetMapping Name="tbCountryMasters">
+            <EntityTypeMapping TypeName="CloudDBModel.tbCountryMaster">
+              <MappingFragment StoreEntitySet="tbCountryMaster">
+                <ScalarProperty Name="Country_2Char_code" ColumnName="Country_2Char_code" />
+                <ScalarProperty Name="Country_3Char_code" ColumnName="Country_3Char_code" />
+                <ScalarProperty Name="Country_Full_name" ColumnName="Country_Full_name" />
+                <ScalarProperty Name="CountryMasterID" ColumnName="CountryMasterID" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="tbDocumentMasters">
+            <EntityTypeMapping TypeName="CloudDBModel.tbDocumentMaster">
+              <MappingFragment StoreEntitySet="tbDocumentMaster">
+                <ScalarProperty Name="DocumentType" ColumnName="DocumentType" />
+                <ScalarProperty Name="DocumentCode" ColumnName="DocumentCode" />
+                <ScalarProperty Name="DocumentMasterID" ColumnName="DocumentMasterID" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="tbEventModuleMasters">
+            <EntityTypeMapping TypeName="CloudDBModel.tbEventModuleMaster">
+              <MappingFragment StoreEntitySet="tbEventModuleMaster">
+                <ScalarProperty Name="EventModuleName" ColumnName="EventModuleName" />
+                <ScalarProperty Name="EventModuleID" ColumnName="EventModuleID" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="tbEventSubModuleMasters">
+            <EntityTypeMapping TypeName="CloudDBModel.tbEventSubModuleMaster">
+              <MappingFragment StoreEntitySet="tbEventSubModuleMaster">
+                <ScalarProperty Name="ActionType" ColumnName="ActionType" />
+                <ScalarProperty Name="EventModuleName" ColumnName="EventModuleName" />
+                <ScalarProperty Name="EventModuleID" ColumnName="EventModuleID" />
+                <ScalarProperty Name="EventSubModuleID" ColumnName="EventSubModuleID" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="tbEventTrackingDetails">
+            <EntityTypeMapping TypeName="CloudDBModel.tbEventTrackingDetail">
+              <MappingFragment StoreEntitySet="tbEventTrackingDetails">
+                <ScalarProperty Name="StatusType" ColumnName="StatusType" />
+                <ScalarProperty Name="EventSubModuleID" ColumnName="EventSubModuleID" />
+                <ScalarProperty Name="ReservationID" ColumnName="ReservationID" />
+                <ScalarProperty Name="EventTrackingID" ColumnName="EventTrackingID" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="tbFeedBackResults">
+            <EntityTypeMapping TypeName="CloudDBModel.tbFeedBackResult">
+              <MappingFragment StoreEntitySet="tbFeedBackResult">
+                <ScalarProperty Name="Answer" ColumnName="Answer" />
+                <ScalarProperty Name="QuestionID" ColumnName="QuestionID" />
+                <ScalarProperty Name="ReservationID" ColumnName="ReservationID" />
+                <ScalarProperty Name="FeedBackID" ColumnName="FeedBackID" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="tbKeyStorageManagements">
+            <EntityTypeMapping TypeName="CloudDBModel.tbKeyStorageManagement">
+              <MappingFragment StoreEntitySet="tbKeyStorageManagement">
+                <ScalarProperty Name="IsActive" ColumnName="IsActive" />
+                <ScalarProperty Name="CreatedDateTime" ColumnName="CreatedDateTime" />
+                <ScalarProperty Name="KeyPass" ColumnName="KeyPass" />
+                <ScalarProperty Name="ID" ColumnName="ID" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="tbPackageMasters">
+            <EntityTypeMapping TypeName="CloudDBModel.tbPackageMaster">
+              <MappingFragment StoreEntitySet="tbPackageMaster">
+                <ScalarProperty Name="Units" ColumnName="Units" />
+                <ScalarProperty Name="IsRoomUpsell" ColumnName="IsRoomUpsell" />
+                <ScalarProperty Name="isActive" ColumnName="isActive" />
+                <ScalarProperty Name="PackageImage" ColumnName="PackageImage" />
+                <ScalarProperty Name="PackageDesc" ColumnName="PackageDesc" />
+                <ScalarProperty Name="PackageAmount" ColumnName="PackageAmount" />
+                <ScalarProperty Name="PackageName" ColumnName="PackageName" />
+                <ScalarProperty Name="PackageCode" ColumnName="PackageCode" />
+                <ScalarProperty Name="PackageID" ColumnName="PackageID" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="tbProfileDetails">
+            <EntityTypeMapping TypeName="CloudDBModel.tbProfileDetail">
+              <MappingFragment StoreEntitySet="tbProfileDetails">
+                <ScalarProperty Name="Gender" ColumnName="Gender" />
+                <ScalarProperty Name="LastModifiedDateTime" ColumnName="LastModifiedDateTime" />
+                <ScalarProperty Name="CreatedDateTime" ColumnName="CreatedDateTime" />
+                <ScalarProperty Name="CountryMasterID" ColumnName="CountryMasterID" />
+                <ScalarProperty Name="PostalCode" ColumnName="PostalCode" />
+                <ScalarProperty Name="StateMasterID" ColumnName="StateMasterID" />
+                <ScalarProperty Name="City" ColumnName="City" />
+                <ScalarProperty Name="AddressLine2" ColumnName="AddressLine2" />
+                <ScalarProperty Name="AddressLine1" ColumnName="AddressLine1" />
+                <ScalarProperty Name="Nationality" ColumnName="Nationality" />
+                <ScalarProperty Name="BirthDate" ColumnName="BirthDate" />
+                <ScalarProperty Name="Phone" ColumnName="Phone" />
+                <ScalarProperty Name="Email" ColumnName="Email" />
+                <ScalarProperty Name="LastName" ColumnName="LastName" />
+                <ScalarProperty Name="MiddleName" ColumnName="MiddleName" />
+                <ScalarProperty Name="FirstName" ColumnName="FirstName" />
+                <ScalarProperty Name="ReservationDetailID" ColumnName="ReservationDetailID" />
+                <ScalarProperty Name="ProfileID" ColumnName="ProfileID" />
+                <ScalarProperty Name="ProfileDetailID" ColumnName="ProfileDetailID" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="tbProfileDocuments">
+            <EntityTypeMapping TypeName="CloudDBModel.tbProfileDocument">
+              <MappingFragment StoreEntitySet="tbProfileDocuments">
+                <ScalarProperty Name="IssueCountry" ColumnName="IssueCountry" />
+                <ScalarProperty Name="lastModifiedDateTime" ColumnName="lastModifiedDateTime" />
+                <ScalarProperty Name="CreatedDateTime" ColumnName="CreatedDateTime" />
+                <ScalarProperty Name="FaceImage" ColumnName="FaceImage" />
+                <ScalarProperty Name="DocumentImage3" ColumnName="DocumentImage3" />
+                <ScalarProperty Name="DocumentImage2" ColumnName="DocumentImage2" />
+                <ScalarProperty Name="DocumentImage1" ColumnName="DocumentImage1" />
+                <ScalarProperty Name="IssueDate" ColumnName="IssueDate" />
+                <ScalarProperty Name="ExpiryDate" ColumnName="ExpiryDate" />
+                <ScalarProperty Name="DocumentNumber" ColumnName="DocumentNumber" />
+                <ScalarProperty Name="DocumentMasterID" ColumnName="DocumentMasterID" />
+                <ScalarProperty Name="ProfileDetailID" ColumnName="ProfileDetailID" />
+                <ScalarProperty Name="ProfileDocID" ColumnName="ProfileDocID" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="tbQuestionMasters">
+            <EntityTypeMapping TypeName="CloudDBModel.tbQuestionMaster">
+              <MappingFragment StoreEntitySet="tbQuestionMaster">
+                <ScalarProperty Name="QuestionHint" ColumnName="QuestionHint" />
+                <ScalarProperty Name="QuestionType" ColumnName="QuestionType" />
+                <ScalarProperty Name="Question" ColumnName="Question" />
+                <ScalarProperty Name="QuestionID" ColumnName="QuestionID" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="tbRequestDetails">
+            <EntityTypeMapping TypeName="CloudDBModel.tbRequestDetail">
+              <MappingFragment StoreEntitySet="tbRequestDetails">
+                <ScalarProperty Name="UserID" ColumnName="UserID" />
+                <ScalarProperty Name="ReqUserComment" ColumnName="ReqUserComment" />
+                <ScalarProperty Name="ReqUpdatedDateTime" ColumnName="ReqUpdatedDateTime" />
+                <ScalarProperty Name="ReqCreatedDateTime" ColumnName="ReqCreatedDateTime" />
+                <ScalarProperty Name="ReqStatus" ColumnName="ReqStatus" />
+                <ScalarProperty Name="ReservationDetailID" ColumnName="ReservationDetailID" />
+                <ScalarProperty Name="ReqTypeMasterID" ColumnName="ReqTypeMasterID" />
+                <ScalarProperty Name="ReqDetailID" ColumnName="ReqDetailID" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="tbRequestMasters">
+            <EntityTypeMapping TypeName="CloudDBModel.tbRequestMaster">
+              <MappingFragment StoreEntitySet="tbRequestMaster">
+                <ScalarProperty Name="ReqType" ColumnName="ReqType" />
+                <ScalarProperty Name="ReqTypeMasterID" ColumnName="ReqTypeMasterID" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="tbReservationDetails">
+            <EntityTypeMapping TypeName="CloudDBModel.tbReservationDetail">
+              <MappingFragment StoreEntitySet="tbReservationDetails">
+                <ScalarProperty Name="IsCheckOutFlag" ColumnName="IsCheckOutFlag" />
+                <ScalarProperty Name="EcomPaymentStatus" ColumnName="EcomPaymentStatus" />
+                <ScalarProperty Name="IsPreCheckedOutPMS" ColumnName="IsPreCheckedOutPMS" />
+                <ScalarProperty Name="RoomTypeDescription" ColumnName="RoomTypeDescription" />
+                <ScalarProperty Name="RoomType" ColumnName="RoomType" />
+                <ScalarProperty Name="IsMemberShipEnrolled" ColumnName="IsMemberShipEnrolled" />
+                <ScalarProperty Name="StatusDescription" ColumnName="StatusDescription" />
+                <ScalarProperty Name="SignatureImage" ColumnName="SignatureImage" />
+                <ScalarProperty Name="ReservationSource" ColumnName="ReservationSource" />
+                <ScalarProperty Name="ETA" ColumnName="ETA" />
+                <ScalarProperty Name="FlightNo" ColumnName="FlightNo" />
+                <ScalarProperty Name="IsPreCheckedInPMS" ColumnName="IsPreCheckedInPMS" />
+                <ScalarProperty Name="LocallySyncedDateTime" ColumnName="LocallySyncedDateTime" />
+                <ScalarProperty Name="IsLocallySynced" ColumnName="IsLocallySynced" />
+                <ScalarProperty Name="Dataupdateddate" ColumnName="Dataupdateddate" />
+                <ScalarProperty Name="DataInsertedDate" ColumnName="DataInsertedDate" />
+                <ScalarProperty Name="IsSaavyPaid" ColumnName="IsSaavyPaid" />
+                <ScalarProperty Name="IsCardDetailPresent" ColumnName="IsCardDetailPresent" />
+                <ScalarProperty Name="IsDepositAvailable" ColumnName="IsDepositAvailable" />
+                <ScalarProperty Name="MembershipType" ColumnName="MembershipType" />
+                <ScalarProperty Name="MembershipNo" ColumnName="MembershipNo" />
+                <ScalarProperty Name="Childcount" ColumnName="Childcount" />
+                <ScalarProperty Name="Adultcount" ColumnName="Adultcount" />
+                <ScalarProperty Name="DepartureDate" ColumnName="DepartureDate" />
+                <ScalarProperty Name="ArrivalDate" ColumnName="ArrivalDate" />
+                <ScalarProperty Name="ReservationNumber" ColumnName="ReservationNumber" />
+                <ScalarProperty Name="ReservationNameID" ColumnName="ReservationNameID" />
+                <ScalarProperty Name="ReservationDetailID" ColumnName="ReservationDetailID" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="tbReservationDocuments">
+            <EntityTypeMapping TypeName="CloudDBModel.tbReservationDocument">
+              <MappingFragment StoreEntitySet="tbReservationDocuments">
+                <ScalarProperty Name="Document" ColumnName="Document" />
+                <ScalarProperty Name="ReseDocTypeMasterID" ColumnName="ReseDocTypeMasterID" />
+                <ScalarProperty Name="ReservationDetailID" ColumnName="ReservationDetailID" />
+                <ScalarProperty Name="ReservationdocumentID" ColumnName="ReservationdocumentID" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="tbReservationDocumentTypeMasters">
+            <EntityTypeMapping TypeName="CloudDBModel.tbReservationDocumentTypeMaster">
+              <MappingFragment StoreEntitySet="tbReservationDocumentTypeMaster">
+                <ScalarProperty Name="DocumentType" ColumnName="DocumentType" />
+                <ScalarProperty Name="DocumentTypeCode" ColumnName="DocumentTypeCode" />
+                <ScalarProperty Name="ReseDocTypeMasterID" ColumnName="ReseDocTypeMasterID" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="tbReservationPackageDetails">
+            <EntityTypeMapping TypeName="CloudDBModel.tbReservationPackageDetail">
+              <MappingFragment StoreEntitySet="tbReservationPackageDetails">
+                <ScalarProperty Name="PackageID" ColumnName="PackageID" />
+                <ScalarProperty Name="ReservationDetailID" ColumnName="ReservationDetailID" />
+                <ScalarProperty Name="ResPackageID" ColumnName="ResPackageID" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="tbReservationRateDetails">
+            <EntityTypeMapping TypeName="CloudDBModel.tbReservationRateDetail">
+              <MappingFragment StoreEntitySet="tbReservationRateDetails">
+                <ScalarProperty Name="BalanceAmount" ColumnName="BalanceAmount" />
+                <ScalarProperty Name="PaidAmount" ColumnName="PaidAmount" />
+                <ScalarProperty Name="TotalAmount" ColumnName="TotalAmount" />
+                <ScalarProperty Name="TotalTax" ColumnName="TotalTax" />
+                <ScalarProperty Name="AverageRoomRate" ColumnName="AverageRoomRate" />
+                <ScalarProperty Name="ReservationDetailID" ColumnName="ReservationDetailID" />
+                <ScalarProperty Name="ReservationRateDetailID" ColumnName="ReservationRateDetailID" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="tbStateMasters">
+            <EntityTypeMapping TypeName="CloudDBModel.tbStateMaster">
+              <MappingFragment StoreEntitySet="tbStateMaster">
+                <ScalarProperty Name="CountryMasterID" ColumnName="CountryMasterID" />
+                <ScalarProperty Name="StateName" ColumnName="StateName" />
+                <ScalarProperty Name="StateCode" ColumnName="StateCode" />
+                <ScalarProperty Name="StateMasterID" ColumnName="StateMasterID" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="tbPaymentAdditionalInfoes">
+            <EntityTypeMapping TypeName="CloudDBModel.tbPaymentAdditionalInfo">
+              <MappingFragment StoreEntitySet="tbPaymentAdditionalInfo">
+                <ScalarProperty Name="KeyValue" ColumnName="KeyValue" />
+                <ScalarProperty Name="KeyHeader" ColumnName="KeyHeader" />
+                <ScalarProperty Name="PaymentID" ColumnName="PaymentID" />
+                <ScalarProperty Name="PaymentAddInforID" ColumnName="PaymentAddInforID" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="tbPaymentHistories">
+            <EntityTypeMapping TypeName="CloudDBModel.tbPaymentHistory">
+              <MappingFragment StoreEntitySet="tbPaymentHistory">
+                <ScalarProperty Name="TransactionType" ColumnName="TransactionType" />
+                <ScalarProperty Name="ReservationNameID" ColumnName="ReservationNameID" />
+                <ScalarProperty Name="TransactionID" ColumnName="TransactionID" />
+                <ScalarProperty Name="RefusalReason" ColumnName="RefusalReason" />
+                <ScalarProperty Name="ResultCode" ColumnName="ResultCode" />
+                <ScalarProperty Name="PSPReference" ColumnName="PSPReference" />
+                <ScalarProperty Name="UpdateDatetime" ColumnName="UpdateDatetime" />
+                <ScalarProperty Name="CreatedDatetime" ColumnName="CreatedDatetime" />
+                <ScalarProperty Name="PaRes" ColumnName="PaRes" />
+                <ScalarProperty Name="MDData" ColumnName="MDData" />
+                <ScalarProperty Name="PData" ColumnName="PData" />
+                <ScalarProperty Name="ReservationNumber" ColumnName="ReservationNumber" />
+                <ScalarProperty Name="PaymentHistoryID" ColumnName="PaymentHistoryID" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="tbRoomTypeMappings">
+            <EntityTypeMapping TypeName="CloudDBModel.tbRoomTypeMapping">
+              <MappingFragment StoreEntitySet="tbRoomTypeMapping">
+                <ScalarProperty Name="PackageTypeID" ColumnName="PackageTypeID" />
+                <ScalarProperty Name="RoomTypeID" ColumnName="RoomTypeID" />
+                <ScalarProperty Name="RoomTypeMappingID" ColumnName="RoomTypeMappingID" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="tbRoomTypeMasters">
+            <EntityTypeMapping TypeName="CloudDBModel.tbRoomTypeMaster">
+              <MappingFragment StoreEntitySet="tbRoomTypeMaster">
+                <ScalarProperty Name="RoomTypeDescription" ColumnName="RoomTypeDescription" />
+                <ScalarProperty Name="RoomTypeCode" ColumnName="RoomTypeCode" />
+                <ScalarProperty Name="RoomTypeID" ColumnName="RoomTypeID" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <FunctionImportMapping FunctionImportName="Usp_ClearCloudData" FunctionName="CloudDBModel.Store.Usp_ClearCloudData">
+            <ResultMapping>
+              <ComplexTypeMapping TypeName="CloudDBModel.Usp_ClearCloudData_Result">
+                <ScalarProperty Name="Result" ColumnName="Result" />
+                <ScalarProperty Name="ResultMessage" ColumnName="ResultMessage" />
+              </ComplexTypeMapping>
+            </ResultMapping>
+          </FunctionImportMapping>
+          <FunctionImportMapping FunctionImportName="usp_FetchReservationDocumentsforLocalPushCheckOut" FunctionName="CloudDBModel.Store.usp_FetchReservationDocumentsforLocalPushCheckOut">
+            <ResultMapping>
+              <ComplexTypeMapping TypeName="CloudDBModel.usp_FetchReservationDocumentsforLocalPushCheckOut_Result">
+                <ScalarProperty Name="ReservationNameID" ColumnName="ReservationNameID" />
+                <ScalarProperty Name="Document" ColumnName="Document" />
+                <ScalarProperty Name="DocumentType" ColumnName="DocumentType" />
+              </ComplexTypeMapping>
+            </ResultMapping>
+          </FunctionImportMapping>
+          <FunctionImportMapping FunctionImportName="usp_FetchReservationforLocalPushCheckOut" FunctionName="CloudDBModel.Store.usp_FetchReservationforLocalPushCheckOut">
+            <ResultMapping>
+              <ComplexTypeMapping TypeName="CloudDBModel.usp_FetchReservationforLocalPushCheckOut_Result">
+                <ScalarProperty Name="ReservationNameID" ColumnName="ReservationNameID" />
+                <ScalarProperty Name="ReservationNumber" ColumnName="ReservationNumber" />
+                <ScalarProperty Name="ArrivalDate" ColumnName="ArrivalDate" />
+                <ScalarProperty Name="DepartureDate" ColumnName="DepartureDate" />
+                <ScalarProperty Name="Adultcount" ColumnName="Adultcount" />
+                <ScalarProperty Name="Childcount" ColumnName="Childcount" />
+                <ScalarProperty Name="MembershipNo" ColumnName="MembershipNo" />
+                <ScalarProperty Name="MembershipType" ColumnName="MembershipType" />
+                <ScalarProperty Name="IsDepositAvailable" ColumnName="IsDepositAvailable" />
+                <ScalarProperty Name="IsCardDetailPresent" ColumnName="IsCardDetailPresent" />
+                <ScalarProperty Name="IsSaavyPaid" ColumnName="IsSaavyPaid" />
+                <ScalarProperty Name="IsPreCheckedInPMS" ColumnName="IsPreCheckedInPMS" />
+                <ScalarProperty Name="FlightNo" ColumnName="FlightNo" />
+                <ScalarProperty Name="ETA" ColumnName="ETA" />
+                <ScalarProperty Name="IsMemberShipEnrolled" ColumnName="IsMemberShipEnrolled" />
+              </ComplexTypeMapping>
+            </ResultMapping>
+          </FunctionImportMapping>
+          <FunctionImportMapping FunctionImportName="USp_GetPackageMasterDetailedList" FunctionName="CloudDBModel.Store.USp_GetPackageMasterDetailedList">
+            <ResultMapping>
+              <ComplexTypeMapping TypeName="CloudDBModel.USp_GetPackageMasterDetailedList_Result">
+                <ScalarProperty Name="UniquePackageFlag" ColumnName="UniquePackageFlag" />
+                <ScalarProperty Name="PackageID" ColumnName="PackageID" />
+                <ScalarProperty Name="PackageCode" ColumnName="PackageCode" />
+                <ScalarProperty Name="PackageName" ColumnName="PackageName" />
+                <ScalarProperty Name="PackageAmount" ColumnName="PackageAmount" />
+                <ScalarProperty Name="PackageDesc" ColumnName="PackageDesc" />
+                <ScalarProperty Name="PackageImage" ColumnName="PackageImage" />
+                <ScalarProperty Name="isActive" ColumnName="isActive" />
+                <ScalarProperty Name="IsRoomUpsell" ColumnName="IsRoomUpsell" />
+                <ScalarProperty Name="RoomTypeID" ColumnName="RoomTypeID" />
+                <ScalarProperty Name="RoomTypeCode" ColumnName="RoomTypeCode" />
+                <ScalarProperty Name="RoomTypeDescription" ColumnName="RoomTypeDescription" />
+              </ComplexTypeMapping>
+            </ResultMapping>
+          </FunctionImportMapping>
+          <FunctionImportMapping FunctionImportName="Usp_GetRoomTypeMaster" FunctionName="CloudDBModel.Store.Usp_GetRoomTypeMaster">
+            <ResultMapping>
+              <ComplexTypeMapping TypeName="CloudDBModel.Usp_GetRoomTypeMaster_Result">
+                <ScalarProperty Name="RoomTypeID" ColumnName="RoomTypeID" />
+                <ScalarProperty Name="RoomTypeCode" ColumnName="RoomTypeCode" />
+                <ScalarProperty Name="RoomTypeDescription" ColumnName="RoomTypeDescription" />
+              </ComplexTypeMapping>
+            </ResultMapping>
+          </FunctionImportMapping>
+          <FunctionImportMapping FunctionImportName="Usp_InsertPaymentDetails" FunctionName="CloudDBModel.Store.Usp_InsertPaymentDetails" />
+          <FunctionImportMapping FunctionImportName="Usp_InsertRoomTypeMaster" FunctionName="CloudDBModel.Store.Usp_InsertRoomTypeMaster">
+            <ResultMapping>
+              <ComplexTypeMapping TypeName="CloudDBModel.Usp_InsertRoomTypeMaster_Result">
+                <ScalarProperty Name="Result" ColumnName="Result" />
+                <ScalarProperty Name="Message" ColumnName="Message" />
+              </ComplexTypeMapping>
+            </ResultMapping>
+          </FunctionImportMapping>
+          <FunctionImportMapping FunctionImportName="Usp_GetPaymentHistory" FunctionName="CloudDBModel.Store.Usp_GetPaymentHistory">
+            <ResultMapping>
+              <ComplexTypeMapping TypeName="CloudDBModel.Usp_GetPaymentHistory_Result">
+                <ScalarProperty Name="RecordDescOrder" ColumnName="RecordDescOrder" />
+                <ScalarProperty Name="PaymentHistoryID" ColumnName="PaymentHistoryID" />
+                <ScalarProperty Name="ReservationNumber" ColumnName="ReservationNumber" />
+                <ScalarProperty Name="PData" ColumnName="PData" />
+                <ScalarProperty Name="MDData" ColumnName="MDData" />
+                <ScalarProperty Name="PaRes" ColumnName="PaRes" />
+                <ScalarProperty Name="CreatedDatetime" ColumnName="CreatedDatetime" />
+                <ScalarProperty Name="UpdateDatetime" ColumnName="UpdateDatetime" />
+                <ScalarProperty Name="PSPReference" ColumnName="PSPReference" />
+                <ScalarProperty Name="ResultCode" ColumnName="ResultCode" />
+                <ScalarProperty Name="RefusalReason" ColumnName="RefusalReason" />
+              </ComplexTypeMapping>
+            </ResultMapping>
+          </FunctionImportMapping>
+          <FunctionImportMapping FunctionImportName="usp_InsertPaymentHistory" FunctionName="CloudDBModel.Store.usp_InsertPaymentHistory">
+            <ResultMapping>
+              <ComplexTypeMapping TypeName="CloudDBModel.usp_InsertPaymentHistory_Result">
+                <ScalarProperty Name="Result" ColumnName="Result" />
+                <ScalarProperty Name="Message" ColumnName="Message" />
+              </ComplexTypeMapping>
+            </ResultMapping>
+          </FunctionImportMapping>
+          <FunctionImportMapping FunctionImportName="usp_FetchPaymentAdditionalInfoforLocalPush" FunctionName="CloudDBModel.Store.usp_FetchPaymentAdditionalInfoforLocalPush">
+            <ResultMapping>
+              <ComplexTypeMapping TypeName="CloudDBModel.usp_FetchPaymentAdditionalInfoforLocalPush_Result">
+                <ScalarProperty Name="PaymentID" ColumnName="PaymentID" />
+                <ScalarProperty Name="KeyHeader" ColumnName="KeyHeader" />
+                <ScalarProperty Name="KeyValue" ColumnName="KeyValue" />
+              </ComplexTypeMapping>
+            </ResultMapping>
+          </FunctionImportMapping>
+          <FunctionImportMapping FunctionImportName="usp_FetchPaymentforLocalPush" FunctionName="CloudDBModel.Store.usp_FetchPaymentforLocalPush" />
+          <FunctionImportMapping FunctionImportName="usp_FetchPaymentHistoryforLocalPush" FunctionName="CloudDBModel.Store.usp_FetchPaymentHistoryforLocalPush">
+            <ResultMapping>
+              <ComplexTypeMapping TypeName="CloudDBModel.usp_FetchPaymentHistoryforLocalPush_Result">
+                <ScalarProperty Name="PaymentHistoryID" ColumnName="PaymentHistoryID" />
+                <ScalarProperty Name="ReservationNumber" ColumnName="ReservationNumber" />
+                <ScalarProperty Name="PData" ColumnName="PData" />
+                <ScalarProperty Name="MDData" ColumnName="MDData" />
+                <ScalarProperty Name="PaRes" ColumnName="PaRes" />
+                <ScalarProperty Name="PSPReference" ColumnName="PSPReference" />
+                <ScalarProperty Name="ResultCode" ColumnName="ResultCode" />
+                <ScalarProperty Name="RefusalReason" ColumnName="RefusalReason" />
+              </ComplexTypeMapping>
+            </ResultMapping>
+          </FunctionImportMapping>
+          <FunctionImportMapping FunctionImportName="Usp_usp_FetchReservationPaymentAdditionalInfoforLocalPush" FunctionName="CloudDBModel.Store.Usp_usp_FetchReservationPaymentAdditionalInfoforLocalPush">
+            <ResultMapping>
+              <ComplexTypeMapping TypeName="CloudDBModel.Usp_usp_FetchReservationPaymentAdditionalInfoforLocalPush_Result">
+                <ScalarProperty Name="TransactionID" ColumnName="TransactionID" />
+                <ScalarProperty Name="KeyHeader" ColumnName="KeyHeader" />
+                <ScalarProperty Name="KeyValue" ColumnName="KeyValue" />
+              </ComplexTypeMapping>
+            </ResultMapping>
+          </FunctionImportMapping>
+          <FunctionImportMapping FunctionImportName="Usp_usp_FetchReservationPaymentHeaderforLocalPush" FunctionName="CloudDBModel.Store.Usp_usp_FetchReservationPaymentHeaderforLocalPush">
+            <ResultMapping>
+              <ComplexTypeMapping TypeName="CloudDBModel.Usp_usp_FetchReservationPaymentHeaderforLocalPush_Result">
+                <ScalarProperty Name="TransactionID" ColumnName="TransactionID" />
+                <ScalarProperty Name="ReservationNumber" ColumnName="ReservationNumber" />
+                <ScalarProperty Name="ReservationNameID" ColumnName="ReservationNameID" />
+                <ScalarProperty Name="MaskedCardNumber" ColumnName="MaskedCardNumber" />
+                <ScalarProperty Name="ExpiryDate" ColumnName="ExpiryDate" />
+                <ScalarProperty Name="FundingSource" ColumnName="FundingSource" />
+                <ScalarProperty Name="Amount" ColumnName="Amount" />
+                <ScalarProperty Name="Currency" ColumnName="Currency" />
+                <ScalarProperty Name="RecurringIdentifier" ColumnName="RecurringIdentifier" />
+                <ScalarProperty Name="AuthorisationCode" ColumnName="AuthorisationCode" />
+                <ScalarProperty Name="pspReferenceNumber" ColumnName="pspReferenceNumber" />
+                <ScalarProperty Name="ParentPspRefereceNumber" ColumnName="ParentPspRefereceNumber" />
+                <ScalarProperty Name="TransactionType" ColumnName="TransactionType" />
+                <ScalarProperty Name="ResultCode" ColumnName="ResultCode" />
+                <ScalarProperty Name="ResponseMessage" ColumnName="ResponseMessage" />
+              </ComplexTypeMapping>
+            </ResultMapping>
+          </FunctionImportMapping>
+          <FunctionImportMapping FunctionImportName="Usp_usp_FetchReservationPaymentHistoryforLocalPush" FunctionName="CloudDBModel.Store.Usp_usp_FetchReservationPaymentHistoryforLocalPush">
+            <ResultMapping>
+              <ComplexTypeMapping TypeName="CloudDBModel.Usp_usp_FetchReservationPaymentHistoryforLocalPush_Result">
+                <ScalarProperty Name="TransactionID" ColumnName="TransactionID" />
+                <ScalarProperty Name="ReservationNumber" ColumnName="ReservationNumber" />
+                <ScalarProperty Name="PData" ColumnName="PData" />
+                <ScalarProperty Name="MDData" ColumnName="MDData" />
+                <ScalarProperty Name="PaRes" ColumnName="PaRes" />
+                <ScalarProperty Name="PSPReference" ColumnName="PSPReference" />
+                <ScalarProperty Name="ResultCode" ColumnName="ResultCode" />
+                <ScalarProperty Name="RefusalReason" ColumnName="RefusalReason" />
+                <ScalarProperty Name="TransactionType" ColumnName="TransactionType" />
+              </ComplexTypeMapping>
+            </ResultMapping>
+          </FunctionImportMapping>
+          <EntitySetMapping Name="tbPaymentHeaders">
+            <EntityTypeMapping TypeName="CloudDBModel.tbPaymentHeader">
+              <MappingFragment StoreEntitySet="tbPaymentHeader">
+                <ScalarProperty Name="CardType" ColumnName="CardType" />
+                <ScalarProperty Name="StatusType" ColumnName="StatusType" />
+                <ScalarProperty Name="IsActive" ColumnName="IsActive" />
+                <ScalarProperty Name="UpdatedDateTime" ColumnName="UpdatedDateTime" />
+                <ScalarProperty Name="CreatedDateTime" ColumnName="CreatedDateTime" />
+                <ScalarProperty Name="ResponseMessage" ColumnName="ResponseMessage" />
+                <ScalarProperty Name="ResultCode" ColumnName="ResultCode" />
+                <ScalarProperty Name="TransactionType" ColumnName="TransactionType" />
+                <ScalarProperty Name="ParentPspRefereceNumber" ColumnName="ParentPspRefereceNumber" />
+                <ScalarProperty Name="pspReferenceNumber" ColumnName="pspReferenceNumber" />
+                <ScalarProperty Name="AuthorisationCode" ColumnName="AuthorisationCode" />
+                <ScalarProperty Name="RecurringIdentifier" ColumnName="RecurringIdentifier" />
+                <ScalarProperty Name="Currency" ColumnName="Currency" />
+                <ScalarProperty Name="Amount" ColumnName="Amount" />
+                <ScalarProperty Name="FundingSource" ColumnName="FundingSource" />
+                <ScalarProperty Name="ExpiryDate" ColumnName="ExpiryDate" />
+                <ScalarProperty Name="MaskedCardNumber" ColumnName="MaskedCardNumber" />
+                <ScalarProperty Name="ReservationNameID" ColumnName="ReservationNameID" />
+                <ScalarProperty Name="ReservationNumber" ColumnName="ReservationNumber" />
+                <ScalarProperty Name="TransactionID" ColumnName="TransactionID" />
+                <ScalarProperty Name="PaymentID" ColumnName="PaymentID" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="tbOperaPaymentTypeCodeWebs">
+            <EntityTypeMapping TypeName="CloudDBModel.tbOperaPaymentTypeCodeWeb">
+              <MappingFragment StoreEntitySet="tbOperaPaymentTypeCodeWeb">
+                <ScalarProperty Name="VendorPaymentTypeCode" ColumnName="VendorPaymentTypeCode" />
+                <ScalarProperty Name="OperaPaymentTypeCode" ColumnName="OperaPaymentTypeCode" />
+                <ScalarProperty Name="ID" ColumnName="ID" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <FunctionImportMapping FunctionImportName="Usp_GetActivePaymentTransctions" FunctionName="CloudDBModel.Store.Usp_GetActivePaymentTransctions">
+            <ResultMapping>
+              <ComplexTypeMapping TypeName="CloudDBModel.Usp_GetActivePaymentTransctions_Result">
+                <ScalarProperty Name="TransactionID" ColumnName="TransactionID" />
+                <ScalarProperty Name="ReservationNumber" ColumnName="ReservationNumber" />
+                <ScalarProperty Name="ReservationNameID" ColumnName="ReservationNameID" />
+                <ScalarProperty Name="MaskedCardNumber" ColumnName="MaskedCardNumber" />
+                <ScalarProperty Name="ExpiryDate" ColumnName="ExpiryDate" />
+                <ScalarProperty Name="FundingSource" ColumnName="FundingSource" />
+                <ScalarProperty Name="Amount" ColumnName="Amount" />
+                <ScalarProperty Name="Currency" ColumnName="Currency" />
+                <ScalarProperty Name="RecurringIdentifier" ColumnName="RecurringIdentifier" />
+                <ScalarProperty Name="AuthorisationCode" ColumnName="AuthorisationCode" />
+                <ScalarProperty Name="pspReferenceNumber" ColumnName="pspReferenceNumber" />
+                <ScalarProperty Name="ParentPspRefereceNumber" ColumnName="ParentPspRefereceNumber" />
+                <ScalarProperty Name="TransactionType" ColumnName="TransactionType" />
+                <ScalarProperty Name="ResultCode" ColumnName="ResultCode" />
+                <ScalarProperty Name="ResponseMessage" ColumnName="ResponseMessage" />
+                <ScalarProperty Name="IsActive" ColumnName="IsActive" />
+                <ScalarProperty Name="StatusType" ColumnName="StatusType" />
+                <ScalarProperty Name="CardType" ColumnName="CardType" />
+              </ComplexTypeMapping>
+            </ResultMapping>
+          </FunctionImportMapping>
+          <FunctionImportMapping FunctionImportName="Usp_InsertPaymentTransactionsFromLocal" FunctionName="CloudDBModel.Store.Usp_InsertPaymentTransactionsFromLocal" />
+          <FunctionImportMapping FunctionImportName="Usp_UpdateEmailIDByReservationID" FunctionName="CloudDBModel.Store.Usp_UpdateEmailIDByReservationID" />
+          <FunctionImportMapping FunctionImportName="Usp_UpdatePaymentHeader" FunctionName="CloudDBModel.Store.Usp_UpdatePaymentHeader">
+            <ResultMapping>
+              <ComplexTypeMapping TypeName="CloudDBModel.Usp_UpdatePaymentHeader_Result">
+                <ScalarProperty Name="Result" ColumnName="Result" />
+                <ScalarProperty Name="ResultMessage" ColumnName="ResultMessage" />
+              </ComplexTypeMapping>
+            </ResultMapping>
+          </FunctionImportMapping>
+        </EntityContainerMapping>
+      </Mapping>
+    </edmx:Mappings>
+  </edmx:Runtime>
+  <!-- EF Designer content (DO NOT EDIT MANUALLY BELOW HERE) -->
+  <Designer xmlns="http://schemas.microsoft.com/ado/2009/11/edmx">
+    <Connection>
+      <DesignerInfoPropertySet>
+        <DesignerProperty Name="MetadataArtifactProcessing" Value="EmbedInOutputAssembly" />
+      </DesignerInfoPropertySet>
+    </Connection>
+    <Options>
+      <DesignerInfoPropertySet>
+        <DesignerProperty Name="ValidateOnBuild" Value="true" />
+        <DesignerProperty Name="EnablePluralization" Value="true" />
+        <DesignerProperty Name="IncludeForeignKeysInModel" Value="true" />
+        <DesignerProperty Name="UseLegacyProvider" Value="false" />
+        <DesignerProperty Name="CodeGenerationStrategy" Value="None" />
+      </DesignerInfoPropertySet>
+    </Options>
+    <!-- Diagram content (shape and connector positions) -->
+    <Diagrams></Diagrams>
+  </Designer>
+</edmx:Edmx>

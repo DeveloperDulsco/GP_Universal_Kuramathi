@@ -1,0 +1,668 @@
+﻿@model CheckinPortal.Models.CheckoutReservationModel
+@{
+    ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/_LayoutCheckout.cshtml";
+    var ActiveTransctions = new List<CheckinPortal.Models.PaymentHeader>();
+    if (ViewBag.ActiveTransactions != null)
+    {
+        ActiveTransctions = (List<CheckinPortal.Models.PaymentHeader>)ViewBag.ActiveTransactions;
+    }
+}
+
+<script>
+    ReservationNumber = "@Model.ReservationNumber"
+    ReservationNameID = "@Model.ReservationNameID"
+    var Amount = "@Model.BalanecAmount"
+       var language = "@(Request.Cookies.AllKeys.Contains("culture") ? @Request.Cookies["culture"].Value : "en")";
+
+</script>
+
+@*<div class="fxd-tab">
+        <div class="container">
+            <div class="steps-wrap">
+                <div class="row">
+                    <div class="col">
+                        <a class="d-flex justify-content-center active tabs" href="#">
+                            <div class="count">
+                                <span class="number">1</span><span class="value">Tax Invoice</span>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col">
+                        <a class="d-flex justify-content-center @(ViewBag.EcomStatus ? "paymentdone active" : "") tabs" href="#">
+                            <div class="count">
+                                <span class="number">2</span><span class="value">Payment</span>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>*@
+<div class="offset-md-0 col-md-3 offset-lg-0 col-lg-3  offset-xl-1 col-xl-2 left-menu h100">
+    <div class="space"></div>
+    <div class="menu">
+        <div class="logo"> <img class="img-fluid" src="~/assets/images/logo.png"></div>
+        @{ int PageNo = 1;}
+        <ul>
+            <li class="active tabs"><a href="#guestDetails"><label>Tax Invoice</label><span class="count">@PageNo</span></a></li>
+            @{ PageNo++;}
+            <li class="@(ViewBag.EcomStatus ? "paymentdone active" : "") tabs"><a href="#upgrade"><label>Payment</label><span class="count">@PageNo</span></a></li>
+        </ul>
+    </div>
+</div>
+<!-- tab end here -->
+<div class="col-md-9 col-lg-9 col-xl-9 h100 room-bg">
+    <div class="row">
+        <div class="col-md-11 col-lg-11 col-xl-9  pd-0">
+            <div class="content-wrapper cstm-form">
+                <div class="min-height">
+
+                    @Html.HiddenFor(model => model.ReservationID)
+
+                    <div class="tab-content">
+                        @if (ViewBag.EcomStatus == null || !ViewBag.EcomStatus)
+                        {
+                            <div class="tab-pane cstm-form active" id="folio">
+                                @* <iframe src="~/temp/@(Model.ReservationNumber).pdf&embedded=true" style="width:100%; height:550px;" frameborder="0"></iframe>*@
+                                <iframe src="~/temp/@(Model.ReservationNumber).pdf" style="width:100%; height:550px;" frameborder="0"></iframe>
+                                @*<iframe src="https://docs.google.com/viewer?url=@(HttpContext.Current.Request.Url.GetLeftPart(UriPartial.Authority))/temp/@(Model.ReservationNumber).pdf&embedded=true" style="width:100%; height:550px;" frameborder="0"></iframe>*@
+
+                                <div class="form-check text-center">
+                                    <input class="form-check-input" id="myCheck" value="sign" type="checkbox">
+                                    <label class="form-check-label" for="gridCheck">
+                                        I agree to the charges stated on the Tax Invoice.
+                                    </label>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-4 offset-md-4">
+                                        <div class="sign" id="signbox" style="display:none">
+                                            <div id="signature-pad" class="signature-pad">
+                                                <div class="signature-pad--body">
+                                                    <canvas></canvas>
+                                                </div>
+                                                <div class="signature-pad--footer">
+                                                    <div class="signature-pad--actions">
+                                                        <div class="buttons">
+                                                            <button type="button" class="button clear" data-action="clear">Clear</button>
+                                                        </div>
+                                                        <div class="description">Sign above</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-lg-6 col-xl-4 offset-xl-4 offset-lg-6">
+                                        <div class="btn-grp d-flex justify-content-between">
+                                            <button class="btn_cancel" onclick="ShowContactFrontDesk()" value='Back'>Cancel</button>
+                                            <button class="btn_next " onclick="AgreeAndMoveNext(this)">Agree</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+
+
+                        @if (ViewBag.EcomStatus == null || !ViewBag.EcomStatus)
+                        {
+                            <div class="tab-pane cstm-form" id="payment">
+                                <div id="paymentTab">
+                                    <h1>PAYMENT</h1>
+
+                                    <div class="row">
+                                        <div class="col-4"></div>
+                                        <div class="col-4" style="font-size: 22px;">
+                                            <label>Balance Amount :</label>
+                                            <span>SGD @Model.BalanecAmount</span>
+
+                                        </div>
+                                        <div class="col-4"></div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-4">
+
+                                        </div>
+
+                                        <div class="col-xl-4 col-md-4  payment">
+                                            <div id="dropin-container"></div>
+                                            @if (ActiveTransctions.Count > 0)
+                                            {
+                                                <a href="#" onclick="showExistingPaymentPoup()">Use existing card</a>
+                                            }
+                                        </div>
+
+                                        <div class="col-md-4">
+
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-lg-6 col-xl-4 offset-xl-8 offset-lg-6">
+                                            <div class="btn-grp d-flex justify-content-between">
+                                                <button class="btn_cancel movePrev" value='Back'>Back</button>
+                                                <button class="btn_next" style="display:none" id="paymentNextButton" onclick="MakePaymentAndMoveNext(this)">Next<img src="~/assets/images/arrow_icon.png"></button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+
+                        <div class="tab-pane cstm-form @((ViewBag.EcomStatus)  ? "active" : "")" id="thankyou">
+                            <div class="min-height">
+                                <div class="sucess">
+                                    <div class="code"><img src="~/assets/images/tick.png"></div>
+                                    <label>Thank You!</label>
+                                    <p>We have successfully processed your check-out request. </p>
+                                    <p>The room key will now be disabled.</p>
+                                    <p>Please drop your room key in the express check-out box located at our lobby on departure.</p>
+                                    <p>Thank you once again for choosing Raffles. We look forward to welcome you back soon.</p>
+                                    <div class="row">
+                                        <div class="col-md-12 text-center mt-5">
+                                            <a href="https://www.Raffles.com/Singapore/">
+                                                <button class="btn_upload"><img src="~/assets/images/tick_icon.png">OK</button>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mail">
+
+                                    <div class="row">
+                                        <div class="col-md-6 col-xl-4  offset-xl-4 offset-md-4">
+                                            <div class="form-inline">
+                                                <label for="exampleInputEmail1">To receive a copy of your invoice via email</label>
+                                                <div class="mail-form">
+                                                    <input id="emailID" type="email" class="form-control" value="@Model.EmailID" placeholder="Enter email">
+                                                    <button type="button" class="btn" onclick="sendEmail()">SEND</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </div>
+                                <div class="social-media">
+                                    <p>Subscribe to our mailing list or follow us on Facebook and Instagram for exclusive offers and updates.</p>
+                                    <ul>
+                                        <li><a target="_blank" href="mailto:singapore@raffles.com"><i class="fas fa-envelope-square"></i></a></li>
+                                        <li>
+                                            <a target="_blank" href="https://www.facebook.com/share/19pCbAnTN2/
+?mibextid=LQQJ4d"><i class="fab fa-facebook-square"></i></a>
+                                        </li>
+                                        <li>
+                                            <a target="_blank" href="https://www.instagram.com/raffleshotelsingapor
+e?igsh=MWswMWN2eXVpaGFqZA=="><i class="fab fa-instagram"></i></a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade cstm-modal" id="exampleModal2" tabindex="-1" role="dialog" aria-labelledby="exampleModal2Label" aria-hidden="true">
+    <div class="modal-dialog  modal-dialog-centered upload-model" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModal2Label">Message</h5>
+            </div>
+            <div class="modal-body">
+                <div class="loader">
+                    <div class="sk-fading-circle">
+                        <div class="sk-circle1 sk-circle"></div>
+                        <div class="sk-circle2 sk-circle"></div>
+                        <div class="sk-circle3 sk-circle"></div>
+                        <div class="sk-circle4 sk-circle"></div>
+                        <div class="sk-circle5 sk-circle"></div>
+                        <div class="sk-circle6 sk-circle"></div>
+                        <div class="sk-circle7 sk-circle"></div>
+                        <div class="sk-circle8 sk-circle"></div>
+                        <div class="sk-circle9 sk-circle"></div>
+                        <div class="sk-circle10 sk-circle"></div>
+                        <div class="sk-circle11 sk-circle"></div>
+                        <div class="sk-circle12 sk-circle"></div>
+                    </div>
+                </div>
+                <div class="quest">
+                    <h5 id="messageContentFolio"> Please upload document.</h5>
+                    <br />
+                </div>
+
+                <div class="button-wrapper1">
+                    <button class="" data-dismiss="modal" aria-label="Close">OK</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade cstm-modal" id="cardSelectionModal" tabindex="-1" role="dialog" data-backdrop="static" data-keyboard="false" aria-labelledby="cardSelectionLabel" aria-hidden="true">
+    <div class="modal-dialog  modal-dialog-centered upload-model" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="cardSelectionLabel">confirmation</h5>
+            </div>
+            <div class="modal-body">
+                <div class="quest card-quest">
+
+                    <h3>Balance Amount: SGD @Model.BalanecAmount </h3>
+
+                    <h3>Would you like to use the existing card? </h3>
+
+                    <div class="card-det">
+
+                        @foreach (var item in ActiveTransctions)
+                        {
+
+                            <a href="#" style="color:white;text-decoration:none;" onclick="selectCardForTransaction('@item.TransactionID')">
+
+                                <div class="row cardDetailRow">
+
+                                    <div class="col-1">
+                                        <input name="selectedCard" class="selectedCard" type="radio" value="@item.pspReferenceNumber" id="card_@item.TransactionID" />
+                                    </div>
+
+                                    <div class="col-6">
+                                        <label>Card Number</label>
+                                        <span>@item.MaskedCardNumber</span>
+                                    </div>
+
+                                    <div class="col-3">
+                                        <label>Exp <span>@item.ExpiryDate</span></label>
+                                    </div>
+
+                                    <div class="col-2">
+                                        <div class="type">
+
+                                            @if (!string.IsNullOrEmpty(item.CardType))
+                                            {
+                                                if (item.CardType.ToUpper() == "MC")
+                                                {
+                                                    <img src="~/assets/images/mastercard_icon.png" style="height:25px;margin-top:-2px" />
+                                                }
+                                                else if (item.CardType.ToUpper() == "VA")
+                                                {
+                                                    <img src="~/assets/images/visa.png" style="height:25px;margin-top:-2px" />
+                                                }
+                                                else if (item.CardType.ToUpper() == "JCB")
+                                                {
+                                                    <img src="~/assets/images/jcb.png" style="height:25px;margin-top:-2px" />
+                                                }
+                                                else if (item.CardType.ToUpper() == "CUP")
+                                                {
+                                                    <img src="~/assets/images/cup.png" style="height:25px;margin-top:-2px" />
+                                                }
+                                                else if (item.CardType.ToUpper() == "AMEX")
+                                                {
+                                                    <img src="~/assets/images/amex.jpg" style="height:25px;margin-top:-2px" />
+                                                }
+                                            }
+
+                                        </div>
+                                    </div>
+
+                                </div>
+
+                            </a>
+
+                        }
+
+                    </div>
+
+                    <div class="btns">
+                        <button class="no" data-dismiss="modal" aria-label="Close">Cancel</button>
+                        <button class="yes" onclick="processExistingTransaction()">Proceed</button>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade cstm-modal" id="contactFOModal" tabindex="-1" role="dialog" aria-labelledby="contactFOModalLabel" aria-hidden="true">
+    <div class="modal-dialog  modal-dialog-centered upload-model" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="contactFOModalLabel">Message</h5>
+            </div>
+            <div class="modal-body">
+                <div class="quest">
+                    <h5>Please contact front desk for assistance.</h5>
+                    <br />
+                </div>
+                <br />
+                <br />
+                <div class="button-wrapper1">
+                    <button class="" data-dismiss="modal" aria-label="Close">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade cstm-modal" id="paymentStatusPopup" tabindex="-1" role="dialog" aria-labelledby="paymentStatusPopupLabel" aria-hidden="true">
+    <div class="modal-dialog  modal-dialog-centered upload-model" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="paymentStatusPopupLabel">Message</h5>
+            </div>
+            <div class="modal-body">
+                <div class="quest" id="messageContent">
+                    <h5>Your payment was successful</h5>
+                    <br />
+                </div>
+                <br />
+                <br />
+                <div class="button-wrapper1">
+                    <button class="" data-dismiss="modal" aria-label="Close">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section Scripts{
+
+    <script src="~/assets/js/multilang.js"></script>
+
+    <script src="~/assets/js/adyenFunctionsCheckout.js"></script>
+    <script src="~/assets/js/signature_pad.umd.js"></script>
+    <script src="~/assets/js/wizard.js"></script>
+
+    @*<script src="~/assets/js/app.js"></script>*@
+
+    <script>
+        var selectedPSPReference;
+        function selectCardForTransaction(transctionID) {
+
+            $('#card_' + transctionID).prop('checked', true);
+            selectedPSPReference = $('#card_' + transctionID).val();
+        }
+
+        const processExistingTransction = (cardData) => httpPost(BaseURL + '/Checkout/processExistingTransction', cardData).then(response => {
+            return response;
+        });
+
+        const processCheckout = (cardData) => httpPost(BaseURL + '/Checkout/ProcessCheckout', cardData).then(response => {
+            return response;
+        });
+
+
+        function showExistingPaymentPoup() {
+            $('#cardSelectionModal').modal('show');
+        }
+
+        function processExistingTransaction() {
+
+            var pspReference;
+            var cardSelected = false;
+            $('.selectedCard').each(function (e) {
+                console.log(this);
+                if ($(this).is(':checked')) {
+                    pspReference = $(this).val();
+                    cardSelected = true;
+                }
+            });
+
+            if (cardSelected) {
+                $('.loader-screen').fadeIn(100);
+
+                processExistingTransction({
+                    ReservationNo: ReservationNumber,
+                    pspReferenceNo: pspReference,
+                    Amount: Amount
+                }).then(response => {
+                    if (response.result) {
+                        $('#messageContent').html('Your payment was successful.')
+                        $('#cardSelectionModal').modal('hide');
+                        $('#paymentStatusPopup').modal('show');
+                        setTimeout(function () {
+                            var obj = $('#paymentNextButton');
+                            moveToNextTab(obj);
+                            $('.loader-screen').fadeOut(800);
+                        }, 1000);
+                    }
+                    else {
+                        $('.loader-screen').fadeOut(800);
+                        $('#messageContent').html('Payment process failed.');
+                        $('#paymentStatusPopup').modal('show');
+                        $('#cardSelectionModal').modal('hide');
+                    }
+
+
+                }).catch(error => {
+                    //processe the error and show error message
+                    $('.loader-screen').fadeOut(800);
+                    $('#customMessageModalMessage').html('Unable to process payment')
+                    $('#customMessageModal').modal('show');
+                });
+            }
+            else {
+                $('.loader-screen').fadeOut(800);
+                $('#customMessageModalMessage').html('Please select card to proceed')
+                $('#customMessageModal').modal('show');
+
+            }
+
+
+
+        }
+
+
+        function ShowContactFrontDesk() {
+            $('#contactFOModal').modal('show');
+        }
+
+        var wrapper = document.getElementById("signature-pad");
+        var clearButton = wrapper.querySelector("[data-action=clear]");
+        //var changeColorButton = wrapper.querySelector("[data-action=change-color]");
+        //var undoButton = wrapper.querySelector("[data-action=undo]");
+        //var savePNGButton = wrapper.querySelector("[data-action=save-png]");
+        //var saveJPGButton = wrapper.querySelector("[data-action=save-jpg]");
+        //var saveSVGButton = wrapper.querySelector("[data-action=save-svg]");
+        var canvas = wrapper.querySelector("canvas");
+        var signaturePad = new SignaturePad(canvas, {
+            // It's Necessary to use an opaque color when saving image as JPEG;
+            // this option can be omitted if only saving as PNG or SVG
+            backgroundColor: 'rgb(255, 255, 255)'
+        });
+
+        clearButton.addEventListener("click", function (event) {
+            signaturePad.clear();
+        });
+
+
+        $(window).on("load", function () {
+
+            $("#myCheck").click(function () {
+
+                if ($(this).is(":checked")) {
+                    $("#signbox").show();
+                } else {
+                    $("#signbox").hide();
+                }
+
+                $('html, body').animate({
+                    scrollTop: $(".justify-content-between").offset().top
+                }, 1000);
+            });
+        });
+    </script>
+
+    <script>
+
+
+        function moveToNextTab(currentTab) {
+            var $parentDiv = $(currentTab).parents('div.tab-pane');
+            var currentTabIndex = $('.tab-pane').index($parentDiv);
+            var nextTab = $parentDiv.next();
+            if (nextTab.length > 0) {
+                $parentDiv.removeClass('active');
+                $parentDiv.next().addClass('active');
+                setActiveTab(+currentTabIndex + 1);
+            }
+            $("html, body").animate({ scrollTop: 0 }, "slow");
+        }
+
+        function movePrevTab(currentTab) {
+            var $parentDiv = $(this).parents('div.tab-pane');
+            var currentTabIndex = $('.tab-pane').index($parentDiv);
+            var nextTab = $parentDiv.prev();
+            if (nextTab.length > 0) {
+                $parentDiv.removeClass('active');
+                $parentDiv.prev().addClass('active');
+                setActiveTab(+currentTabIndex - 1);
+            }
+            $("html, body").animate({ scrollTop: 0 }, "slow");
+        }
+
+
+        $('.moveNext').on('click', function () {
+            moveToNextTab(this);
+        });
+
+
+        $('.movePrev').on('click', function () {
+            movePrevTab(this);
+        });
+
+
+
+        function saveSignature() {
+
+
+
+        }
+
+
+        function AgreeAndMoveNext(obj) {
+
+            if ($("#myCheck").is(':checked')) {
+
+                if (!signaturePad.isEmpty()) {
+                    const data = new FormData();
+                    var terms = $("#myCheck").is(':checked')
+                    data.append('IsTermsAndConditionAccepted', terms);
+                    data.append('ReservationID', $('#ReservationID').val());
+                    var dataURL = signaturePad.toDataURL();
+                    var strImage = dataURL.replace(/^data:image\/[a-z]+;base64,/, "");
+                    data.append('Base64Signature', strImage);
+
+
+                    fetch(BaseURL + '/Checkout/UpdateSignature', {
+                        method: "POST",
+                        body: data,
+                    }).then(response => response = response.json()).then(response => {
+                        $('#paymentTab').hide();
+                        moveToNextTab(obj);
+                        var balanceAmount = "@Model.BalanecAmount";
+                        if (+balanceAmount > 0) {
+                            $('#paymentTab').show();
+                            if ("@(ActiveTransctions.Count > 0)" == "True") {
+                                $('#cardSelectionModal').modal('show');
+                            }
+                            $('.loader-screen').fadeOut(800);
+                        }
+                        else {
+                            //call server to update the checkout flag
+                            $('.loader-screen').fadeIn(100);
+                            var formdata = new FormData();
+                            formdata.append('ReservationID', $('#ReservationID').val());
+
+                            fetch(BaseURL + '/Checkout/CompletePreCheckout', {
+                                method: "POST",
+                                body: formdata,
+                            }).then(response => response = response.json()).then(response => {
+                                setTimeout(function () {
+                                    var obj1 = $('#paymentNextButton');
+                                    moveToNextTab(obj1);
+                                    $('.loader-screen').fadeOut(500);
+                                }, 500);
+                            }).catch(error => {
+                                $('#customMessageModalMessage').html("Unable to process your checkout.")
+                                $('#customMessageModal').modal('show');
+                                $('.loader-screen').fadeOut(500);
+                            });
+                        }
+                    });
+
+                }
+                else {
+                    $('#messageContentFolio').html('Sign the folio invoice');
+                    $('#exampleModal2').modal('show');
+
+                }
+            }
+            else {
+                $('#messageContentFolio').html('Please accept the terms and conditions');
+                $('#exampleModal2').modal('show');
+            }
+
+        }
+
+
+        function MakePaymentAndMoveNext(obj) {
+            $('.loader-screen').fadeIn(100);
+            var formdata = new FormData();
+            formdata.append('ReservationID', $('#ReservationID').val());
+            fetch(BaseURL + '/Checkout/CompletePreCheckout', {
+                method: "POST",
+                body: formdata,
+            }).then(response => response = response.json()).then(response => {
+                setTimeout(function () {
+                    moveToNextTab(obj);
+                     $('.loader-screen').fadeOut(800);
+                }, 500);
+            });
+
+        }
+
+
+        function setActiveTab(index) {
+            $('.tabs').each(function (i, e) {
+                $(this).removeClass('active');
+                if (i <= index) {
+                    $(this).addClass('active');
+                }
+            });
+        }
+
+
+        function sendEmail() {
+            var email = $('#emailID').val();
+
+            if (email) {
+                var formdata = new FormData();
+                formdata.append('email', email);
+                formdata.append('reservationId', $('#ReservationID').val())
+                fetch(BaseURL + '/api/portalservice/SendEmail', {
+                    method: "POST",
+                    body: formdata,
+                }).then(response => response = response.json()).then(response => {
+                    $('#messageContentFolio').html('We have sent your invoice to the email provided. You will receive it within 15 minutes.');
+                    $('#exampleModal2').modal('show');
+                });
+            }
+            else {
+                $('#messageContentFolio').html('Please enter email address');
+                $('#exampleModal2').modal('show');
+            }
+        }
+
+
+    </script>
+
+}

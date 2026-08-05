@@ -1,0 +1,3103 @@
+@model CheckinPortal.Models.ReservationModel
+@{
+    var ProfileList = (List<CheckinPortal.Models.Profile>)Model.Profiles;
+    var primaryProfile = ProfileList[0];
+
+    /*var PackageList = (List<CheckinPortal.Models.PackageMasterModal>)ViewBag.PackageList;*/
+    var PackageList = ViewBag.PackageList as List<CheckinPortal.Models.PackageMasterModal>
+                  ?? new List<CheckinPortal.Models.PackageMasterModal>();
+    var PackageListForRoomUpsell = PackageList.Where(x => x.IsRoomUpsell).ToList();
+    var PackageListForSpecials = PackageList.Where(x => x.IsRoomUpsell == false).ToList();
+
+    string RoomUpsellPackages = ViewBag.RoomUpsellPackages;
+    string SpecialPackages = ViewBag.SpecialPackages;
+
+}
+<script>
+    @*window.BlinkIDLicenseKey = '@System.Configuration.ConfigurationManager.AppSettings["BlinkIDLicenseKey"]';*@
+       var APIbaseURL = '@System.Configuration.ConfigurationManager.AppSettings["APIBaseUrl"]';
+</script>
+<script>
+
+        var OCRAPIBaseURL = "@ViewBag.OCRAPIBaseURL";
+        var AdaptorAPIBaseURL = "@ViewBag.AdaptorAPIBaseURL";
+        ReservationNumber = "@Model.ReservationNumber"
+        ReservationNameID = "@Model.ReservationNameID"
+        var IsDepositAvailable = "@Model.IsDepositAvailable";
+        var TotalRoomRate = "@Model.TotalRoomRate";
+        var TotalSpecialCharges = 0;
+        var selectedUpsellPackage = [];
+        var selectedSpecialPackage = [];
+    var isuploadcomplete = "@ViewBag.uploadcomplete";
+     var language = "@(Request.Cookies.AllKeys.Contains("culture") ? @Request.Cookies["culture"].Value : "en")";
+
+        selectedUpsellPackage = "@RoomUpsellPackages".split(",")
+        selectedSpecialPackage = "@SpecialPackages".split(",")
+
+
+        selectedUpsellPackage = selectedUpsellPackage.filter(function (value, index, arr) {
+            return value != "";
+        });
+
+        selectedSpecialPackage = selectedSpecialPackage.filter(function (value, index, arr) {
+            return value != "";
+        });
+
+
+
+</script>
+
+<style>
+    .adyen-checkout__button__text {
+        width: 100% !important;
+    }
+
+    .fade-alert {
+        opacity: 0;
+        display: none;
+        transition: opacity 0.5s ease-in-out;
+    }
+
+        .fade-alert.show {
+            display: block;
+            opacity: 1;
+        }
+
+    .required {
+        color: red;
+    }
+</style>
+
+
+
+
+<link href="~/assets/css/additionalStyles.css" rel="stylesheet" />
+
+<!-- intl-tel-input: Country Code Dropdown Plugin -->
+
+<style>
+    /* ── intl-tel-input overrides to match Bootstrap form-control ── */
+    .iti {
+        width: 100%;
+        display: block;
+        z-index: 1 !important;
+    }
+
+    .iti__flag-container {
+        z-index: 1 !important;
+    }
+
+    .phone-number-input.form-control {
+        /*padding-left: 90px !important;*/
+        /*border-radius: 4px !important;*/
+        height: calc(1.5em + .75rem + 2px);
+    }
+
+    .iti__country-list {
+        z-index: 9999;
+        max-height: 220px;
+        overflow-y: auto;
+        font-size: 13px;
+    }
+
+    .iti__country.iti__highlight {
+        background-color: #f0f0f0;
+    }
+
+
+    .phone-input-wrapper {
+        width: 100%;
+    }
+
+
+
+/*    .phone-number-input {
+        height: calc(2.5em + .75rem + 2px) !important;
+        width: 100%;
+        padding-left: 95px !important;
+    }*/
+
+    .iti__selected-flag {
+        background: transparent !important;
+    }
+    /* Dial code color black instead of teal */
+    .iti__selected-dial-code {
+        color: #000 !important;
+        font-weight: 500;
+    }
+
+    .iti--separate-dial-code .iti__selected-flag {
+        padding-left: 12px;
+        padding-right: 12px;
+    }
+    /*********************88*/
+    /* Make intl-tel-input match your rounded textbox style */
+
+
+    /* Match textbox height + radius */
+    .iti input.form-control {
+        height: calc(1.5em + .75rem + 2px);
+        border-radius: 25px !important;
+        padding-left: 85px !important;
+    }
+
+    /* Rounded left side (flag container) */
+    .iti--separate-dial-code .iti__selected-flag {
+        border-radius: 25px 0 0 25px !important;
+        background: transparent !important;
+        padding-left: 10px !important;
+        padding-right: 6px !important;
+        min-width: 70px !important;
+    }
+
+
+
+
+
+    /* Ensure validation border wraps correctly */
+    .iti input.is-invalid {
+        border-radius: 25px !important;
+    }
+
+    /* Align dropdown arrow better */
+    .iti__arrow {
+        margin-left: 4px !important;
+    }
+</style>
+
+<div class="offset-md-0 col-md-3 offset-lg-0 col-lg-3  offset-xl-1 col-xl-2 left-menu h100">
+    <div class="space"></div>
+    <div class="menu">
+        <div class="logo"> <img class="img-fluid" src="~/assets/images/logo.png"></div>
+        @{ int PageNo = 1;}
+        <ul>
+            <li class="active @(ViewBag.PaymentProcessed ? "paymentdone active " : "") tabs"><a href="#guestDetails"><label>Guest Details</label><span class="count">@PageNo</span></a></li>
+            @*@{ PageNo++;}
+                <li class="@(ViewBag.PaymentProcessed ? "paymentdone active" : "") tabs"><a href="#upgrade"><label>Upgrade</label><span class="count">@PageNo</span></a></li>*@
+            @{ PageNo++;}
+            <li class="@(ViewBag.PaymentProcessed ? "paymentdone active" : "") tabs"><a href="#policies"><label>Policies</label><span class="count">@PageNo</span></a></li>
+            @*@{ PageNo++;}
+                @if (!Model.IsDepositAvailable)
+                    {
+                        <li class="@((ViewBag.PaymentProcessed && ViewBag.IsPaymentSuccess) ? "paymentdone active" : "") tabs"><a href="#payment"><label>Payment</label><span class="count">@PageNo</span></a></li>
+                    }*@
+            @{ PageNo++;}
+            <li class="@((ViewBag.PaymentProcessed && ViewBag.IsPaymentSuccess && ViewBag.uploadcomplete) ? "paymentdone active" : "") tabs"><a href="#document"><label>Document</label><span class="count">@PageNo</span></a></li>
+            @{ PageNo++;}
+            <li class="@((ViewBag.IsPaymentSuccess && ViewBag.uploadcomplete) ? "paymentdone active" : "") tabs"><a href="#qrCode"><label>Thank You</label><span class="count">@PageNo</span></a></li>
+
+        </ul>
+    </div>
+</div>
+
+
+<div class="col-md-9 col-lg-9 col-xl-9 h100 room-bg">
+    <div class="row">
+        <div class="col-md-11 col-lg-11 col-xl-11  pd-0">
+            <div class="content-wrapper cstm-form">
+                <div class="min-height">
+                    <div class="tab-content">
+                        <div class="tab-pane  cstm-form @(ViewBag.PaymentProcessed ? "paymentdone" : "active") " id="guestDetails">
+                            <form id="frm_guestdetails" name="frm_guestdetails">
+
+                                @Html.HiddenFor(model => model.ReservationID)
+                                @Html.HiddenFor(model => model.AdultCount)
+                                @Html.HiddenFor(model => model.ChildCount)
+                                @Html.HiddenFor(model => model.InfantCount)
+                                @Html.HiddenFor(model => model.ReservationNumber)
+                                @*@if (Model.Profiles.Count > 0)
+                                    {
+                                        @Html.HiddenFor(model => model.Profiles[0].ProfileDetailID)
+                                    }
+                                    @if (Model.Profiles.Count > 1)
+                                    {
+                                        @Html.HiddenFor(model => model.Profiles[1].ProfileDetailID)
+                                    }
+                                    @if (Model.Profiles.Count > 2)
+                                    {
+                                        @Html.HiddenFor(model => model.Profiles[2].ProfileDetailID)
+                                    }*@
+
+                                @if (Model.Profiles.Count > 0)
+                                {
+                                    @Html.HiddenFor(model => model.Profiles[0].ProfileDetailID)
+                                    @Html.HiddenFor(model => model.Profiles[0].ProfileID)
+                                }
+                                @if (Model.Profiles.Count > 1)
+                                {
+                                    @Html.HiddenFor(model => model.Profiles[1].ProfileDetailID)
+                                    @Html.HiddenFor(model => model.Profiles[0].ProfileID)
+                                }
+                                @if (Model.Profiles.Count > 2)
+                                {
+                                    @Html.HiddenFor(model => model.Profiles[2].ProfileDetailID)
+                                    @Html.HiddenFor(model => model.Profiles[0].ProfileID)
+                                }
+
+                                <h1>GUEST DETAILS</h1>
+                                <div class="detail-wrapper">
+                                    <ul>
+                                        <li>
+                                            <label>ROOM TYPE</label>
+                                            <span>@Model.RTCShortDescription</span>
+                                        </li>
+                                        <li>
+                                            <label>CHECK-IN DATE</label>
+                                            <span>@Model.ArrivalDate</span>
+                                        </li>
+                                        <li>
+                                            <label>CHECK-OUT DATE</label>
+                                            <span>@Model.DepartureDate</span>@*02 June 2020*@
+                                        </li>
+                                        <li>
+                                            <label>Adult / Child / Infant</label>
+                                            <span>@Model.AdultCount / @Model.ChildCount / @Model.InfantCount</span>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <!-- details -->
+                                <h2>Personal Information</h2>
+                                <div class="form-row">
+                                    <div class="form-group col-md-6 col-lg-4">
+                                        <label>Email  Address<span class="required">*</span></label>
+                                        @Html.TextBoxFor(model => model.Profiles[0].Email, new { @class = "form-control", type = "email" })
+                                        @Html.ValidationMessageFor(model => model.Profiles[0].Email, "", new { @class = "text-danger" })
+                                    </div>
+                                    <div class="form-group col-md-6 col-lg-4">
+                                        <label>Phone Number <span class="required">*</span></label>
+                                        <div class="phone-input-wrapper" style="display:flex; align-items:center; gap:0;">
+                                            @Html.TextBoxFor(model => model.Profiles[0].Phone,
+                                                     new
+                                                     {
+                                                         @class = "form-control phone-number-input",
+                                                         id = "phoneNumber",
+                                                         type = "tel",
+                                                         @readonly = "readonly"
+                                                     })
+                                        </div>
+
+                                        <input type="hidden" id="phoneFullNumber" />
+                                        @Html.ValidationMessageFor(model => model.Profiles[0].Phone, "", new { @class = "text-danger" })
+                                        @*<div class="invalid-feedback" style="display: block;">
+                Please provide a valid phone number
+            </div>*@
+                                    </div>
+                                    <div class="form-group col-md-6 col-lg-4">
+                                        <label>Address</label>
+                                        @Html.TextBoxFor(model => model.Profiles[0].AddressLine1, new { @class = "form-control" })
+                                    </div>
+
+                                    <div class="form-group col-md-6 col-lg-4">
+                                        <label>Country of Residence</label>
+                                        @*@Html.DropDownListFor(model => model.Profiles[0].CountryID, (SelectList)ViewBag.CountryList, "Select Country", new { @class = "form-control selectpicker selectCountry", @data_live_search = "true" })*@
+                                        @Html.DropDownListFor(model => model.Profiles[0].CountryID,
+                                                     (SelectList)ViewBag.CountryList,
+                                                     "Select Country",
+                                                     new
+                                                     {
+                                                         @class = "form-control selectpicker selectCountry",
+                                                         @data_live_search = "true",
+                                                         @data_live_search_style = "startsWith"
+                                                     })
+                                    </div>
+                                    <div class="form-group col-md-6 col-lg-4">
+                                        <label>State</label>
+                                        @Html.DropDownListFor(model => model.Profiles[0].StateID, (SelectList)ViewBag.StateList, "Select State",
+                                            new
+                                            {
+                                                @class = "form-control selectpicker state",
+                                                @data_live_search = "true",
+                                                @data_live_search_style = "startsWith"
+                                            })
+                                    </div>
+                                    <div class="form-group col-md-6 col-lg-4">
+                                        <label>City</label>
+                                        @Html.TextBoxFor(model => model.Profiles[0].City, new { @class = "form-control" })
+                                    </div>
+
+                                    <div class="form-group col-md-6 col-lg-4">
+                                        <label>Postal Code</label>
+                                        @Html.TextBoxFor(model => model.Profiles[0].PostalCode, new { @class = "form-control", value = "1212" })
+                                    </div>
+                                    <div class="form-group col-md-6 col-lg-4">
+                                        <label>Nationality<span class="required">*</span></label>
+                                        @Html.DropDownListFor(model => model.Profiles[0].Nationality,
+                                             (SelectList)ViewBag.NationalityList,
+                                             "Select Nationality",
+                                             new
+                                             {
+                                                 @class = "form-control selectpicker selectNationality",
+                                                 @data_live_search = "true",
+                                                 @data_live_search_style = "startsWith"
+                                             })
+                                        @Html.ValidationMessageFor(model => model.Profiles[0].Nationality, "", new { @class = "text-danger" })
+                                        <input type="hidden" id="selectedNationality" name="selectedNationality" />
+                                    </div>
+                                    <div class="form-group col-md-6 col-lg-4">
+                                        <div class="label-head mb-3">Purpose of Visit</div>
+                                        <div class="check-bx">
+                                            <div class="form-check form-check-inline">
+                                                <input class="form-check-input" type="radio" name="VisitPurposeCode" id="1" value="Leisure">
+                                                <label class="form-check-label" for="1">
+                                                    Leisure / Holiday
+                                                </label>
+                                            </div>
+
+                                            <div class="form-check form-check-inline">
+                                                <input class="form-check-input" type="radio" name="VisitPurposeCode" id="2" value="Business">
+                                                <label class="form-check-label" for="2">
+                                                    Business
+                                                </label>
+                                            </div>
+
+                                            <div class="form-check form-check-inline">
+                                                <input class="form-check-input" type="radio" name="VisitPurposeCode" id="3" value="Official">
+                                                <label class="form-check-label" for="3">
+                                                    Official
+                                                </label>
+                                            </div>
+
+                                            <div class="form-check form-check-inline">
+                                                <input class="form-check-input" type="radio" name="VisitPurposeCode" id="4" value="Other">
+                                                <label class="form-check-label" for="4">
+                                                    Other
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- <h2>FLIGHT INFORMATION</h2> -->
+
+                                    <div class="form-group col-md-6 col-lg-4">
+                                        <label>Flight Number</label>
+                                        @Html.TextBoxFor(model => model.FlightNo, new { @class = "form-control" })
+                                    </div>
+                                    <div class="form-group col-md-6 col-lg-4 time-cstm">
+                                        <label>Expected Arrival Time at the Resort <span class="required">*</span></label>
+                                        @*@Html.TextBoxFor(model => model.ExpectedTimeofArrival, new { @class = "form-control", id = "timepicker1" })
+                                        @Html.ValidationMessageFor(
+model => model.ExpectedTimeofArrival,
+"",
+new { @class = "text-danger" }
+)*@
+                                        @Html.TextBoxFor(model => model.ExpectedTimeofArrival, new { @class = "form-control", id = "timepicker1", type = "time" })
+                                        @Html.ValidationMessageFor(model => model.ExpectedTimeofArrival,"",new { @class = "text-danger" })
+                                    </div>
+
+                                </div>
+
+
+
+                                <div class="row">
+                                    <div class="col-lg-6 col-xl-4 offset-xl-8 offset-lg-6">
+                                        <div class="btn-grp d-flex justify-content-between">
+                                            @*<button class="btn_cancel">Back</button>*@
+                                            <button type="button" class="btn_next " onclick="SaveReservationAndMoveNext(this)">Next<img src="~/assets/images/arrow_icon.png"></button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="tab-pane  cstm-form @(ViewBag.PaymentProcessed ? "paymentdone" : "") " id="policies">
+
+                            <h1>Policies</h1>
+                            @*<h2 class="mb-none">Policies</h2>*@
+                            <div class="plcy-wrapper">
+                                <div class="row">
+                                    <div class="col-xl-6">
+                                        <div class="form-group row">
+                                            <label class="col-7 col-lg-4 col-xl-4">Confirmation Number</label>
+                                            <div class="col-5 col-lg-8 col-xl-8">
+                                                <span>@Model.ReservationNumber</span>
+                                            </div>
+                                        </div>
+                                        <div class="form-group row">
+                                            <label class="col-7 col-lg-4 col-xl-4">Room Type</label>
+                                            <div class="col-5 col-lg-8 col-xl-8">
+                                                <span>@Model.RTCShortDescription</span>
+                                            </div>
+                                        </div>
+                                        <div class="form-group row">
+                                            <label class="col-7 col-lg-4 col-xl-4">Check-in Date</label>
+                                            <div class="col-5 col-lg-8 col-xl-8">
+                                                <span>@Model.ArrivalDate</span>
+                                            </div>
+                                        </div>
+                                        <div class="form-group row">
+                                            <label class="col-7 col-lg-4 col-xl-4">Check-out Date</label>
+                                            <div class="col-5 col-lg-8 col-xl-8">
+                                                <span>@Model.DepartureDate</span>
+                                            </div>
+                                        </div>
+                                        <div class="form-group row">
+                                            <label class="col-7 col-lg-4 col-xl-4">ADULT / CHILD / INFANT</label>
+                                            <div class="col-5 col-lg-8 col-xl-8">
+                                                <span>@Model.AdultCount / @Model.ChildCount / @Model.InfantCount</span>
+                                            </div>
+                                        </div>
+                                        <div class="form-group row">
+                                            <label class="col-7 col-lg-4 col-xl-4">BREAKFAST</label>
+                                            <div class="col-5 col-lg-8 col-xl-8">
+                                                <span>@(Model.IsBreakFastAvailable ? "Included" : "Not Included")</span>
+                                            </div>
+                                        </div>
+                                        @*<div class="form-group row">
+                                                <label class="col-7 col-lg-4 col-xl-4">Avg. Room Rate </label>
+                                                <div class="col-5 col-lg-8 col-xl-8">
+                                                    <span>SGD @Model.AverageRoomRate.ToString("0.00")</span>
+                                                </div>
+                                            </div>*@
+                                        @*<div class="form-group row">
+                                                <label class="col-7 col-lg-4 col-xl-4">Breakfast</label>
+                                                <div class="col-5 col-lg-8 col-xl-8">
+                                                    <span>@(Model.IsBreakFastAvailable ? "Included" : "Not Included")</span>
+                                                </div>
+                                            </div>*@
+                                        <hr>
+                                        @*<div class="form-group row total">
+                                                <label class="col-7 col-lg-4 col-xl-4">TOTAL CHARGES</label>
+                                                <div class="col-5 col-lg-8 col-xl-8">
+
+                                                    @{
+                                                        var totalcharge = "--";
+
+                                                        if (Model.TotalRoomRate > 0)
+                                                        {
+                                                            totalcharge = "SGD " + Model.TotalRoomRate.ToString("0.00");
+                                                        }
+                                                    }
+
+
+                                                    <span id="spanTotalCharges">@totalcharge <span> (Inclusive of 10% service charge and prevailing government taxes)</span></span>
+                                                </div>
+
+                                            </div>*@
+                                        <div class="form-group row total">
+                                            <label class="col-7 col-lg-4 col-xl-4">ADDITIONAL GUEST POLICY</label>
+                                            <div class="col-5 col-lg-8 col-xl-8">
+                                                <p>
+                                                    Additional guests (adults or children) not included in the original reservation are subject to applicable extra charges per room.
+                                                </p>
+                                            </div>
+                                        </div>
+                                        @*<div class="form-group row total" style=" margin-top: 0px; line-height: 15px;">
+                                                <div class="col-12 col-lg-12 col-xl-12">
+                                                    <span><span style="margin-left: -5px;">Note: Suite upgrade charges will only be applied upon confirmation of availability.</span></span>
+                                                </div>
+                                            </div>*@
+
+
+
+                                        @*<div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="receviceUpdate" name="checkbox1">
+                                                <label class="form-check-label" for="receviceUpdate" style="text-transform: none;font-weight: 500;">
+                                                    I would like to receive information and updates from Raffles Hotel Singapore.
+                                                </label>
+                                            </div>*@
+
+
+                                    </div>
+                                    <div class="col-xl-5 sign-here">
+                                        <!--<div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="IsTermsAndConditionAccepted" name="IsTermsAndConditionAccepted" value="True">
+                                            <label class="form-check-label" for="acceptTermsAndCondition" style="text-transform: none;">
+                                                I Agree to the-->
+                                        @*<a href="#" data-toggle="modal" data-target="#termsAndConditionModal">Terms and Conditions</a>*@
+                                        <!--<a href="https://www.balimandira.com/terms-conditions/" target="_blank">
+                                                    Terms and Conditions
+                                                </a>
+                                            </label>
+                                        </div>-->
+                                        <div class="form-check">
+
+                                            <input class="form-check-input" type="checkbox" id="IsAdditionalTermsAndConditionAccepted" name="IsAdditionalTermsAndConditionAccepted" value="True">
+
+                                            <label class="form-check-label">
+                                                I confirm that the information provided is accurate, and that I agree to the Property Policies and responsibility for any damages or outstanding charges during my stay.
+                                            </label>
+                                        </div>
+                                        @*<div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="govtNote" name="checkbox2">
+                                                <label class="form-check-label" for="chkFine" style="text-transform: none;font-weight: 500;">
+                                                    I hereby acknowledge that smoking is not allowed in my suite or any area of the hotel that has not been designated as a smoking zone. If anyone in my party, or anyone I invite , smokes in my suite. I authorise the management to charge my credit card the amount of SGD $2000 before prevailing taxes as reimbursement for additional cleaning cost.
+                                                </label>
+
+                                            </div>*@
+
+                                        <div class="sign" style="max-width:350px;width:auto">
+                                            <div id="signature-pad" class="signature-pad">
+                                                <div class="signature-pad--body">
+                                                    <canvas></canvas>
+                                                </div>
+                                                <div class="signature-pad--footer">
+                                                    <div class="signature-pad--actions">
+                                                        <div class="buttons">
+                                                            <button type="button" class="button clear" data-action="clear">Clear</button>
+                                                        </div>
+                                                        <div class="description">Sign above</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-lg-6 col-xl-4 offset-xl-8 offset-lg-6">
+                                    <div class="btn-grp d-flex justify-content-between">
+                                        <button class="btn_cancel" value='Back'>Back</button>
+                                        <button class="btn_next" onclick="return SavePolicies(this)">Next<img src="~/assets/images/arrow_icon.png"></button>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                        @*<div class="tab-pane  cstm-form  @(ViewBag.PaymentProcessed ? "paymentdone" : "") " id="upgrade">
+                            <h1>Upgrade</h1>
+                            <h2>SUITE UPGRADE  <span style="text-transform:none;font-size: small;">(Subject to availability)</span></h2>
+                            <div class="row">
+                                @foreach (var package in PackageListForRoomUpsell)
+                                {
+                                    var url = $"data:image/png;base64,{Convert.ToBase64String(package.PackageImage)}";
+                                    var isUpsellSelected = ((List<CheckinPortal.Models.ReservationPackageModel>)ViewBag.ReservationPackagesList).Any(x => x.PackageID == package.PackageID);
+
+
+                                    <div class="col-md-6 col-lg-4 col-xl-3 @package.PackageID">
+                                        <div class="upg-wrap">
+                                            <div class="upgrade">
+                                                <span class="tick" data-upselltype="Upsell" style="display:@(isUpsellSelected ? "block" : "none")"></span>
+                                                <img class="img-fluid" src="@url">
+                                            </div>
+                                            <div class="btn-wrap" style="height:120px">
+                                                <div class="row">
+                                                    <div class="col"><label>@package.PackageName</label> </div>
+                                                    <div class="col-auto">
+                                                        <a href="#/" class="selectUpsell" onclick="showUpsellPopup(this,'Upsell')">DETAILS</a>
+                                                        <input type="hidden" value="@package.PackageName" class="upsellPackageName" />
+                                                        <input type="hidden" value="@url" class="upsellImage" />
+                                                        <input type="hidden" value="@package.PackageAmount" class="packageAmount" />
+                                                        <input type="hidden" value="@package.PackageCode" class="packageCode" />
+                                                        <input type="hidden" value="@package.PackageDesc" class="packageDesc" />
+                                                        <input type="hidden" value="@package.PackageID" class="packageID" />
+                                                        <input type="hidden" value="@package.Units" class="packageUnits" />
+                                                    </div>
+
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+
+                            </div>
+                            </div>*@
+                        @*@if (!Model.IsDepositAvailable)
+                            {
+                                <div class="tab-pane cstm-form @((ViewBag.PaymentProcessed && !ViewBag.IsPaymentSuccess) ? "active" : "paymentdone")" id="payment">
+                                    <h1>PAYMENT</h1>*@
+                        @*<h2 class="mb-none">PAYMENT</h2>\*@
+                        <!--<div class="row">
+                                    <div class="col-lg-4 col-md-12 col-sm-12" style="color: #55575c; font-size: 10px;">
+                                        <p>Credit card details are required as a guarantee against your suite charges and incidentals which may be incurred during your stay.</p>
+                                        <p>After completing this step, a merchant authorization will be charged to the credit card provided. Additional authorization depending on the requirements of your reservation will only be taken upon your arrival to Raffles Hotel Singapore.</p>
+                                        <p>The final settlement of your account will only take place at the hotel upon check-out and any overage of the authorization amount charged will be released accordingly.</p>
+                                    </div>
+                                    <div class="col-lg-4 col-md-12 col-sm-12  payment">
+                                        <div id="dropin-container"></div>
+                                    </div>
+                                    <div class="col-lg-4 col-md-12 col-sm-12">
+
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-lg-4 col-md-2 col-sm-1">
+
+                                    </div>
+                                    <div class="col-lg-4 col-md-6 col-sm-10  payment">
+                                        <div id="dropin-container"></div>
+                                    </div>
+                                    <div class="col-lg-4 col-md-2 col-sm-1">
+
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-lg-6 col-xl-4 offset-xl-8 offset-lg-6">
+                                        <div class="btn-grp d-flex justify-content-between">
+                                            <button class="btn_cancel" value='Back'>Back</button>
+                                            <button style="display:none" class="btn_next moveNext" id="btnPaymentNextButton">Next<img src="~/assets/images/arrow_icon.png"></button>
+                                            <button style="display:none" id="btnPaymentSkip" class="btn_next skippayment">Skip<img src="~/assets/images/arrow_icon.png"></button>
+
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }-->
+                        @if (!Model.IsUploadComplete)
+                        {
+                            <div class="tab-pane  cstm-form @((ViewBag.PaymentProcessed && ViewBag.IsPaymentSuccess && !ViewBag.uploadcomplete) ? "active" : "")  " id="document">
+                                <h1>Document</h1>
+                                <div class="content">
+                                    <p>Dear @Model.Profiles[0].Salutation @Model.Profiles[0].FirstName @Model.Profiles[0].MiddleName @Model.Profiles[0].LastName,</p>
+                                    <p>In this final step for identity verification, please upload a valid KTP (Indonesian national ID) or passport as required.</p>
+                                    <p id="documentUploadIntro">Please upload passport for all guests in the reservation.</p>
+                                    <div id="documentUploadSkipHelp" class="alert alert-warning" style="display:none;" role="alert">
+                                        If you experience any issues uploading your ID, please skip this step. Kindly present your ID at the front office.
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-12">
+                                            <div class="user-list">
+                                                <ul>
+                                                    @{
+                                                        var totalGuestSlots = Model.AdultCount + Model.ChildCount + Model.InfantCount;
+                                                        if (totalGuestSlots < 1)
+                                                        {
+                                                            totalGuestSlots = 1;
+                                                        }
+                                                    }
+                                                    @for (int i = 0; i < totalGuestSlots; i++)
+                                                    {
+                                                        string guestRoleLabel;
+                                                        if (i < Model.AdultCount)
+                                                        {
+                                                            guestRoleLabel = i == 0 ? "Main Guest" : ("Adult " + (i + 1));
+                                                        }
+                                                        else if (i < Model.AdultCount + Model.ChildCount)
+                                                        {
+                                                            guestRoleLabel = "Child " + (i - Model.AdultCount + 1);
+                                                        }
+                                                        else
+                                                        {
+                                                            guestRoleLabel = "Infant " + (i - Model.AdultCount - Model.ChildCount + 1);
+                                                        }
+
+                                                        string GuestName = guestRoleLabel;
+                                                        int GuestID = 0;
+                                                        int PMSProfileID = 0;
+                                                        if (Model.Profiles != null && Model.Profiles.Count > i)
+                                                        {
+                                                            var profileName = $"{Model.Profiles[i].FirstName} {Model.Profiles[i].MiddleName} {Model.Profiles[i].LastName}".Trim();
+                                                            if (!string.IsNullOrWhiteSpace(profileName))
+                                                            {
+                                                                GuestName = profileName;
+                                                            }
+
+                                                            GuestID = Model.Profiles[i].ProfileDetailID;
+                                                            PMSProfileID = Model.Profiles[i].ProfileID;
+                                                        }
+
+                                                        bool isIndonesiaBooking = false;
+                                                        if (Model.Profiles != null && Model.Profiles.Count > 0 && !string.IsNullOrWhiteSpace(Model.Profiles[0].Nationality))
+                                                        {
+                                                            var bookingNationality = Model.Profiles[0].Nationality.Trim();
+                                                            isIndonesiaBooking = bookingNationality.Equals("ID", StringComparison.OrdinalIgnoreCase)
+                                                                || bookingNationality.Equals("IDN", StringComparison.OrdinalIgnoreCase);
+                                                        }
+
+                                                        bool isRequiredUpload = isIndonesiaBooking ? (i == 0) : true;
+
+                                                        <li class="">
+                                                            <label id="guestname_@(i + 1)" data-default-name="@GuestName">@GuestName<br /><small class="text-muted">(@guestRoleLabel)</small></label>
+                                                            <div class="pic"><img src="~/assets/images/avatar.png"></div>
+                                                            <a href="#" id="guestid_@(i + 1)" class="fileUpload" data-guestpmsprofileid="@PMSProfileID" data-guestprofileid="@GuestID" data-upload="incomplete" data-guestid="@(i + 1)" data-required="@(isRequiredUpload.ToString().ToLower())" data-guest-role="@guestRoleLabel">
+                                                                <i class="fas fa-cloud-upload-alt"></i> UPLOAD@(isRequiredUpload ? "" : " (Optional)")
+                                                            </a>
+                                                            @*<a href="#" id="scan_guestid_@(i + 1)" class="scanDocument" data-guestpmsprofileid="@PMSProfileID"  data-guestprofileid="@GuestID" data-scan="incomplete" data-guestid="@(i + 1)"><i class="fas fa-camera"></i> SCAN DOCUMENT</a>*@
+                                                        </li>
+
+                                                    }
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-lg-6 col-xl-4 offset-xl-8 offset-lg-6">
+                                        <div class="btn-grp d-flex justify-content-between">
+                                            @*<button class="btn_cancel" value='Back' style="display:@((ViewBag.PaymentProcessed && ViewBag.IsPaymentSuccess)  ? "none" : "block") ">Back</button>*@
+                                            <button class="btn_next checkUpload">Next <img src="~/assets/images/arrow_icon.png"></button>
+                                            <button style="display:none" id="btnDocumentSkipAndProceed" class="btn_next skipAndProceedDocument">Skip &amp; Proceed<img src="~/assets/images/arrow_icon.png"></button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                        @*<div class="tab-pane  cstm-form" id="Questions">
+                                <form id="frmDeclaration" name="frmDeclaration">
+                                    <div class="question">
+                                        <h1>PRE-ARRIVAL HEALTH DECLARATION</h1>
+                                        <h2 class="mb-none">declaration</h2>
+                                        <div class="alert alert-warning" role="alert">
+                                            As we navigate through the ongoing pandemic, Raffles Singapore continues to embody the philosophy that guides our service excellence, whilst maintaining the highest hygiene standards to safeguard the health and wellbeing of all guests and colleagues.
+                                        </div>
+                                        @{
+                                            int QuestionIndex = 1;
+                                        }
+                                        @foreach (var question in Model.Questions)
+                                        {
+                                            <div class="qs">
+
+                                                @if (question.QuestionType == "Radio")
+                                                {
+                                                    <p>
+                                                        <span>@(QuestionIndex++)</span>
+                                                        @question.Question <span class="error" style="background:white">*</span>
+                                                    </p>
+
+                                                    <div class="ans">
+                                                        <div class="custom-control custom-radio custom-control-inline">
+                                                            <input type="radio" id="1_Answer_@question.QuestionID" required
+                                                                   name="Answer[@question.QuestionID]"
+                                                                   value="Yes"
+                                                                   class="custom-control-input declarationRadio">
+                                                            <label class="custom-control-label" for="1_Answer_@question.QuestionID">Yes</label>
+                                                        </div>
+                                                        <div class="custom-control custom-radio custom-control-inline">
+                                                            <input type="radio" id="2_Answer_@question.QuestionID"
+                                                                   name="Answer[@question.QuestionID]" required
+                                                                   value="No"
+                                                                   class="custom-control-input declarationRadio">
+                                                            <label class="custom-control-label" for="2_Answer_@question.QuestionID">No</label>
+                                                        </div>
+                                                    </div>
+                                                }
+                                                else if (question.QuestionType == "Checkbox")
+                                                {
+                                                    <div class="custom-control custom-checkbox" style="padding-left: 0">
+                                                        <p>
+                                                            <span>@(QuestionIndex++)</span>
+
+                                                            <label class="custom-control-label1" for="Answer[@question.QuestionID]">
+                                                                <input type="checkbox" class="custom-control-input1 passholder"
+                                                                       id="Answer[@question.QuestionID]"
+                                                                       name="Answer[@question.QuestionID]" onclick="enableDisableNextInput(this)">
+
+                                                                @question.Question <span class="error" style="background:white">*</span>
+                                                            </label>
+                                                        </p>
+
+
+                                                    </div>
+                                                }
+                                                else
+                                                {
+                                                    <p>
+                                                        <span>@(QuestionIndex++)</span>
+                                                        @question.Question <span class="error" style="background:white">*</span>
+                                                    </p>
+
+                                                    <div class="ans">
+                                                        <textarea class="form-control" name="Answer[@question.QuestionID]" required></textarea>
+                                                    </div>
+                                                }
+
+                                                @if (!string.IsNullOrEmpty(question.QuestionHint))
+                                                {
+
+                                                    <div class="msg"><p>@Html.Raw(HttpUtility.HtmlDecode(question.QuestionHint))</p></div>
+                                                }
+
+                                            </div>
+                                        }
+
+                                        <div class="row">
+                                            <div class="col-md-12">
+                                                <div class="button-center mt-4">
+                                                    <button type="button" class="btn_next btn_blue confirmDeclaration"><i class="fas fa-check-circle"></i> Confirm</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>*@
+
+                        <div class="tab-pane   cstm-form @((ViewBag.PaymentProcessed && ViewBag.IsPaymentSuccess && ViewBag.uploadcomplete) ? "active" : "")" id="qrCode">
+                            <div class="content">
+                                <div class="qr">
+                                    <div class="code">
+                                        <img height="180" src="data:image/jpeg;base64,@ViewBag.QRcode" id="qrImage">
+                                        <p>@Model.ReservationNumber</p>
+
+                                    </div>
+                                    <p>
+                                        Thank you for completing your Pre-Arrival Registration! Please save your QR code and confirmation number for easy presentation upon arrival at the Front Desk.
+                                        Our standard check-in time is 3:00 PM and check-out time is 12:00 PM.<br>
+                                        We look forward to welcoming you to our slice of paradise soon.
+                                    </p>
+                                    <div class="row">
+                                        <div class="col-md-12 text-center mt-5">
+                                            @*<div class="buttonwrapper">
+                                                    <ul>
+                                                        <li><a class="apple" href="#"></a></li>
+                                                        <li><a class="google" href="#"></a></li>
+                                                    </ul>
+                                                    <a href="#">Save to Photo Library</a>
+                                                </div>*@
+                                            @*<img src="data:image/jpeg;base64,@ViewBag.CalQRcode" height="200" />*@
+                                            <br /><br />
+                                            <iframe id="my_iframe" style="display:none;"></iframe>
+
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    @*<div class="col-md-12 text-center ">
+                                            <a href="@Url.Action("CompletePreCheckin","Home",new { ReservationID = Model.ReservationID })" class="ok_btn mt-2"><img src="~/assets/images/tick_icon.png">OK</a>
+                                        </div>*@
+                                    <div class="col-md-12 text-center ">
+                                        <a href="javascript:void(0);" id="btncmpcheckin" class="ok_btn mt-2"><img src="~/assets/images/tick_icon.png">OK</a>
+                                        <a id="downloadQR"
+                                           download="QRCode.jpg"
+                                           href="data:image/jpeg;base64,@ViewBag.QRcode"
+                                           class="ok_btn mt-2">
+
+                                            <img src="~/assets/images/tick_icon.png">
+                                            Save QR Code
+                                        </a>
+                                    </div>
+
+                                </div>
+
+                                @*<div class="address">
+                                        <label>1 BEACH ROAD, SINGAPORE 189673</label>
+                                        <label>T +65 6337 1886</label>
+                                        <label>E <a href="mailto:singapore@raffles.com">singapore@raffles.com</a></label>
+                                    </div>*@
+                                <div class="social-media">
+                                    <p>Subscribe or follow us on Facebook, Instagram and TikTok for exclusive offers and updates.</p>
+                                    <ul>
+                                        <li><a target="_blank" href="https://balimandira.com"><i class="fas fa-globe"></i></a></li>
+                                        <li>
+                                            <a target="_blank" href="https://www.facebook.com/balimandira"><i class="fab fa-facebook-square"></i></a>
+                                        </li>
+                                        <li>
+                                            <a target="_blank" href="https://www.instagram.com/balimandira/"><i class="fab fa-instagram"></i></a>
+                                        </li>
+                                        <li>
+                                            <a target="_blank" href="https://www.tiktok.com/&#64;balimandira">
+                                                <img src="~/assets/images/tiktok.png"
+                                                     alt="TikTok"
+                                                     style="width: 26px; height: 26px; vertical-align: middle; position: relative; top: -3px;" />
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade cstm-modal" id="AdditionaltermsAndConditionModal" tabindex="-1" role="dialog" aria-labelledby="AdditionaltermsAndConditionModalLabel" style="display: none;" aria-hidden="true">
+    <div class="modal-dialog  modal-dialog-centered privacy-model" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Terms and Conditions </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true" class="close_icon"></span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>
+                    Please review our <a href="https://www.balimandira.com/terms-conditions/" target="_blank">
+                        Terms and Conditions
+                    </a> before proceeding.
+
+                    @*Please note that all important terms and conditions have been outlined on the previous page.
+                    For your comfort and safety, complimentary safety deposit boxes are available in each room for the safekeeping of your valuables. Kindly note that a charge of IDR 1,000,000 will apply should you choose to smoke in one of our non-smoking rooms.*@
+                </p>
+                <p>
+                    For your comfort and security, complimentary safety deposit boxes are provided in every room for the safekeeping of your valuables.
+                </p>
+                <p>
+                    Please note that smoking is strictly prohibited in our non-smoking rooms. A cleaning fee of IDR 1,000,000 will be charged if smoking occurs in these rooms.
+                </p>
+                @*<p>
+                    <a href="https://www.balimandira.com/terms-conditions/" target="_blank">
+                        Terms and Conditions
+                    </a>
+                </p>*@
+                <p>
+                    Want to know what’s happening around the resort during your stay? From dining highlights to beachfront events, <a href="https://www.balimandira.com/whats-new-news/" target="_blank"
+                                                                                                                                      rel="balimandira">click here to find out what's on at Bali Mandira.</a>
+                </p>
+
+                <div class="mt-4 text-center">
+                    <button class="btnstyle blue" data-dismiss="modal" aria-label="Close">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade cstm-modal" id="termsAndConditionModal" tabindex="-1" role="dialog" aria-labelledby="termsAndConditionModalLabel" aria-hidden="true">
+    <div class="modal-dialog  modal-dialog-centered privacy-model" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="termsAndConditionModalLabel">Terms and Conditions </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true" class="close_icon"></span>
+                </button>
+            </div>
+            <div class="modal-body">
+
+                <p>-I acknowledge that the liability of Raffles Hotel Singapore is governed by Innkeepers' Act.</p>
+                <p>
+                    -I agree that I am liable for the payment of the above and if the person, company or association indicated by me as responsible for payment of the same does not do so, I will be liable for such payment.
+                </p>
+                <p>-I agree and authorize that any late charges shall be billed to my credit card as provided above.</p>
+                <p>-Check-in time 3.00 pm Check-out time 12 Noon</p>
+                <p>-All suite rates are subject to 10% service charge and prevailing 8% good and service taxes</p>
+
+                <p>
+                    -The hotel, as data controller, processes the personal data you provide in this form or during your stay for the purposes of booking management, compliance with legal obligations, and based on legitimate interest, for marketing activities and the improvement of the quality of your stays, including satisfaction enquiries. Commercial communications by electronic means are subject to your prior consent. The data is disclosed to Accor SA acting as a separate data controller, other Accor Group legal entities and all hotel's and entities' service providers. In particular, the data related to your stays, preferences, satisfaction and, if the cases may be, your loyalty program is shared between the hotels operated under one of the Accor Group hotels brands in order to improve the quality of your stays in each of these hotels. You may at any time object to the sharing of this data between the hotels of the Group by writing to data.privacy@accor.com. You have the right to request from the data controller, access to and rectification or erasure of your personal data or restriction of processing or to object to processing as well as the right to data portability. You also have the right to lodge a complaint with a supervisory authority. For more information, you can consult our website <a target="_blank" href="https://all.accor.com/india/index.en.shtml">www.all.accor.com</a> or ask for a copy of our data protection charter.
+                </p>
+                <p>
+                    -The use of the Accor Customer Digital Card (ACDC) by Accor and by hotels operating under any of the Accor Group brands involves joint processing of customers' personal data. Accordingly, a joint data controllership agreement has been established in order to determine in a transparent manner the respective responsibilities of Accor SA and the hotels for compliance with the obligations under the European General Data Protection Regulation. This agreement reflects the respective roles and relationships of the joint controllers vis-à-vis the customers. Any authorized representative of the hotel may request a copy of this agreement by writing to ACCOR.DATA.PROTECTION.OFFICER@accor.com
+                </p>
+
+                <div class="mt-4 text-center">
+                    <button class="btnstyle blue termscondition" data-dismiss="modal" aria-label="Close">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade cstm-modal" id="upgradeConditionModal" tabindex="-1" role="dialog" aria-labelledby="upgradeConditionModalLabel" aria-hidden="true">
+    <div class="modal-dialog  modal-dialog-centered privacy-model" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="upgradeConditionModalLabel">Message</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true" class="close_icon"></span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <h5>Please accept the upgrade terms and conditions</h5>
+                <div class="mt-4 text-center">
+                    <button class="btnstyle blue" data-dismiss="modal" aria-label="Close">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade cstm-modal" id="exampleModal3" tabindex="-1" role="dialog" data-backdrop="static" data-keyboard="false" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog  modal-dialog-centered upload-model" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">UPLOAD</h5>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="file-up-wrap">
+                            <label class="lb suces-sp"><span>1</span>Document</label>
+                            <div class="custom-file">
+                                <input type="file" class="custom-file-input" id="customFile11">
+                                <label class="custom-file-label" for="customFile" style=" position: relative; width: 100%; margin-top: 10px;">Choose file</label>
+                            </div>
+                            <label class="lb suces-sp"><span>2</span>Document</label>
+                            <div class="custom-file">
+                                <input type="file" class="custom-file-input" id="customFile12">
+                                <label class="custom-file-label" for="customFile">Choose file</label>
+                            </div>
+                            <label class="lb"><span>3</span>Document</label>
+                            <div class="custom-file">
+                                <input type="file" class="custom-file-input" id="customFile13">
+                                <label class="custom-file-label" for="customFile" style=" position: relative; width: 100%; margin-top: 10px;">Choose file</label>
+                            </div>
+                            <!--<div class="progress mb-2">
+                              <div class="progress-bar bg-success" role="progressbar" style="width: 25%;" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100">25%</div>
+                            </div>-->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="button-wrapper1">
+                    <button class="btn_cancel " data-dismiss="modal" aria-label="Close">Cancel</button>
+                    <button class="btn_ok" data-guestid="" aria-label="Close">OK</button>
+
+                </div>
+                <div class="mt-4 text-center mb-4">
+                    <span class="support">Supported File Type is .jpb and .png With Max Size Of 2MB</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade cstm-modal" id="DocumentUploadprimaryGuest" tabindex="-1" role="dialog" data-backdrop="static" data-keyboard="false" aria-labelledby="DocumentUploadprimaryGuestLabel" aria-hidden="true">
+    <div class="modal-dialog  modal-dialog-centered upload-model" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="DocumentUploadprimaryGuestLabel">UPLOAD</h5>
+                <input type="hidden" value="" id="currentProfileID" />
+                <input type="hidden" value="" id="currentGuestIndex" />
+                <input type="hidden" value="" id="currentguestprofileid" />
+            </div>
+            <div class="modal-body">
+                <div class="d-flex justify-content-center align-items-center">
+                    <div id="primaryDoc_alert"
+                         class="row alert alert-success fade-alert"
+                         style="margin:0; padding:10px; margin-top:-10px;">
+                        <span></span>
+                    </div>
+
+                </div>
+                <div class="row">
+
+                    <div class="message" id="upgradeTerms" style="margin:0;text-align:left">
+                        <ul id="documentUploadGuidance">
+                            <li>Indonesian guests: upload KTP (national ID) or passport for the main guest.</li>
+                            <li>Foreign guests: upload passport for the main guest.</li>
+                            <li>Document upload for accompanying guests, children, and infants is optional.</li>
+                        </ul>
+
+                        @*1. For Singaporeans & Permanent Residents, please upload the front and back of your Identity Card separately.<br>
+                            2. For non-residents, please upload an image of the information page from your passport.*@
+
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="file-up-wrap">
+                            <label class="lb suces-sp"><span>1</span>Document</label>
+                            <div class="custom-file">
+                                <div class="row" style="margin:auto">
+                                    <img src="" id="imgprimaryDoc1" class="img-fluid " style="display: none;margin: auto;height: 200px;" />
+                                </div>
+                                <input type="file" class="custom-file-input docUploadFile" id="primaryDoc1">
+                                <label class="custom-file-label" for="customFile" style="width: 100%;margin-top: -30px;position: relative;">Choose file</label>
+                                <div id="primaryDoc1_alert"
+                                     class="row alert alert-success fade-alert" style="margin: 0px; padding: 10px; margin-top: -22px;">
+                                    <span></span>
+                                </div>
+                            </div>
+                        </div>
+                        <br />
+                        <br />
+                        <br />
+                        <label class="lb suces-sp" style="display:none"><span>2</span>Document</label>
+                        <div class="custom-file" style="display:none">
+                            <div class="row" style="margin:auto">
+                                <img src="" id="imgprimaryDoc2" class="img-fluid " style="display:none;margin: auto;height: 200px;" />
+                            </div>
+                            <input type="file" class="custom-file-input docUploadFile" id="primaryDoc2" disabled>
+                            <label class="custom-file-label" for="customFile" style="width: 100%;margin-top: -30px;position: relative;">Choose file</label>
+                            <div id="primaryDoc2_alert" class="row alert-success alert" style="margin: 0px; padding: 10px; margin-top: -22px;">
+                                <span></span>
+                            </div>
+
+                        </div>
+                        <label class="lb" style="display:none"><span>3</span>Document</label>
+                        <div class="custom-file" style="display:none">
+                            <div class="row" style="margin:auto">
+                                <img src="" id="imgprimaryDoc3" class="img-fluid " style="display:none;margin: auto;height: 200px;" />
+                            </div>
+                            <input type="file" class="custom-file-input  docUploadFile" id="primaryDoc3">
+                            <label class="custom-file-label" for="customFile" style="width: 100%;margin-top: -30px;position: relative;">Choose file</label>
+                            <div id="primaryDoc3_alert" class="row alert-success alert" style="margin: 0px; padding: 10px; margin-top: -22px;">
+                                <span></span>
+                            </div>
+                        </div>
+                        <br />
+                        <br />
+                        <!--<div class="progress mb-2">
+                          <div class="progress-bar bg-success" role="progressbar" style="width: 25%;" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100">25%</div>
+                        </div>-->
+                    </div>
+                </div>
+            </div>
+
+            <div id="documentUploadSkipHelpModal" class="alert alert-warning mx-3" style="display:none;" role="alert">
+                If you experience any issues uploading your ID, please skip this step. Kindly present your ID at the front office.
+            </div>
+            <div class="button-wrapper1">
+                <button class="btn_cancel " data-dismiss="modal" aria-label="Close" onclick="resetDocumentInfo(); clearFileUpload();">Cancel</button>
+                <button class="btn_ok btnUploadPrimaryDoc" data-guestid="1">OK</button>
+                <button style="display:none" id="btnDocumentSkipModal" class="btn_ok skipdocument">Skip</button>
+            </div>
+            <div class="mt-4 text-center mb-4">
+                <span class="support">Supported file types are .jpg and .png with max. size of 2MB.</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="upsellModal" tabindex="-1" role="dialog" aria-labelledby="upsellModalLabel" aria-hidden="true">
+    <div class="modal-dialog hotel-view modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-body">
+                <div class="hotel-details">
+                    <div class="row">
+                        <div class="col-md-5">
+                            <div class="image-wrap">
+                                <img class="img-fluid" src="" id="upsellModalImg">
+                            </div>
+                        </div>
+                        <div class="col-md-7">
+                            <div class="logosm">
+                                <h2 id="upsellModalPackageName"></h2>
+                            </div>
+                            <p id="upsellModaldescription"></p>
+                            <span class="amount" id="upsellModalAmount"></span>
+                            <span class="amountCondition">per room per night</span>
+                            <div class="row upsell-amount-description">
+                                <span>Price stated is subject to 10% service charge and prevailing government taxes.</span>
+                            </div>
+
+                            <div class="btn-grp upsellconfirmDiv">
+                                <button class="btn_cancel" id="upsellDetailCancelButton" onclick="cancelPackageDetailPopup(this)" data-dismiss="modal" data-packageID="">Cancel</button>  @*data-toggle="modal" data-target="#ConfirmCancelUpsell"*@
+                                <button class="btn_next" onclick="confirmPackage(this)" id="upsellConfirmButton" data-packageID="" data-upselltype="">
+                                    <i class="fas fa-check-circle"></i> Request
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="ConfirmCancelUpsell" tabindex="-1">
+    <div class="modal-dialog confirm modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-body">
+                <div class="hotel-details">
+                    <div class="row">
+                        <div class="col-md-12 text-center">
+                            <p>Are you sure you want to discard this option?</p>
+                            <div class="button-wrapper text-center mt-4">
+                                <button class="btnstyle grey" data-dismiss="modal" data-toggle="modal" data-target="#upsellModal">No</button>
+                                <button class="btnstyle blue" data-dismiss="modal" data-packageID="" data-upselltype="" id="upsellCancelButton" onclick="cancelPackage(this)"><i class="fas fa-check-circle"></i> Yes</button>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade cstm-modal" id="paymentAmountConfirmationModal_old" tabindex="-1" role="dialog" data-backdrop="static" data-keyboard="false" aria-labelledby="paymentAmountConfirmationModalLabel" aria-hidden="true">
+    <div class="modal-dialog  modal-dialog-centered upload-model" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="paymentAmountConfirmationModalLabel">confirmation</h5>
+            </div>
+            <div class="modal-body">
+                <div class="quest card-quest">
+                    <h5>Please verify your preauthorisation details </h5>
+                    <div class="card-det" style="color:black">
+                        <div class="row">
+                            <div class="col-md-1"></div>
+                            <div class="col-md-10 ">
+                                <div class="payment-details">
+                                    <h3>PREAUTHORISATION DETAILS</h3>
+                                    <div class="form-group row">
+                                        <label class="col-7 col-lg-4 col-xl-5">AMOUNT</label>
+                                        <div class="col-5 col-lg-8 col-xl-7">
+                                            <span id="spanRoomRate1" style="text-shadow: none;">SGD 220</span>
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <label class="col-7 col-lg-4 col-xl-5">Incidental Charges</label>
+                                        <div class="col-5 col-lg-8 col-xl-7">
+                                            <span id="spanIncidential1" style="text-shadow: none;">SGD 100</span>
+                                        </div>
+                                    </div>
+                                    <hr>
+                                    <div class="form-group row">
+                                        <label class="col-7 col-lg-4 col-xl-5">Total</label>
+                                        <div class="col-5 col-lg-8 col-xl-7">
+                                            <span id="spanTotalAmount1" style="text-shadow: none;">SGD 320<span style="text-shadow: none;">(Inclusive of Charges to Tax)</span></span>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+                            <div class="col-md-1"></div>
+                        </div>
+                    </div>
+
+                    <div class="btns">
+                        <button class="no" data-dismiss="modal" aria-label="Close">No</button>
+                        <button class="yes" data-dismiss="modal" data-toggle="modal" onclick="proceedWithPayment()">Yes</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="paymentAmountConfirmationModal" tabindex="-1" role="dialog" aria-labelledby="paymentAmountConfirmationModalLabel" aria-hidden="true">
+    <div class="modal-dialog bill-view modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="paymentAmountConfirmationModalLabel">Please verify your preauthorisation details</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true" class="close_icon"></span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="cstm-payment">
+                    @*<h4 id="idPaymentTitleLable">PREAUTHORISATION DETAILS</h4>*@
+                    @*<div class="form-group row">
+                            <label class="col-7 col-lg-4 col-xl-5">AMOUNT</label>
+                            <div class="col-5 col-lg-8 col-xl-7">
+                                <span id="spanRoomRate">SGD 220</span>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label class="col-7 col-lg-4 col-xl-5">Incidental Charges</label>
+                            <div class="col-5 col-lg-8 col-xl-7">
+                                <span  id="spanIncidential">SGD 100</span>
+                            </div>
+                        </div>
+                        <hr>*@
+                    <div class="form-group total row">
+                        <label class="col-7 col-lg-4 col-xl-5">Total</label>
+                        <div class="col-5 col-lg-8 col-xl-7">
+                            <span id="spanTotalAmount">SGD 0.00 <span style="text-shadow: none;">(Inclusive of Charges to Tax)</span></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="button-wrapper text-center mt-3 mb-3">
+                    <button class="btnstyle grey" data-dismiss="modal" aria-label="Close">No</button>
+                    <button class="btnstyle blue" data-guestid="" onclick="proceedWithPayment()">Yes</button>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Microblink Modal -->
+<!--<div class="modal" id="scanDocumentModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Scan Document</h5>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body p-0">-->
+<!-- Load BlinkID into iframe -->
+<!--<iframe id="blinkFrame" src="/BlinkID/Index" width="100%" height="600px" style="border:0;"></iframe>
+            </div>
+        </div>
+    </div>
+</div>-->
+@section Scripts{
+    <script src="~/assets/js/multilang.js"></script>
+    <script src="~/assets/js/adyenFunctions.js"></script>
+    <script>
+        var upselAvailable="@(PackageList.Count > 0)"
+    </script>
+
+    <script src="~/assets/js/signature_pad.umd.js"></script>
+    <script src="~/assets/js/main.js"></script>
+    @*<script src="~/assets/js/documentUpload.js"></script>*@
+    <script src="~/assets/js/wizard.js"></script>
+    @*<script src="~/assets/js/app.js"></script>*@
+    @Scripts.Render("~/bundles/jqueryval")
+    <script>
+        // ── intl-tel-input Initialisation ────────────────────────────────────
+        // Plugin docs: https://github.com/jackocnr/intl-tel-input
+        // Flags/data served from the official CDN utility script below.
+        // ─────────────────────────────────────────────────────────────────────
+        var phoneInputEl;
+        var iti;
+        // ── Phone pre-fill helper ───────────────────────────────────────────────
+        // Extracted as a named function so it can be called:
+        //   1. On first page load (document.ready below)
+        //   2. Every time the user navigates BACK to the Guest Details tab,
+        //      because this is a SPA wizard — the DOM is never reloaded, so
+        //      document.ready does NOT re-run on tab navigation.
+        //
+        // OPERA stores numbers in two formats (no "+" ever):
+        //   (a) dialCode + national : "918089063877"
+        //   (b) national only       : "8089063877"
+        // Country dropdown may also be blank.
+        //
+        // After a Next click, SaveReservationAndMoveNext sets phoneInput.value
+        // to "918089063877" (dialCode+national, no "+") for server submission.
+        // When the user hits Back, that polluted value is still in the DOM input.
+        // restorePhoneDisplay() cleans it up every time it is called.
+        //function restorePhoneDisplay() {
+
+        //    if (!window.iti || !phoneInputEl) return;
+
+        //    // Read whatever is currently in the input (may be polluted from last save).
+        //    var raw = phoneInputEl.value.replace(/\s/g, "");
+
+        //    if (!raw) return;
+
+        //    // Strategy A: prepend "+" and let iti auto-detect from E.164.
+        //    // Works perfectly for format (a): "+918089063877" → India, shows "8089063877".
+        //    iti.setNumber("+" + raw);
+
+        //    var detected = iti.getSelectedCountryData();
+
+        //    if (detected && detected.iso2) {
+        //        // iti resolved country AND stripped the dial code from the input display.
+        //        return;
+        //    }
+
+        //    // Strategy B: iti couldn't detect a country (format (b) national-only number).
+        //    // Set country flag from the dropdown, then write the raw digits as-is.
+        //    var selectedCountryText =
+        //        $("#Profiles_0__CountryID option:selected").text().trim();
+
+        //    if (selectedCountryText && selectedCountryText !== "Select Country") {
+
+        //        var countryList = window.intlTelInputGlobals.getCountryData();
+
+        //        var match = countryList.find(function (c) {
+        //            return c.name.toLowerCase() === selectedCountryText.toLowerCase();
+        //        });
+
+        //        if (match) {
+        //            iti.setCountry(match.iso2);
+        //        }
+        //    }
+
+        //    // Write the national number directly.
+        //    phoneInputEl.value = raw;
+        //}
+        function restorePhoneDisplay() {
+
+            if (!iti || !phoneInputEl) return;
+
+            var raw = phoneInputEl.value.replace(/\s/g, "").replace(/^\+/, "");
+
+            if (!raw) return;
+
+            var selectedCountryText =
+                $("#Profiles_0__CountryID option:selected").text().trim();
+
+            var countryList = window.intlTelInputGlobals.getCountryData();
+
+            var selectedLower = selectedCountryText.toLowerCase();
+
+            var match = findIntlCountryByDropdownText(selectedCountryText);
+
+            console.log("selectedCountryText:", selectedCountryText);
+            console.log("match:", match);
+
+            if (match) {
+
+                // Set correct flag/country
+                iti.setCountry(match.iso2);
+
+                var dialCode = match.dialCode; // UAE = 971, India = 91
+
+                // Remove country code from stored number
+                if (raw.startsWith(dialCode)) {
+                    raw = raw.substring(dialCode.length);
+                }
+            }
+
+            // Show only national number
+            phoneInputEl.value = raw;
+        }
+        // Hook Back buttons so the phone display is restored when returning to
+        // Guest Details. wizard.js handles tab switching via .btn_cancel clicks.
+        $(document).on("click", ".btn_cancel", function () {
+            // Small delay to let wizard.js finish showing the tab before we fix the input.
+            setTimeout(function () {
+                if ($("#guestDetails").hasClass("active")) {
+                    restorePhoneDisplay();
+                }
+            }, 50);
+        });
+
+        $(document).ready(function () {
+
+            phoneInputEl = document.querySelector("#phoneNumber");
+
+            if (phoneInputEl) {
+
+                //iti = window.intlTelInput(phoneInputEl, {
+
+                //    utilsScript: "/assets/js/intlTelInput/js/utils.js",
+
+                //    separateDialCode: true,
+
+                //    initialCountry: "in",
+
+                //    allowDropdown: true,
+
+                //    autoPlaceholder: "polite",
+
+                //    preferredCountries: ["in", "us", "gb", "sg", "ae"]
+                //});
+
+                // Initial pre-fill on first page load.
+                /*restorePhoneDisplay();*/
+
+                //if (existingValue) {
+
+                //    // Always let intl-tel-input detect country from number first
+                //    iti.setNumber("+" + existingValue);
+
+                //}
+                //else {
+
+                //    // fallback if number empty
+                //    var selectedCountryText =
+                //        $("#Profiles_0__CountryID option:selected").text().trim();
+
+                //    var countryList =
+                //        window.intlTelInputGlobals.getCountryData();
+
+                //    var match = countryList.find(function (c) {
+
+                //        return c.name.toLowerCase() ===
+                //            selectedCountryText.toLowerCase();
+
+                //    });
+
+                //    if (match) {
+
+                //        iti.setCountry(match.iso2);
+
+                //    } else {
+
+                //        iti.setCountry("in");
+
+                //    }
+
+                //}
+                //$.validator.addMethod("validPhone", function (value, element) {
+
+                //    if (!value) return true;
+
+                //    return iti.isValidNumber();
+
+                //}, "Invalid phone number");
+                //$("#phoneNumber").rules("add", {
+                //    validPhone: true
+                //});
+            }
+
+        });
+
+
+    </script>
+
+
+    <script>
+
+    let isFileUploadComplete = false;
+                    function enableDisableNextInput(obj) {
+                        if ($(obj).is(':checked')) {
+                            $(':input:eq(' + ($(':input').index(obj) + 1) + ')').parents('div.qs').show();
+                            $(':input:eq(' + ($(':input').index(obj) + 2) + ')').parents('div.qs').show();
+
+                            $(':input:eq(' + ($(':input').index(obj) + 1) + ')').attr('disabled', false);
+                            $(':input:eq(' + ($(':input').index(obj) + 2) + ')').attr('disabled', false);
+                        }
+                        else {
+                            $(':input:eq(' + ($(':input').index(obj) + 1) + ')').parents('div.qs').hide();
+                            $(':input:eq(' + ($(':input').index(obj) + 2) + ')').parents('div.qs').hide();
+
+                            $(':input:eq(' + ($(':input').index(obj) + 1) + ')').attr('disabled', true);
+                            $(':input:eq(' + ($(':input').index(obj) + 2) + ')').attr('disabled', true);
+                        }
+                    }
+                    enableDisableNextInput(document.getElementsByClassName('passholder')[0]);
+
+
+
+                    function clearAndRemoveAllPackage(packageID) {
+
+                        selectedUpsellPackage = selectedUpsellPackage.filter(function (value, index, arr) {
+                            return value == packageID;
+                        });
+
+                        $('.tick').each(function () {
+                            if ($(this).data('upselltype') == "Upsell") {
+                                $(this).hide();
+                            }
+                        });
+                    }
+
+                    function cancelPackageDetailPopup(obj) {
+
+                        var packageid = $(obj).data('packageID');
+
+                        if (selectedUpsellPackage.indexOf(packageid) >= 0) {
+                            $('#ConfirmCancelUpsell').modal('show');
+                        }
+                        else if (selectedSpecialPackage.indexOf(packageid) >= 0) {
+                            $('#ConfirmCancelUpsell').modal('show');
+                        }
+                        else {
+                            $('#upsellModal').modal('hide');
+                        }
+
+                    }
+
+                    function savePackages(btn) {
+
+                        var packages = selectedUpsellPackage.concat(selectedSpecialPackage)
+                        if (selectedUpsellPackage.length > 0) {
+                            var upgradTerms = $('#upgradeTermsCheckbox').is(':checked');
+                            if (!upgradTerms) {
+                                $('#customMessageModalMessage').html('Please accept the upgrade terms and conditions')
+                                $('#customMessageModal').modal('show');
+                                return;
+                            }
+                        }
+
+                        const data = new FormData();
+                        data.append('ReservationID', $('#ReservationID').val());
+
+                        TotalSpecialCharges = 0;
+                        $(selectedSpecialPackage).each(function (i, p) {
+                            var packageAmount = $('div .' + p).find('.packageAmount').val();
+                            TotalSpecialCharges += +packageAmount;
+                        });
+
+                        if ((+TotalSpecialCharges + +TotalRoomRate) > 0) {
+                            $('#spanTotalCharges').html('SGD ' + (+TotalSpecialCharges + +TotalRoomRate).toFixed(2) + "<span> (Inclusive of 10% service charge and prevailing government taxes)</span>");
+                        }
+                        else {
+                            $('#spanTotalCharges').html('--');
+                        }
+
+                        data.append('Packages', packages)
+                        $('.loader-screen').fadeIn(100);
+                        fetch(BaseURL + '/Home/savePackages', {
+                            method: "POST",
+                            body: data,
+                        }).then(response => response = response.json()).then(response => {
+                            moveToNextTab(btn);
+                            $('.loader-screen').fadeOut(1000);
+                        });
+                    }
+
+                    function showUpsellPopup(obj, type) {
+
+                        var description = $(obj).parent('div').find('.packageDesc').val();
+                        var PackageAmount = $(obj).parent('div').find('.packageAmount').val();
+                        var upsellImage = $(obj).parent('div').find('.upsellImage').val();
+                        var upsellPackageName = $(obj).parent('div').find('.upsellPackageName').val();
+                        var packageID = $(obj).parent('div').find('.packageID').val();
+                        var packageUnits = $(obj).parent('div').find('.packageUnits').val();
+
+
+                        $('#upsellModalPackageName').html(upsellPackageName)
+                        $('#upsellModalImg').attr('src', upsellImage)
+                        $('#upsellModalAmount').html('SGD ' + PackageAmount)
+                        $('.amountCondition').html(packageUnits)
+
+                        $('#upsellModaldescription').empty().html(description)
+
+                        $('#upsellConfirmButton').data('upselltype', type);
+                        $('#upsellConfirmButton').data('packageID', packageID);
+                        $('#upsellCancelButton').data('upselltype', type);
+                        $('#upsellCancelButton').data('packageID', packageID);
+                        $('#upsellDetailCancelButton').data('packageID', packageID);
+
+
+
+                        $('#upsellModal').modal('show');
+                    }
+
+                    function confirmPackage(obj) {
+
+                        var packageID = $(obj).data('packageID');
+                        var type = $(obj).data('upselltype');
+                        if (type == "Upsell") {
+                            if (!selectedUpsellPackage.includes(packageID)) {
+                                selectedUpsellPackage.push(packageID);
+                            }
+
+                            clearAndRemoveAllPackage(packageID);
+                        }
+                        else {
+                            if (!selectedSpecialPackage.includes(packageID)) {
+                                selectedSpecialPackage.push(packageID)
+                            }
+                        }
+
+
+                        $('div.' + packageID).find('.tick').css('z-index', '1');
+                        $('div.' + packageID).find('.tick').show();
+                        $('#upsellModal').modal('hide');
+
+                        showHideUpsellTerms();
+
+
+                    }
+
+
+                    function showHideUpsellTerms() {
+                        if (selectedUpsellPackage.length > 0) {
+                            $('#upgradeTerms').show();
+                        }
+                        else {
+                            $('#upgradeTerms').hide();
+                        }
+
+                        if (selectedSpecialPackage.length > 0) {
+                            $('#upgradeTermsSpecials').show();
+                        }
+                        else {
+                            $('#upgradeTermsSpecials').hide();
+                        }
+                    }
+
+                    function cancelPackage(obj) {
+
+                        $('#ConfirmCancelUpsell').modal();
+
+                        var packageID = $(obj).data('packageID');
+                        var type = $(obj).data('upselltype');
+
+                        if (type == "Upsell") {
+                            selectedUpsellPackage = selectedUpsellPackage.filter(function (value, index, arr) {
+                                return value != packageID;
+                            });
+                        }
+                        else {
+                            selectedSpecialPackage = selectedSpecialPackage.filter(function (value, index, arr) {
+                                return value != packageID;
+                            });
+                        }
+
+                        $('div.' + packageID).find('.tick').css('z-index', '1');
+                        $('div.' + packageID).find('.tick').hide();
+                        $('#upsellModal').modal('hide');
+
+
+                        if (selectedUpsellPackage.length > 0) {
+                            $('#upgradeTerms').show();
+                        }
+                        else {
+                            $('#upgradeTerms').hide();
+                        }
+
+                        if (selectedSpecialPackage.length > 0) {
+                            $('#upgradeTermsSpecials').show();
+                        }
+                        else {
+                            $('#upgradeTermsSpecials').hide();
+                        }
+
+
+
+                    }
+
+
+        $('select.selectCountry').on('change', function () {
+
+            //syncPhoneCountryFromDropdown();
+
+            //// Clear old validation error after country change
+            //var validator = $('#frm_guestdetails').data('validator');
+            //if (validator) {
+            //    validator.element("#phoneNumber");
+            //}
+
+            //LoadStateByCountry(this.value);
+        });
+
+        function getSelectedNationalityCode() {
+            return ($('select.selectNationality').val() || $('#selectedNationality').val() || '').toString().toUpperCase();
+        }
+
+        function isIndonesiaNationality() {
+            var nationalityCode = getSelectedNationalityCode();
+            return nationalityCode === 'ID' || nationalityCode === 'IDN';
+        }
+
+        function isUploadRequiredForGuest(guestId) {
+            if (isIndonesiaNationality()) {
+                return guestId === 1;
+            }
+            return true;
+        }
+
+        function isUploadMarkedRequired($element) {
+            var isRequired = $element.data('required');
+            return !(isRequired === false || isRequired === 'false');
+        }
+
+        function updateDocumentUploadRequirements() {
+            $('.fileUpload').each(function () {
+                var guestId = parseInt($(this).data('guestid'), 10) || 0;
+                var isRequired = isUploadRequiredForGuest(guestId);
+                $(this).data('required', isRequired);
+                var uploadLabel = '<i class="fas fa-cloud-upload-alt"></i> UPLOAD';
+                $(this).html(isRequired ? uploadLabel : uploadLabel + ' (Optional)');
+            });
+
+            var $intro = $('#documentUploadIntro');
+            if ($intro.length) {
+                if (isIndonesiaNationality()) {
+                    $intro.text('Document upload is required for the main guest only. Uploads for accompanying adults, children, and infants are optional.');
+                } else {
+                    $intro.text('Please upload document for all guests in the reservation.');
+                }
+            }
+
+            updateDocumentUploadGuidance();
+        }
+
+        function updateDocumentUploadGuidance() {
+            var $guidance = $('#documentUploadGuidance');
+            if (!$guidance.length) {
+                return;
+            }
+
+            if (isIndonesiaNationality()) {
+                $guidance.html(
+                    '<li>Indonesian guests: upload KTP (national ID) or passport for the main guest.</li>' +
+                    '<li>Document upload for accompanying guests, children, and infants is optional.</li>'
+                );
+            } else {
+                $guidance.html(
+                    '<li>Please upload document for every guest in the reservation.</li>' +
+                    '<li>All guest documents must be uploaded before you can proceed.</li>'
+                );
+            }
+        }
+
+        function getDocumentUploadValidationMessage() {
+            if (isIndonesiaNationality()) {
+                return 'Please upload KTP or passport for the main guest.';
+            }
+            return 'Please upload document for all guests.';
+        }
+
+        var documentUploadFailCount = 0;
+
+        function showDocumentUploadSkipOption() {
+            $('#documentUploadSkipHelp').show();
+            $('#btnDocumentSkipAndProceed').show();
+            $('#documentUploadSkipHelpModal').show();
+            $('#btnDocumentSkipModal').show();
+        }
+
+        function hideDocumentUploadSkipOption() {
+            $('#documentUploadSkipHelp').hide();
+            $('#btnDocumentSkipAndProceed').hide();
+            $('#documentUploadSkipHelpModal').hide();
+            $('#btnDocumentSkipModal').hide();
+        }
+
+        function clearDocumentUploadSkipOption() {
+            documentUploadFailCount = 0;
+            hideDocumentUploadSkipOption();
+        }
+
+        function updateDocumentUploadSkipVisibility() {
+            if (isDocumentUploadComplete()) {
+                clearDocumentUploadSkipOption();
+            }
+        }
+
+        function recordDocumentUploadFailure() {
+            documentUploadFailCount++;
+            if (documentUploadFailCount >= 2) {
+                showDocumentUploadSkipOption();
+            }
+        }
+
+        var pendingDocumentUploads = {};
+
+        function hasPendingDocumentUploads() {
+            return Object.keys(pendingDocumentUploads).length > 0;
+        }
+
+        function updateDocumentProceedButtonsState() {
+            var isUploading = hasPendingDocumentUploads();
+            $('.checkUpload').prop('disabled', isUploading);
+            $('#btnDocumentSkipAndProceed').prop('disabled', isUploading);
+        }
+
+        function waitForPendingDocumentUploads() {
+            return new Promise(function (resolve) {
+                function check() {
+                    if (!hasPendingDocumentUploads()) {
+                        resolve();
+                        return;
+                    }
+                    setTimeout(check, 300);
+                }
+                check();
+            });
+        }
+
+        function markGuestUploadInProgress(guestID) {
+            var $guest = $('#guestid_' + guestID);
+            $guest.data('upload', 'uploading');
+            $guest.html('<i class="fas fa-spinner fa-spin"></i> UPLOADING');
+            $guest.parent('li').removeClass('sucess');
+        }
+
+        function markGuestUploadFailed(guestID) {
+            var $guest = $('#guestid_' + guestID);
+            var isRequired = isUploadMarkedRequired($guest);
+            var uploadLabel = '<i class="fas fa-cloud-upload-alt"></i> UPLOAD';
+            $guest.data('upload', 'incomplete');
+            $guest.html(isRequired ? uploadLabel : uploadLabel + ' (Optional)');
+            $guest.parent('li').removeClass('sucess');
+        }
+
+        function markGuestUploadCompleted(guestID) {
+            var $guest = $('#guestid_' + guestID);
+            $guest.parent('li').addClass('sucess');
+            $guest.data('upload', 'completed');
+            $guest.html('<i class="fas fa-check-circle"></i> COMPLETE');
+        }
+
+        function proceedDocumentUpload($trigger) {
+            $('.loader-screen').fadeIn(100);
+            waitForPendingDocumentUploads().then(function () {
+                $.ajax({
+                    url: "@Url.Action("CompletedocUploadAsync", "Home")",
+                    method: "POST",
+                    type: "POST",
+                    dataType: "json",
+                    data: {
+                        ReservationNumber: @Model.ReservationNumber,
+                        ReservationNameID: @Model.ReservationNameID,
+                    },
+                    success: function (data) {
+                    },
+                    error: function (data) {
+                    }
+                });
+                documentupload = true;
+                $('.loader-screen').fadeOut(500);
+                moveToNextTab($trigger);
+            });
+        }
+
+        function isDocumentUploadComplete() {
+            var isComplete = true;
+            $('.fileUpload,.fileUpload1,.fileUpload2').each(function () {
+                if (!isUploadMarkedRequired($(this))) {
+                    return;
+                }
+                var uploadStatus = $(this).data('upload');
+                if (uploadStatus === 'incomplete' || uploadStatus === 'uploading') {
+                    isComplete = false;
+                }
+            });
+
+            $('.scanDocument').each(function () {
+                if (!isUploadMarkedRequired($(this))) {
+                    return;
+                }
+                if ($(this).data('scan') === 'incomplete') {
+                    isComplete = false;
+                }
+            });
+
+            return isComplete;
+        }
+
+        $('select.selectNationality').on('change', function () {
+            $("#selectedNationality").val(this.value);
+            updateDocumentUploadRequirements();
+        });
+
+        updateDocumentUploadRequirements();
+        $("#selectedNationality").val($('select.selectNationality').val());
+
+        function syncPhoneCountryFromDropdown() {
+
+            if (!iti || !window.intlTelInputGlobals) return;
+
+            var selectedCountryText =
+                $("#Profiles_0__CountryID option:selected").text().trim();
+
+            var match = findIntlCountryByDropdownText(selectedCountryText);
+
+            if (match) {
+                iti.setCountry(match.iso2);
+            }
+        }
+
+
+        function SaveReservationAndMoveNext(btn) {
+            const phoneInput = document.querySelector("#phoneNumber");
+            //if (iti) {
+            //    let fullNumber = iti.getNumber();
+            //    let dialCode = iti.getSelectedCountryData().dialCode;
+            //    let nationalNumber = fullNumber
+            //        .replace(new RegExp("^\\+" + dialCode), "")
+            //        .replace(/\s/g, "");
+            //    phoneInput.value = nationalNumber;
+            //}
+            var form = $('#frm_guestdetails');
+            if (!form.valid()) {
+
+                console.log("Form invalid");
+                console.log("Error list:", form.validate().errorList);
+
+                var errors = form.validate().errorList.map(function (e) {
+                    return {
+                        name: e.element.name,
+                        id: e.element.id,
+                        value: e.element.value,
+                        message: e.message
+                    };
+                });
+
+                console.table(errors);
+
+                //alert(
+                //    errors.map(function (e) {
+                //        return e.name + " : " + e.message;
+                //    }).join("\n")
+                //);
+
+                return false;
+            }
+            //phoneInput.value = iti.getNumber()
+            //    .replace('+', '')
+            //    .replace(/\s/g, '');
+            $('.loader-screen').fadeIn(100);
+            const data = new URLSearchParams(
+                new FormData(document.getElementById('frm_guestdetails'))
+            );
+            fetch(BaseURL + '/Home/UpdateReservation', {
+                method: "POST",
+                body: data
+            })
+                .then(response => response.json())
+                .then(response => {
+                    moveToNextTab(btn);
+                    $('.loader-screen').fadeOut(1000);
+                });
+        }
+
+                    function SavePolicies(btn) {
+
+                        const data = new FormData();
+                        //var terms = $('#IsTermsAndConditionAccepted').is(':checked')
+                        var terms = $('#IsAdditionalTermsAndConditionAccepted').is(':checked')
+
+                        //if (Addterms && terms) {
+                        if (terms) {
+                            data.append('ReservationNumber', '@Model.ReservationNumber')
+                            data.append('ReservationNameID','@Model.ReservationNameID')
+                            data.append('IsTermsAndConditionAccepted', terms);
+                            data.append('ReservationID', $('#ReservationID').val());
+                            data.append('CheckBox1', terms);
+                            //data.append('CheckBox2', receviceUpdate);
+                            //data.append('CheckBox3', govtNote);
+
+                            data.append('DepositAvailable', '@Model.IsDepositAvailable');
+                            data.append('UploadComplete', '@Model.IsUploadComplete');
+                            if (signaturePad.isEmpty()) {
+                                $('#customMessageModalMessage').html("Please provide a signature first.");
+                                $('#customMessageModal').modal('show');
+
+
+                                return false;
+                            } else {
+                                var dataURL = signaturePad.toDataURL();
+                                var strImage = dataURL.replace(/^data:image\/[a-z]+;base64,/, "");
+                                data.append('Base64Signature', strImage);
+                            }
+
+                            $('.loader-screen').fadeIn(100);
+                            fetch(BaseURL + '/Home/UpdatePolicies', {
+                                method: "POST",
+                                body: data,
+                            }).then(response => response = response.json()).then(response => {
+                                moveToNextTab(btn);
+                                $('.loader-screen').fadeOut(1000);
+                            });
+                        }
+                        else {
+                            if (!terms) {
+                                $('#customMessageModalMessage').html("Please accept terms and conditions.");
+                                $('#customMessageModal').modal('show');
+                            }
+                            else {
+                                $('#customMessageModalMessage').html("Please accept additional terms and conditions.");
+                                $('#customMessageModal').modal('show');
+                            }
+                        }
+                    }
+
+                    $('.confirmDeclaration').on('click', function (e) {
+                        e.preventDefault();
+                        var btn = $(this);
+
+                        if ($('#frmDeclaration').valid()) {
+
+                            const data = new URLSearchParams();
+                            for (const pair of new FormData(document.getElementById('frmDeclaration'))) {
+                                data.append(pair[0], pair[1]);
+                            }
+                            data.append('ReservationID', $('#ReservationID').val());
+                            $('.loader-screen').fadeIn(100);
+                            fetch(BaseURL + '/Home/SaveDeclaration', {
+                                method: "POST",
+                                body: data,
+                            }).then(response => response = response.json()).then(response => {
+                                moveToNextTab(btn);
+                                $('.loader-screen').fadeOut(1000);
+                            });
+                        }
+
+                    });
+
+                    function LoadStateByCountry(countryID) {
+                        $.ajax({
+                            url: BaseURL + "/api/PortalService/GetStateByCountryID/",
+                            data: {
+                                "CountryID": countryID
+                            },
+                            type: "GET",
+                            dataType: "json",
+                            success: function (data) {
+                                var state = $('select.state');
+                                $(state).find('option').remove().end();
+                                state.append("<option value=''>Select State</option>");
+                                $(data).each(function (i, obj) {
+                                    $(state).append("<option value='" + obj.StateMasterID + "'>" + obj.Statename + "</option>");
+                                });
+                                state.val('');
+
+                                state.selectpicker('refresh');
+                            },
+                            error: function (data) {
+                                console.error(data);
+                            }
+                        });
+                    }
+
+                    function pageLoad() {
+
+                        if ($('#MembershipNo').val() != '') {
+                            $('#IsMembershipRequested').attr('disabled', true);
+                            $('#MembershipNo').attr('readonly', true);
+                        }
+                        else {
+                            $('#IsMembershipRequested').attr('disabled', false);
+                            $('#MembershipNo').attr('readonly', false);
+                        }
+
+                        if ($('#IsMembershipRequested').is(':checked')) {
+                            $('#MembershipNo').attr('readonly', true);
+                        }
+
+                    }
+
+                    pageLoad();
+
+    </script>
+
+    <script>
+
+                    $('.tick').each(function () {
+                        // $(this).hide();
+                    })
+    var uploadedDocs = [];
+
+
+                   // showHideUpsellTerms();
+
+                    $('.fileUpload').on('click', function (e) {
+                        e.preventDefault();
+                        var upload1 = $(this).data('upload');
+                        if (upload1 === 'completed' || upload1 === 'uploading') {
+                            return;
+                        }
+                        var guestprofileid = $(this).data('guestprofileid');
+                        var currentguestpmsprofileid = $(this).data('guestpmsprofileid');
+                        var currentGuestIndex = $(this).data('guestid');
+                        $('#currentProfileID').val(guestprofileid);
+                        $('#currentguestprofileid').val(currentguestpmsprofileid);
+                        $('#currentGuestIndex').val(currentGuestIndex);
+
+
+                        $('.spanDocumentNotValidated').each(function (i, o) {
+                            $(o).html('');
+                            $(o).hide();
+                        });
+
+                        $('#imgprimaryDoc1').hide();
+                        $('#imgprimaryDoc2').hide();
+                        $('#imgprimaryDoc3').hide();
+
+                        $('#imgprimaryDoc1').attr('src', '');
+                        $('#imgprimaryDoc2').attr('src', '');
+                        $('#imgprimaryDoc3').attr('src', '');
+
+
+                        $('#primaryDoc1_alert').hide().removeClass('show');
+                        $('#primaryDoc2_alert').hide().removeClass('show');
+                        $('#primaryDoc_alert').hide().removeClass('show');
+
+                        $('#DocumentUploadprimaryGuest').modal('show');
+                    });
+
+        function showAlert(id, message, type) {
+            var alert = $('#' + id);
+
+            alert
+                .removeClass('alert-success alert-danger alert-warning alert-info')
+                .addClass('alert-' + type);
+
+            alert.find('span').text(message);
+
+            alert.show().addClass('show');
+
+            setTimeout(function () {
+                alert.removeClass('show');
+                setTimeout(function () {
+                    alert.hide();
+                }, 500);
+            }, 60000);
+        }
+        $('#btncmpcheckin').on('click', function (e) {
+    e.preventDefault();
+    $('.loader-screen').fadeIn(100);
+    var btn = $(this);
+    btn.prop("disabled", true);   // prevent double tap
+
+
+
+    $.ajax({
+        url: '/Home/CompletePreCheckin',
+        type: 'POST',
+        contentType: 'application/json; charset=utf-8',
+        data: JSON.stringify({
+            ReservationNumber: @Model.ReservationNumber,
+            ReservationNameId: @Model.ReservationNameID,
+            ReservationID:@Model.ReservationID,
+        }),
+        success: function (result) {
+
+            if (result.success) {
+                $('.loader-screen').fadeOut(1000);
+                window.location.href = result.redirectUrl;
+            }
+            else {
+                $('.loader-screen').fadeOut(1000);
+                btn.prop("disabled", false);
+            }
+        },
+        error: function () {
+
+            btn.prop("disabled", false);
+        }
+    });
+
+});
+                    $('.btnUploadPrimaryDoc').on('click', function (e) {
+
+                        uploadDocumentToCloud();
+
+                        //if (checkFileExtensions()) {
+                        //    uploadDocumentToCloud()
+                        //}
+                        //else {
+                        //    $('#customMessageModalMessage').html("Invalid file format selected");
+                        //    $('#customMessageModal').modal('show');
+                        //}
+                    });
+
+    $('.checkUpload').on('click', function (e) {
+      var $btn = $(this);
+      function tryProceedAfterUploads() {
+          if (!isDocumentUploadComplete()) {
+              $('#customMessageModalMessage').html(getDocumentUploadValidationMessage());
+              $('#customMessageModal').modal('show');
+              return;
+          }
+          proceedDocumentUpload($btn);
+      }
+
+      if (hasPendingDocumentUploads()) {
+          $('.loader-screen').fadeIn(100);
+          waitForPendingDocumentUploads().then(function () {
+              $('.loader-screen').fadeOut(100);
+              tryProceedAfterUploads();
+          });
+      }
+      else {
+          tryProceedAfterUploads();
+      }
+                     });
+
+                    $('.skippayment').on('click', function (e) {
+
+
+                        $.ajax({
+                            url: "@Url.Action("PaymentSkipped", "Home")",
+                            method: "POST",
+
+                            data: {
+                                "ReservationID": $("#ReservationID").val()
+                            },
+                            type: "POST",
+                            dataType: "json",
+                            success: function (data) {
+
+                            },
+                            error: function (data) {
+
+                            }
+                        });
+
+
+                        moveToNextTab($(this));
+
+                    });
+
+                    $('.skipAndProceedDocument').on('click', function (e) {
+                        e.preventDefault();
+
+                        $.ajax({
+                            url: "@Url.Action("InsertEvent", "Home")",
+                            method: "POST",
+                            data: {
+                                EventName: "DocumentUploadSkip",
+                                reservationid: $("#ReservationID").val()
+                            },
+                            type: "POST",
+                            dataType: "json"
+                        });
+
+                        proceedDocumentUpload($(this));
+                    });
+
+                    $('.skipdocument').on('click', function (e) {
+                        e.preventDefault();
+                        $('#DocumentUploadprimaryGuest').modal('hide');
+                        resetDocumentInfo();
+                        clearFileUpload();
+
+                        $.ajax({
+                            url: "@Url.Action("InsertEvent", "Home")",
+                            method: "POST",
+                            data: {
+                                EventName: "DocumentUploadSkip",
+                                reservationid: $("#ReservationID").val()
+                            },
+                            type: "POST",
+                            dataType: "json"
+                        });
+                    });
+                    function checkFileExtensions() {
+
+                        var isValid = true;
+                        $('.docUploadFile').each(function (i, o) {
+                            var filename = $(this).val();
+                            if (filename) {
+                                var extension = filename.replace(/^.*\./, '');
+
+                                if (extension == filename) {
+                                    extension = '';
+                                }
+                                else {
+                                    extension = extension.toLowerCase();
+                                }
+
+                                if (extension == 'jpg' || extension == 'jpeg' || extension == 'png') {
+
+                                }
+                                else {
+                                    isValid = false;
+                                }
+                            }
+                        });
+                        return isValid;
+                    }
+
+                    var documentInformation = {
+                        documentType: "",
+                        documentNumber: "",
+                        issueDate: "",
+                        expiryDate: "",
+                        gender: "",
+                        firstName: "",
+                        middleName: "",
+                        lastName: "",
+                        nationality: "",
+                        issueCountry: "",
+                        birthDate: "",
+                        faceImage: "",
+                        fullName: ""
+                    };
+
+        function applySelectedNationalityFallback() {
+            if (!documentInformation.nationality || !documentInformation.nationality.trim()) {
+                var bookingNationality = getSelectedNationalityCode();
+                if (bookingNationality) {
+                    documentInformation.nationality = bookingNationality;
+                }
+            }
+        }
+
+                    function uploadDocumentToCloud() {
+
+                        applySelectedNationalityFallback();
+
+                        var Img1 = $('#imgprimaryDoc1').attr('src');
+                        var Img2 = $('#imgprimaryDoc2').attr('src');
+
+                        var profileDetailID = $('#currentProfileID').val();
+
+                        var guestID = $('#currentGuestIndex').val();
+                        var profileid = $('#currentguestprofileid').val();
+                        if (Img1 != '') {
+                            //if ((documentInformation.documentType == "Identity Card" || documentInformation.documentType == "NID") ||
+                            //    (documentInformation.documentType && documentInformation.issueCountry == "SGP"))
+                            if (!documentInformation.documentType?.trim()) {
+                                $('#customMessageModalMessage').html('Please upload a valid document');
+                                $('#customMessageModal').modal('show');
+                                recordDocumentUploadFailure();
+                                return;
+                            }
+                            else {
+                                if (documentInformation.issueCountry == "SGP" && documentInformation.documentType == "IDENTITY_CARD") {
+                                    if (Img1 != '' && Img2 != '') {
+
+                                    }
+                                    else {
+                                        $('#customMessageModalMessage').html('Please upload other side of the document');
+                                        $('#customMessageModal').modal('show');
+                                        return;
+                                    }
+                                }
+                            }
+
+                            var docInfoSnapshot = $.extend({}, documentInformation);
+                            if (uploadedDocs.includes(docInfoSnapshot.documentNumber)) {
+                                $('#customMessageModalMessage')
+                                    .html('This document is already uploaded now for another guest.');
+                                $('#customMessageModal').modal('show');
+                                resetDocumentInfo();
+
+                                clearFileUpload();
+                                return;
+                            }
+
+                            var formdata = new FormData();
+                            formdata.append("Doc1Base64", Img1.replace(/^data:image.+;base64,/, ''));
+                            formdata.append("Doc2Base64", (Img2 || '').replace(/^data:image.+;base64,/, ''));
+                            formdata.append('ReservationID', $('#ReservationID').val());
+                            formdata.append('ProfileDetailID', profileDetailID);
+                            formdata.append('ProfileID', profileid);
+                            formdata.append("dt.ReservationNameId", '@Model.ReservationNameID');
+                            formdata.append("dt.ReservationNumber",'@Model.ReservationNumber');
+                            formdata.append('documentInformation', JSON.stringify(docInfoSnapshot));
+
+                            updateGuestNameFromDocumentInfo(guestID);
+                            pendingDocumentUploads[guestID] = true;
+                            markGuestUploadInProgress(guestID);
+                            updateDocumentProceedButtonsState();
+
+                            $('#DocumentUploadprimaryGuest').modal('hide');
+                            resetDocumentInfo();
+                            clearFileUpload();
+
+                            fetch(BaseURL + '/Home/UploadDocument', {
+                                method: "POST",
+                                body: formdata,
+                            }).then(response => response.json())
+                                .then(response => {
+                                    delete pendingDocumentUploads[guestID];
+                                    updateDocumentProceedButtonsState();
+
+                                    if (!response.result) {
+                                        markGuestUploadFailed(guestID);
+                                        $('#customMessageModalMessage').html(response.message || 'Document upload failed. Please try again.');
+                                        $('#customMessageModal').modal('show');
+                                        recordDocumentUploadFailure();
+                                        return;
+                                    }
+
+                                    uploadedDocs.push(docInfoSnapshot.documentNumber);
+                                    markGuestUploadCompleted(guestID);
+                                    clearDocumentUploadSkipOption();
+                                    updateDocumentUploadSkipVisibility();
+                                })
+                                .catch(function () {
+                                    delete pendingDocumentUploads[guestID];
+                                    updateDocumentProceedButtonsState();
+                                    markGuestUploadFailed(guestID);
+                                    $('#customMessageModalMessage').html('Document upload failed. Please try again.');
+                                    $('#customMessageModal').modal('show');
+                                    recordDocumentUploadFailure();
+                                });
+                        }
+                        else {
+                            showAlert("primaryDoc_alert", "Please select file.", "warning");
+
+                        }
+                    }
+
+                    const validateDocument = (document) => httpPost(BaseURL + '/api/portalservice/ValidateDocument', document).then(response => {
+                        return response;
+                    });
+
+                    const ValidateDocumentIssueCountry = (docType, issueCountry) => httpPost(BaseURL + '/Home/ValidateDocumentIssueCountry?idType=' + docType + '&issueCountry=' + issueCountry).then(response => {
+                        return response;
+                    });
+
+                    //const validateDocumentDirect = (document) => httpPost(AdaptorAPIBaseURL + '/ProcessDocument', document).then(response => {
+                    //    return response;
+                    //});
+
+        //const validateDocumentDirect = (document) => httpPost(APIbaseURL + '/MicroBlink/ExtractDataFromMBDocument', document).then(response => {
+        //                return response;
+        //});
+        const validateDocumentDirect = (document) => httpPost(BaseURL + '/api/portalservice/ExtractDataFromMBDocument', document).then(response => {
+            return response;
+        });
+
+                    const getProcessedImage = (transaction) => httpPost(AdaptorAPIBaseURL + '/GetProcessedImage', transaction).then(response => {
+                        return response;
+                    });
+
+                    const GetProcessedDocumentType = (transaction) => httpPost(AdaptorAPIBaseURL + '/GetProcessedDocumentType', transaction).then(response => {
+                        return response;
+                    });
+
+                    const GetProcessedDocumentFaceImage = (transaction) => httpPost(AdaptorAPIBaseURL + '/GetProcessedDocumentFaceImage', transaction).then(response => {
+                        return response;
+                    });
+
+                    const upload = document.getElementById('primaryDoc1');
+
+                    const upload2 = document.getElementById('primaryDoc2');
+
+                    function blobToDataURL(blob, callback) {
+                        var a = new FileReader();
+                        a.onload = function (e) { callback(e.target.result); }
+                        a.readAsDataURL(blob);
+                    }
+
+
+                    //uploadold.addEventListener("change", (evt) => {
+                    //    processDocument(evt);
+                    //}, false);
+
+                    //upload2old.addEventListener("change", (evt) => {
+                    //    processDocument(evt);
+                    //}, false);
+
+
+
+                    upload.addEventListener('change', (evt) => {
+                        const files = [...evt.target.files]
+                        processDocumentNew(files, evt.target);
+                    }, false)
+
+                    upload2.addEventListener('change', (evt) => {
+                        const files = [...evt.target.files]
+                        processDocumentNew(files, evt.target);
+
+                    }, false)
+
+        function processDocumentNew(files, target) {
+            var fileControl = $(target);
+
+            var fileName = $(fileControl).val().split("\\").pop();
+            var imgPreview = $(fileControl).parent('div').find('img');
+            var filextension = fileName.split(".");
+            var documentReadStatus = $(fileControl).parent('div').find(".alert");
+            var filecontrolID = $(fileControl).attr("id");
+            var alertId = documentReadStatus.attr("id");
+            if (filecontrolID == "primaryDoc1") {
+                $('#primaryDoc2').attr('disabled', true);
+            }
+            $(documentReadStatus).hide();
+
+            if ($('.docUploadFile').index(fileControl) == 0) {
+                resetDocumentInfo();
+
+                $('#primaryDoc2').val('');
+                $('#primaryDoc2').siblings(".custom-file-label").removeClass("selected").html('Choose file');
+                $('#primaryDoc2').parent('div').find('img').attr('src', '');
+                $('#primaryDoc2').parent('div').find('img').hide();
+                if (filecontrolID == "primaryDoc1") {
+                    $('#primaryDoc2').attr('disabled', true);
+                }
+                var primaryDoc2alert = $('#primaryDoc2').parent('div').find(".alert")
+                $(primaryDoc2alert).hide();
+            }
+
+
+            var filext = "." + filextension.slice(-1)[0];
+            var valid = [".jpg", ".png", ".jpeg", ".pdf"];
+
+            if (valid.indexOf(filext.toLowerCase()) == -1) {
+
+                //$('#customMessageModalMessage').html('File type not supported');
+                //$('#customMessageModal').modal('show');
+
+                showAlert(alertId, "File type not supported", "warning");
+                $(fileControl).val('');
+                $(fileControl).siblings(".custom-file-label").removeClass("selected").html('Choose file');
+                $(fileControl).parent('div').find('img').attr('src', '');
+                $(fileControl).parent('div').find('img').hide();
+                /* $(documentReadStatus).hide();*/
+            }
+            else {
+                $('.loader-screen').fadeIn(100);
+                if (filext.toLowerCase() == ".pdf") {
+                    var formData = new FormData();
+                    formData.append('pdfFile', files[0]);
+                    formData.append('ReservationID', ReservationID);
+                    $.ajax({
+                        url: '/Home/ConvertPdfToImage',
+                        type: 'POST',
+                        data: formData,
+                        processData: false,
+                        contentType: false,
+                        success: function (data) {
+                            //console.log(data);
+
+                            imageBase64 = data.Base64Image;
+
+
+                            // Compress before sending to MicroBlink
+                            // imageBase64 = compressBase64Image(imageBase64, 1280, 0.7);
+
+                            @*validateDocumentDirect({
+                                RequestObject: {
+                                    Base64Image: imageBase64,
+                                    ImageFormat: ".jpg",
+                                    OCRURL: OCRAPIBaseURL
+                                },
+                                 RequestIdentifier: @Model.ReservationNumber
+
+                            })*@
+
+
+                            validateDocumentDirect({
+                                imageBase64: imageBase64,
+                                extension: ".jpg"
+                            }).then(response => {
+                                if (response.Result) {
+                                    //$(documentReadStatus).html('document not validated');
+                                    //$(documentReadStatus).hide();
+                                    assignDocumentInfo(response);
+
+                                    var transactionIDRequestObj = {
+                                        "RequestObject": response.responseData.TransactionID
+                                    };
+                                    const isValid =
+                                        filecontrolID === "primaryDoc2" ||
+                                        (
+                                            filecontrolID === "primaryDoc1" &&
+                                            response.responseData?.idType != null &&
+                                            response.responseData.idType !== ""
+                                        );
+                                    if (isValid) {
+                                        if (!response.responseData.IsExpired) {
+                                            //console.log(response.responseData.documentNumber);
+                                            //console.log(uploadedDocs);
+                                            if (uploadedDocs.includes(response.responseData.documentNumber)) {
+                                                $('.loader-screen').fadeOut(100);
+
+                                                showAlert(alertId, "This document is already uploaded now for another guest.", "warning");
+
+                                                $(fileControl).val('');
+                                                $(fileControl).siblings(".custom-file-label").removeClass("selected").html('Choose file');
+                                                $(fileControl).parent('div').find('img').attr('src', '');
+                                                $(fileControl).parent('div').find('img').hide();
+                                                return;
+                                            }
+
+                                            if (response.responseData && response.responseData.fullImage) {
+                                                $(imgPreview).attr('src', "data:image/jpg;base64," + response.responseData.fullImage);
+                                                $(imgPreview).show();
+                                            }
+                                            else {
+                                                $(imgPreview).attr('src', `${imgout.prefix}${imgout.data}`);
+                                                $(imgPreview).show();
+                                            }
+
+                                            if (((response.responseData.idType != "PASSPORT" || response.responseData.idType == "") && filecontrolID == "primaryDoc1") || filecontrolID == "primaryDoc2") {
+                                                $('#primaryDoc2').attr('disabled', false);
+                                            }
+                                            else {
+
+                                                $('#primaryDoc2').attr('disabled', true);
+
+                                            }
+
+                                            clearDocumentUploadSkipOption();
+                                            $('.loader-screen').fadeOut(100);
+
+                                            //ValidateDocumentIssueCountry(response.responseData.documentTypeCode, response.responseData.issueCountry).then(docIssueCountryResponse => {
+
+                                            //    if (docIssueCountryResponse.result) {
+                                            //        $('.loader-screen').fadeOut(100);
+                                            //        //$(documentReadStatus).html('document validated');
+                                            //        //$(documentReadStatus).hide();
+                                            //        //$(documentReadStatus).removeClass('alert-success');
+                                            //        //$(documentReadStatus).removeClass('alert-danger');
+                                            //        //$(documentReadStatus).addClass('alert-success');
+                                            //    }
+                                            //    else {
+                                            //        $('.loader-screen').fadeOut(100);
+                                            //        //$(documentReadStatus).html('document not validated');
+                                            //        //$(documentReadStatus).hide();
+                                            //        //$(documentReadStatus).removeClass('alert-success');
+                                            //        //$(documentReadStatus).removeClass('alert-danger');
+                                            //        //$(documentReadStatus).addClass('alert-danger');
+                                            //    }
+                                            //});
+
+
+                                        }
+                                        else {
+                                            //$(imgPreview).attr('src', `${imgout.prefix}${imgout.data}`);
+                                            //$(imgPreview).show();
+                                            $('.loader-screen').fadeOut(100);
+
+                                            showAlert(alertId, "Document is expired.Please upload a valid one", "warning");
+                                            recordDocumentUploadFailure();
+
+                                            $(fileControl).val('');
+                                            $(fileControl).siblings(".custom-file-label").removeClass("selected").html('Choose file');
+                                            $(fileControl).parent('div').find('img').attr('src', '');
+                                            $(fileControl).parent('div').find('img').hide();
+                                        }
+                                    }
+                                    else {
+                                        $('.loader-screen').fadeOut(100);
+
+                                        showAlert(alertId, "Please upload a valid document", "warning");
+                                        recordDocumentUploadFailure();
+
+                                        $(fileControl).val('');
+                                        $(fileControl).siblings(".custom-file-label").removeClass("selected").html('Choose file');
+                                        $(fileControl).parent('div').find('img').attr('src', '');
+                                        $(fileControl).parent('div').find('img').hide();
+
+                                    }
+
+                                }
+                                else {
+                                    //$(imgPreview).attr('src', `${imgout.prefix}${imgout.data}`);
+                                    //$(imgPreview).show();
+                                    $('.loader-screen').fadeOut(100);
+                                    showAlert(alertId, "Please upload a valid Document", "warning");
+                                    recordDocumentUploadFailure();
+
+                                    $(fileControl).val('');
+                                    $(fileControl).siblings(".custom-file-label").removeClass("selected").html('Choose file');
+                                    $(fileControl).parent('div').find('img').attr('src', '');
+                                    $(fileControl).parent('div').find('img').hide();
+                                }
+
+                            });
+                        }
+                    });
+                }
+                else {
+                    compress.compress(files, {
+                        size: 2,
+                        quality: 0.75,
+                        maxWidth: 1920,
+                        maxHeight: 1920,
+                        resize: true
+                    }).then((images) => {
+                        const imgout = images[0]
+                        var imageBase64 = imgout.data;
+                        //imageBase64 = compressBase64Image(imageBase64, 1280, 0.7);
+                        @*validateDocumentDirect({
+                            RequestObject: {
+                                Base64Image: imageBase64,
+                                ImageFormat: ".jpg",
+                                OCRURL: OCRAPIBaseURL
+                            },
+                            RequestIdentifier: @Model.ReservationNumber
+
+                        })*@
+                        validateDocumentDirect({
+                            imageBase64: imageBase64,
+                            extension: ".jpg"
+                        }).then(response => {
+                            //alert('1 : ' + response.responseData.issueCountry + ' 2 : ' + response.Result + ' 3 : ' + response.result + ' 4: ' + response.responseData.idType);
+                            console.log(response);
+                            if (response.Result) {
+                                // alert('1 : ' + response.responseData.issueCountry + ' 2 : ' + response.responseData.idType + ' 3: ' + response.responseData.idType);
+                                // alert('IsExpired ' + response.responseData.IsExpired);
+                                //$(documentReadStatus).html('document not validated');
+                                //$(documentReadStatus).hide();
+                                assignDocumentInfo(response);
+
+                                var transactionIDRequestObj = {
+                                    "RequestObject": response.responseData.TransactionID
+                                };
+                                const isValid =
+                                    filecontrolID === "primaryDoc2" ||
+                                    (
+                                        filecontrolID === "primaryDoc1" &&
+                                        response.responseData?.idType != null &&
+                                        response.responseData.idType !== ""
+                                    );
+                                console.log('isValid : ' + isValid);
+                                if (isValid) {
+                                   if (!response.responseData.IsExpired) {
+                                        //console.log(response.responseData.documentNumber);
+                                        //console.log(uploadedDocs);
+                                        if (uploadedDocs.includes(response.responseData.documentNumber)) {
+                                            $('.loader-screen').fadeOut(100);
+
+                                            showAlert(alertId, "This document is already uploaded now for another guest.", "warning");
+
+                                            $(fileControl).val('');
+                                            $(fileControl).siblings(".custom-file-label").removeClass("selected").html('Choose file');
+                                            $(fileControl).parent('div').find('img').attr('src', '');
+                                            $(fileControl).parent('div').find('img').hide();
+                                            return;
+                                        }
+                                        if (response.responseData && response.responseData.fullImage) {
+                                            $(imgPreview).attr('src', "data:image/jpg;base64," + response.responseData.fullImage);
+                                            $(imgPreview).show();
+                                        }
+                                        else {
+                                            $(imgPreview).attr('src', `${imgout.prefix}${imgout.data}`);
+                                            $(imgPreview).show();
+                                        }
+
+                                        if (response.responseData.idType != "PASSPORT" || response.responseData.idType == "") {
+                                            $('#primaryDoc2').attr('disabled', false);
+                                        }
+                                        else {
+                                            $('#primaryDoc2').attr('disabled', true);
+                                        }
+                                        console.log('isValid : ' + response.responseData.idType);
+                                        clearDocumentUploadSkipOption();
+                                        //ValidateDocumentIssueCountry(response.responseData.idType, response.responseData.issueCountry).then(docIssueCountryResponse => {
+
+                                        //    if (docIssueCountryResponse.result) {
+                                        //        $('.loader-screen').fadeOut(100);
+
+                                        //    }
+                                        //    else {
+                                                $('.loader-screen').fadeOut(100);
+
+                                        //    }
+                                        //});
+
+
+                                    }
+                                    else {
+                                        //$(imgPreview).attr('src', `${imgout.prefix}${imgout.data}`);
+                                        //$(imgPreview).show();
+                                        $('.loader-screen').fadeOut(100);
+                                        showAlert(alertId, "Document is expired. Please upload a valid one", "warning");
+                                        recordDocumentUploadFailure();
+
+                                        $(fileControl).val('');
+                                        $(fileControl).siblings(".custom-file-label").removeClass("selected").html('Choose file');
+                                        $(fileControl).parent('div').find('img').attr('src', '');
+                                        $(fileControl).parent('div').find('img').hide();
+                                    }
+                                }
+                                else {
+                                    $('.loader-screen').fadeOut(100);
+
+                                    showAlert(alertId, "Please upload a valid document", "warning");
+                                    recordDocumentUploadFailure();
+
+                                    $(fileControl).val('');
+                                    $(fileControl).siblings(".custom-file-label").removeClass("selected").html('Choose file');
+                                    $(fileControl).parent('div').find('img').attr('src', '');
+                                    $(fileControl).parent('div').find('img').hide();
+
+                                }
+
+                            }
+                            else {
+                                //$(imgPreview).attr('src', `${imgout.prefix}${imgout.data}`);
+                                //$(imgPreview).show();
+                                $('.loader-screen').fadeOut(100);
+                                showAlert(alertId, "Please upload a valid document", "warning");
+                                recordDocumentUploadFailure();
+
+                                $(fileControl).val('');
+                                $(fileControl).siblings(".custom-file-label").removeClass("selected").html('Choose file');
+                                $(fileControl).parent('div').find('img').attr('src', '');
+                                $(fileControl).parent('div').find('img').hide();
+                            }
+
+                        });
+
+
+                    });
+                }
+
+                $(fileControl).siblings(".custom-file-label").addClass("selected").html(fileName);
+            }
+        }
+
+                    $(".custom-file-input1").on("change", function () {
+
+                        var fileControl = $(this);
+                        var fileName = $(this).val().split("\\").pop();
+                        var img = $(this).parent('div').find('img');
+                        var filextension = fileName.split(".");
+                        var documentReadStatus = $(this).parent('div').find("div .alert");
+                        $(documentReadStatus).hide();
+
+
+                        if ($('.docUploadFile').index(fileControl) == 0) {
+                            resetDocumentInfo();
+                        }
+
+                        var filext = "." + filextension.slice(-1)[0];
+                        var valid = [".jpg", ".png", ".jpeg"];
+
+                        if (valid.indexOf(filext.toLowerCase()) == -1) {
+
+                            // file format not supported
+                            $('#customMessageModalMessage').html('File type not supported');
+                            $('#customMessageModal').modal('show');
+                            $(this).val('');
+                            $(this).siblings(".custom-file-label").removeClass("selected").html('Choose file');
+                            $(this).parent('div').find('img').attr('src', '');
+                            $(this).parent('div').find('img').hide();
+                            return;
+                        }
+                        else {
+
+
+
+                            // read the image file as a data URL.
+                            // reader.readAsDataURL(this.files[0]);
+                            $(this).siblings(".custom-file-label").addClass("selected").html(fileName);
+
+                        }
+
+                    });
+                    //file upload
+                    $(".custom-file-input").on("change", function () {
+                        var fileName = $(this).val().split("\\").pop();
+                        $(this).siblings(".custom-file-label").addClass("selected").html(fileName);
+                    });
+
+
+                            function assignDocumentInfo(response) {
+                                //alert(response.responseData.idType);
+                                console.log('doctype: '+response.responseData.idType);
+                        if (!documentInformation.documentType)
+                            documentInformation.documentType = response.responseData.idType;
+                        if (!documentInformation.documentNumber)
+                            documentInformation.documentNumber = response.responseData.documentNumber;
+                        if (!documentInformation.issueDate)
+                            documentInformation.issueDate = response.responseData.issueDate;
+                        if (!documentInformation.expiryDate)
+                            documentInformation.expiryDate = response.responseData.expiryDate;
+                        if (!documentInformation.gender)
+                            documentInformation.gender = response.responseData.gender;
+                        if (!documentInformation.firstName)
+                            documentInformation.firstName = response.responseData.firstName;
+                        if (!documentInformation.middleName)
+                            documentInformation.middleName = response.responseData.middleName;
+                        if (!documentInformation.lastName)
+                            documentInformation.lastName = response.responseData.lastName;
+                        if (!documentInformation.fullName)
+                            documentInformation.fullName = response.responseData.fullName;
+                        if (!documentInformation.nationality)
+                            documentInformation.nationality = response.responseData.nationality;
+                        applySelectedNationalityFallback();
+                        if (!documentInformation.issueCountry)
+                            documentInformation.issueCountry = response.responseData.issueCountry_fullname;
+                        if (!documentInformation.faceImage)
+                            documentInformation.faceImage = response.responseData.faceImage;
+                        if (!documentInformation.documentType)
+                            documentInformation.documentType = response.responseData.idType;
+                               // documentInformation.issueCountry = response.responseData.issueCountry_fullname;
+                        if (!documentInformation.birthDate)
+                            if (response.responseData.dateOfBirth != null && response.responseData.dateOfBirth != "" && response.responseData.dateOfBirth != undefined)
+                                documentInformation.birthDate = response.responseData.dateOfBirth;
+                        if (response.responseData.birthDate != null && response.responseData.birthDate != "" && response.responseData.birthDate != undefined)
+                                    documentInformation.birthDate = response.responseData.birthDate;
+                                console.log('assignDocumentInfo: End' );
+                    }
+
+                    function getGuestNameFromDocumentInfo() {
+                        var fullName = (documentInformation.fullName || "").trim();
+                        if (fullName) {
+                            return fullName;
+                        }
+
+                        var nameParts = [
+                            documentInformation.firstName,
+                            documentInformation.middleName,
+                            documentInformation.lastName
+                        ].filter(function (value) {
+                            return value && value.trim();
+                        });
+
+                        return nameParts.join(' ').trim();
+                    }
+
+                    function updateGuestNameFromDocumentInfo(guestID) {
+                        var guestName = getGuestNameFromDocumentInfo();
+                        if (!guestName) {
+                            return;
+                        }
+                        console.log('guestID : ' + guestID + ' guestName : ' + guestName);
+                        var guestRoleLabel = $('#guestid_' + guestID).data('guest-role') || '';
+                        var $label = $('#guestname_' + guestID);
+                        if (guestRoleLabel) {
+                            $label.html(guestName + '<br /><small class="text-muted">(' + guestRoleLabel + ')</small>');
+                        } else {
+                            $label.text(guestName);
+                        }
+                    }
+
+                    function resetDocumentInfo() {
+                        documentInformation = {
+                            documentType: "",
+                            documentNumber: "",
+                            issueDate: "",
+                            expiryDate: "",
+                            gender: "",
+                            firstName: "",
+                            middleName: "",
+                            lastName: "",
+                            nationality: "",
+                            issueCountry: "",
+                            birthDate: "",
+                            faceImage: "",
+                            fullName:""
+                        };
+                    }
+
+                    function clearFileUpload() {
+                        $('#primaryDoc1').val('');
+                        $('#primaryDoc1').siblings(".custom-file-label").removeClass("selected").html('Choose file');
+                        $('#primaryDoc1').parent('div').find('img').attr('src', '');
+                        $('#primaryDoc1').parent('div').find('img').hide();
+                        $('#primaryDoc1').parent('div').find('.alert').hide();
+
+                        $('#primaryDoc2').val('');
+                        $('#primaryDoc2').siblings(".custom-file-label").removeClass("selected").html('Choose file');
+                        $('#primaryDoc2').parent('div').find('img').attr('src', '');
+                        $('#primaryDoc2').parent('div').find('img').hide();
+                        $('#primaryDoc2').parent('div').find('.alert').hide();
+
+                        $('#primaryDoc3').val('');
+                        $('#primaryDoc3').siblings(".custom-file-label").removeClass("selected").html('Choose file');
+                        $('#primaryDoc3').parent('div').find('img').attr('src', '');
+                        $('#primaryDoc3').parent('div').find('img').hide();
+                        $('#primaryDoc3').parent('div').find('.alert').hide();
+
+
+                        $('#primaryDoc2').attr('disabled', true);
+                        $('#primaryDoc3').attr('disabled', true);
+        }
+        function findIntlCountryByDropdownText(selectedCountryText) {
+
+            if (!selectedCountryText) return null;
+
+            var countryList = window.intlTelInputGlobals.getCountryData();
+
+            var selected = selectedCountryText
+                .toLowerCase()
+                .replace(/\(.*?\)/g, "")
+                .trim();
+
+            // 1. Exact normalized match only
+            var exactMatch = countryList.find(function (c) {
+                var name = c.name
+                    .toLowerCase()
+                    .replace(/\(.*?\)/g, "")
+                    .trim();
+
+                return name === selected;
+            });
+
+            if (exactMatch) return exactMatch;
+
+            // 2. Manual fallback for common country names from your DB
+            var manualMap = {
+                "india": "in",
+                "united arab emirates": "ae",
+                "uae": "ae",
+                "singapore": "sg",
+                "united states": "us",
+                "usa": "us",
+                "united kingdom": "gb",
+                "uk": "gb"
+            };
+
+            if (manualMap[selected]) {
+                return countryList.find(function (c) {
+                    return c.iso2 === manualMap[selected];
+                });
+            }
+
+            return null;
+        }
+
+    </script>
+    <script>
+        function compressBase64Image(base64, maxWidth, quality) {
+            return new Promise((resolve) => {
+                const img = new Image();
+                img.onload = function () {
+                    const canvas = document.createElement('canvas');
+                    const scale = Math.min(1, maxWidth / img.width);
+                    canvas.width = img.width * scale;
+                    canvas.height = img.height * scale;
+                    canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+                    // strip the data:image/jpeg;base64, prefix
+                    resolve(canvas.toDataURL('image/jpeg', quality).split(',')[1]);
+                };
+                img.src = 'data:image/jpeg;base64,' + base64;
+            });
+        }
+        function saveQRCode() {
+
+            var image = document.getElementById("qrImage").src;
+
+            var link = document.createElement('a');
+            link.href = image;
+            link.download = 'QRCode.jpg';
+
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    </script>
+    <script>
+        $(function () {
+
+            $('input[type=email]').blur(function () {
+
+                $(this).valid();
+
+            });
+
+        });
+
+    </script>
+
+}
+
