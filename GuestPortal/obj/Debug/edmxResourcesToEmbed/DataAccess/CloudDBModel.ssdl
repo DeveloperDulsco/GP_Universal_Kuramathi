@@ -1,0 +1,570 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Schema Namespace="CloudDBModel.Store" Provider="System.Data.SqlClient" ProviderManifestToken="2012.Azure" Alias="Self" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm/ssdl">
+  <EntityType Name="tbCountryMaster">
+    <Key>
+      <PropertyRef Name="CountryMasterID" />
+    </Key>
+    <Property Name="CountryMasterID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+    <Property Name="Country_Full_name" Type="varchar" MaxLength="300" />
+    <Property Name="Country_3Char_code" Type="char" MaxLength="3" />
+    <Property Name="Country_2Char_code" Type="char" MaxLength="2" />
+  </EntityType>
+  <EntityType Name="tbDocumentMaster">
+    <Key>
+      <PropertyRef Name="DocumentMasterID" />
+    </Key>
+    <Property Name="DocumentMasterID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+    <Property Name="DocumentCode" Type="varchar" MaxLength="100" />
+    <Property Name="DocumentType" Type="varchar" MaxLength="300" />
+  </EntityType>
+  <EntityType Name="tbEventModuleMaster">
+    <Key>
+      <PropertyRef Name="EventModuleID" />
+    </Key>
+    <Property Name="EventModuleID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+    <Property Name="EventModuleName" Type="varchar" MaxLength="300" />
+  </EntityType>
+  <EntityType Name="tbEventSubModuleMaster">
+    <Key>
+      <PropertyRef Name="EventSubModuleID" />
+    </Key>
+    <Property Name="EventSubModuleID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+    <Property Name="EventModuleID" Type="int" />
+    <Property Name="EventModuleName" Type="varchar" MaxLength="300" />
+    <Property Name="ActionType" Type="varchar" MaxLength="500" />
+  </EntityType>
+  <EntityType Name="tbEventTrackingDetails">
+    <Key>
+      <PropertyRef Name="EventTrackingID" />
+    </Key>
+    <Property Name="EventTrackingID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+    <Property Name="ReservationID" Type="int" />
+    <Property Name="EventSubModuleID" Type="int" />
+    <Property Name="StatusType" Type="varchar" MaxLength="300" />
+  </EntityType>
+  <EntityType Name="tbFeedBackResult">
+    <Key>
+      <PropertyRef Name="FeedBackID" />
+    </Key>
+    <Property Name="FeedBackID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+    <Property Name="ReservationID" Type="int" />
+    <Property Name="QuestionID" Type="int" />
+    <Property Name="Answer" Type="varchar" MaxLength="400" />
+  </EntityType>
+  <EntityType Name="tbKeyStorageManagement">
+    <Key>
+      <PropertyRef Name="ID" />
+    </Key>
+    <Property Name="ID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+    <Property Name="KeyPass" Type="nvarchar(max)" />
+    <Property Name="CreatedDateTime" Type="datetime" />
+    <Property Name="IsActive" Type="bit" />
+  </EntityType>
+  <EntityType Name="tbOperaPaymentTypeCodeWeb">
+    <Key>
+      <PropertyRef Name="ID" />
+    </Key>
+    <Property Name="ID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+    <Property Name="OperaPaymentTypeCode" Type="varchar" MaxLength="100" />
+    <Property Name="VendorPaymentTypeCode" Type="varchar" MaxLength="100" />
+  </EntityType>
+  <EntityType Name="tbPackageMaster">
+    <Key>
+      <PropertyRef Name="PackageID" />
+    </Key>
+    <Property Name="PackageID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+    <Property Name="PackageCode" Type="varchar" MaxLength="100" />
+    <Property Name="PackageName" Type="varchar" MaxLength="300" />
+    <Property Name="PackageAmount" Type="decimal" Precision="18" Scale="2" />
+    <Property Name="PackageDesc" Type="varchar" MaxLength="500" />
+    <Property Name="PackageImage" Type="varbinary(max)" />
+    <Property Name="isActive" Type="bit" />
+    <Property Name="IsRoomUpsell" Type="bit" />
+    <Property Name="Units" Type="varchar" MaxLength="100" />
+  </EntityType>
+  <EntityType Name="tbPaymentAdditionalInfo">
+    <Key>
+      <PropertyRef Name="PaymentAddInforID" />
+    </Key>
+    <Property Name="PaymentAddInforID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+    <Property Name="PaymentID" Type="int" />
+    <Property Name="KeyHeader" Type="nvarchar(max)" />
+    <Property Name="KeyValue" Type="nvarchar(max)" />
+  </EntityType>
+  <EntityType Name="tbPaymentHeader">
+    <Key>
+      <PropertyRef Name="PaymentID" />
+    </Key>
+    <Property Name="PaymentID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+    <Property Name="TransactionID" Type="nvarchar(max)" />
+    <Property Name="ReservationNumber" Type="varchar" MaxLength="300" />
+    <Property Name="ReservationNameID" Type="varchar" MaxLength="50" />
+    <Property Name="MaskedCardNumber" Type="nvarchar(max)" />
+    <Property Name="ExpiryDate" Type="nvarchar(max)" />
+    <Property Name="FundingSource" Type="nvarchar(max)" />
+    <Property Name="Amount" Type="nvarchar(max)" />
+    <Property Name="Currency" Type="nvarchar(max)" />
+    <Property Name="RecurringIdentifier" Type="nvarchar(max)" />
+    <Property Name="AuthorisationCode" Type="nvarchar(max)" />
+    <Property Name="pspReferenceNumber" Type="nvarchar(max)" />
+    <Property Name="ParentPspRefereceNumber" Type="nvarchar(max)" />
+    <Property Name="TransactionType" Type="varchar" MaxLength="200" />
+    <Property Name="ResultCode" Type="varchar" MaxLength="100" />
+    <Property Name="ResponseMessage" Type="nvarchar(max)" />
+    <Property Name="CreatedDateTime" Type="datetime" />
+    <Property Name="UpdatedDateTime" Type="datetime" />
+    <Property Name="IsActive" Type="bit" />
+    <Property Name="StatusType" Type="varchar" MaxLength="100" />
+    <Property Name="CardType" Type="varchar" MaxLength="200" />
+  </EntityType>
+  <EntityType Name="tbPaymentHistory">
+    <Key>
+      <PropertyRef Name="PaymentHistoryID" />
+    </Key>
+    <Property Name="PaymentHistoryID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+    <Property Name="TransactionID" Type="nvarchar(max)" />
+    <Property Name="ReservationNameID" Type="varchar" MaxLength="100" />
+    <Property Name="ReservationNumber" Type="varchar" MaxLength="50" />
+    <Property Name="PData" Type="nvarchar(max)" />
+    <Property Name="MDData" Type="nvarchar(max)" />
+    <Property Name="PaRes" Type="nvarchar(max)" />
+    <Property Name="CreatedDatetime" Type="datetime" />
+    <Property Name="UpdateDatetime" Type="datetime" />
+    <Property Name="PSPReference" Type="nvarchar" MaxLength="100" />
+    <Property Name="ResultCode" Type="varchar" MaxLength="100" />
+    <Property Name="RefusalReason" Type="nvarchar(max)" />
+    <Property Name="TransactionType" Type="varchar" MaxLength="200" />
+  </EntityType>
+  <EntityType Name="tbProfileDetails">
+    <Key>
+      <PropertyRef Name="ProfileDetailID" />
+    </Key>
+    <Property Name="ProfileDetailID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+    <Property Name="ProfileID" Type="varchar" MaxLength="100" />
+    <Property Name="ReservationDetailID" Type="int" />
+    <Property Name="FirstName" Type="nvarchar(max)" />
+    <Property Name="MiddleName" Type="nvarchar(max)" />
+    <Property Name="LastName" Type="nvarchar(max)" />
+    <Property Name="Email" Type="nvarchar(max)" />
+    <Property Name="Phone" Type="nvarchar(max)" />
+    <Property Name="BirthDate" Type="datetime" />
+    <Property Name="Nationality" Type="int" />
+    <Property Name="AddressLine1" Type="nvarchar" MaxLength="300" />
+    <Property Name="AddressLine2" Type="nvarchar" MaxLength="300" />
+    <Property Name="City" Type="varchar" MaxLength="300" />
+    <Property Name="StateMasterID" Type="int" />
+    <Property Name="PostalCode" Type="varchar" MaxLength="100" />
+    <Property Name="CountryMasterID" Type="int" />
+    <Property Name="CreatedDateTime" Type="datetime" />
+    <Property Name="LastModifiedDateTime" Type="datetime" />
+    <Property Name="Gender" Type="varchar" MaxLength="12" />
+  </EntityType>
+  <EntityType Name="tbProfileDocuments">
+    <Key>
+      <PropertyRef Name="ProfileDocID" />
+    </Key>
+    <Property Name="ProfileDocID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+    <Property Name="ProfileDetailID" Type="int" />
+    <Property Name="DocumentMasterID" Type="int" />
+    <Property Name="DocumentNumber" Type="nvarchar(max)" />
+    <Property Name="ExpiryDate" Type="datetime" />
+    <Property Name="IssueDate" Type="datetime" />
+    <Property Name="DocumentImage1" Type="varbinary(max)" />
+    <Property Name="DocumentImage2" Type="varbinary(max)" />
+    <Property Name="DocumentImage3" Type="varbinary(max)" />
+    <Property Name="FaceImage" Type="varbinary(max)" />
+    <Property Name="CreatedDateTime" Type="datetime" />
+    <Property Name="lastModifiedDateTime" Type="datetime" />
+    <Property Name="IssueCountry" Type="varchar" MaxLength="250" />
+  </EntityType>
+  <EntityType Name="tbQuestionMaster">
+    <Key>
+      <PropertyRef Name="QuestionID" />
+    </Key>
+    <Property Name="QuestionID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+    <Property Name="Question" Type="varchar" MaxLength="500" />
+    <Property Name="QuestionType" Type="varchar" MaxLength="200" />
+    <Property Name="QuestionHint" Type="varchar" MaxLength="500" />
+  </EntityType>
+  <EntityType Name="tbRequestDetails">
+    <Key>
+      <PropertyRef Name="ReqDetailID" />
+    </Key>
+    <Property Name="ReqDetailID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+    <Property Name="ReqTypeMasterID" Type="int" />
+    <Property Name="ReservationDetailID" Type="int" />
+    <Property Name="ReqStatus" Type="bit" />
+    <Property Name="ReqCreatedDateTime" Type="datetime" />
+    <Property Name="ReqUpdatedDateTime" Type="datetime" />
+    <Property Name="ReqUserComment" Type="varchar(max)" />
+    <Property Name="UserID" Type="int" />
+  </EntityType>
+  <EntityType Name="tbRequestMaster">
+    <Key>
+      <PropertyRef Name="ReqTypeMasterID" />
+    </Key>
+    <Property Name="ReqTypeMasterID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+    <Property Name="ReqType" Type="varchar" MaxLength="300" />
+  </EntityType>
+  <EntityType Name="tbReservationDetails">
+    <Key>
+      <PropertyRef Name="ReservationDetailID" />
+    </Key>
+    <Property Name="ReservationDetailID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+    <Property Name="ReservationNameID" Type="varchar" MaxLength="100" />
+    <Property Name="ReservationNumber" Type="varchar" MaxLength="100" />
+    <Property Name="ArrivalDate" Type="datetime" />
+    <Property Name="DepartureDate" Type="datetime" />
+    <Property Name="Adultcount" Type="int" />
+    <Property Name="Childcount" Type="int" />
+    <Property Name="MembershipNo" Type="varchar" MaxLength="200" />
+    <Property Name="MembershipType" Type="varchar" MaxLength="200" />
+    <Property Name="IsDepositAvailable" Type="bit" />
+    <Property Name="IsCardDetailPresent" Type="bit" />
+    <Property Name="IsSaavyPaid" Type="bit" />
+    <Property Name="DataInsertedDate" Type="datetime" />
+    <Property Name="Dataupdateddate" Type="datetime" />
+    <Property Name="IsLocallySynced" Type="bit" />
+    <Property Name="LocallySyncedDateTime" Type="datetime" />
+    <Property Name="IsPreCheckedInPMS" Type="bit" />
+    <Property Name="FlightNo" Type="varchar" MaxLength="100" />
+    <Property Name="ETA" Type="datetime" />
+    <Property Name="ReservationSource" Type="varchar" MaxLength="300" />
+    <Property Name="SignatureImage" Type="varbinary(max)" />
+    <Property Name="StatusDescription" Type="varchar" MaxLength="500" />
+    <Property Name="IsMemberShipEnrolled" Type="bit" />
+    <Property Name="RoomType" Type="varchar" MaxLength="100" />
+    <Property Name="RoomTypeDescription" Type="varchar" MaxLength="500" />
+    <Property Name="IsPreCheckedOutPMS" Type="bit" />
+    <Property Name="EcomPaymentStatus" Type="bit" />
+    <Property Name="IsCheckOutFlag" Type="bit" />
+  </EntityType>
+  <EntityType Name="tbReservationDocuments">
+    <Key>
+      <PropertyRef Name="ReservationdocumentID" />
+    </Key>
+    <Property Name="ReservationdocumentID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+    <Property Name="ReservationDetailID" Type="int" />
+    <Property Name="ReseDocTypeMasterID" Type="int" />
+    <Property Name="Document" Type="varbinary(max)" />
+  </EntityType>
+  <EntityType Name="tbReservationDocumentTypeMaster">
+    <Key>
+      <PropertyRef Name="ReseDocTypeMasterID" />
+    </Key>
+    <Property Name="ReseDocTypeMasterID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+    <Property Name="DocumentTypeCode" Type="varchar" MaxLength="50" />
+    <Property Name="DocumentType" Type="varchar" MaxLength="300" />
+  </EntityType>
+  <EntityType Name="tbReservationPackageDetails">
+    <Key>
+      <PropertyRef Name="ResPackageID" />
+    </Key>
+    <Property Name="ResPackageID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+    <Property Name="ReservationDetailID" Type="int" />
+    <Property Name="PackageID" Type="int" />
+  </EntityType>
+  <EntityType Name="tbReservationRateDetails">
+    <Key>
+      <PropertyRef Name="ReservationRateDetailID" />
+    </Key>
+    <Property Name="ReservationRateDetailID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+    <Property Name="ReservationDetailID" Type="int" />
+    <Property Name="AverageRoomRate" Type="decimal" Precision="18" Scale="2" />
+    <Property Name="TotalTax" Type="decimal" Precision="18" Scale="2" />
+    <Property Name="TotalAmount" Type="decimal" Precision="18" Scale="2" />
+    <Property Name="PaidAmount" Type="decimal" Precision="18" Scale="2" />
+    <Property Name="BalanceAmount" Type="decimal" Precision="18" Scale="2" />
+  </EntityType>
+  <EntityType Name="tbRoomTypeMapping">
+    <Key>
+      <PropertyRef Name="RoomTypeMappingID" />
+    </Key>
+    <Property Name="RoomTypeMappingID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+    <Property Name="RoomTypeID" Type="int" />
+    <Property Name="PackageTypeID" Type="int" />
+  </EntityType>
+  <EntityType Name="tbRoomTypeMaster">
+    <Key>
+      <PropertyRef Name="RoomTypeID" />
+    </Key>
+    <Property Name="RoomTypeID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+    <Property Name="RoomTypeCode" Type="varchar" MaxLength="100" />
+    <Property Name="RoomTypeDescription" Type="varchar" MaxLength="300" />
+  </EntityType>
+  <EntityType Name="tbStateMaster">
+    <Key>
+      <PropertyRef Name="StateMasterID" />
+    </Key>
+    <Property Name="StateMasterID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+    <Property Name="StateCode" Type="varchar" MaxLength="100" />
+    <Property Name="StateName" Type="varchar" MaxLength="300" />
+    <Property Name="CountryMasterID" Type="int" />
+  </EntityType>
+  <Association Name="FK_tbEventSubModuleMaster_tbEventModuleMaster">
+    <End Role="tbEventModuleMaster" Type="Self.tbEventModuleMaster" Multiplicity="0..1" />
+    <End Role="tbEventSubModuleMaster" Type="Self.tbEventSubModuleMaster" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="tbEventModuleMaster">
+        <PropertyRef Name="EventModuleID" />
+      </Principal>
+      <Dependent Role="tbEventSubModuleMaster">
+        <PropertyRef Name="EventModuleID" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <Association Name="FK_tbEventTrackingDetails_tbEventSubModuleMaster">
+    <End Role="tbEventSubModuleMaster" Type="Self.tbEventSubModuleMaster" Multiplicity="0..1" />
+    <End Role="tbEventTrackingDetails" Type="Self.tbEventTrackingDetails" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="tbEventSubModuleMaster">
+        <PropertyRef Name="EventSubModuleID" />
+      </Principal>
+      <Dependent Role="tbEventTrackingDetails">
+        <PropertyRef Name="EventSubModuleID" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <Association Name="FK_tbEventTrackingDetails_tbReservationDetails">
+    <End Role="tbReservationDetails" Type="Self.tbReservationDetails" Multiplicity="0..1" />
+    <End Role="tbEventTrackingDetails" Type="Self.tbEventTrackingDetails" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="tbReservationDetails">
+        <PropertyRef Name="ReservationDetailID" />
+      </Principal>
+      <Dependent Role="tbEventTrackingDetails">
+        <PropertyRef Name="ReservationID" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <Function Name="CloseKeys" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo" />
+  <Function Name="fn_diagramobjects" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="true" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo" ReturnType="int" />
+  <Function Name="OpenKeys" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo" />
+  <Function Name="sp_alterdiagram" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+    <Parameter Name="diagramname" Type="nvarchar" Mode="In" />
+    <Parameter Name="owner_id" Type="int" Mode="In" />
+    <Parameter Name="version" Type="int" Mode="In" />
+    <Parameter Name="definition" Type="varbinary(max)" Mode="In" />
+  </Function>
+  <Function Name="sp_creatediagram" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+    <Parameter Name="diagramname" Type="nvarchar" Mode="In" />
+    <Parameter Name="owner_id" Type="int" Mode="In" />
+    <Parameter Name="version" Type="int" Mode="In" />
+    <Parameter Name="definition" Type="varbinary(max)" Mode="In" />
+  </Function>
+  <Function Name="sp_dropdiagram" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+    <Parameter Name="diagramname" Type="nvarchar" Mode="In" />
+    <Parameter Name="owner_id" Type="int" Mode="In" />
+  </Function>
+  <Function Name="sp_helpdiagramdefinition" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+    <Parameter Name="diagramname" Type="nvarchar" Mode="In" />
+    <Parameter Name="owner_id" Type="int" Mode="In" />
+  </Function>
+  <Function Name="sp_helpdiagrams" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+    <Parameter Name="diagramname" Type="nvarchar" Mode="In" />
+    <Parameter Name="owner_id" Type="int" Mode="In" />
+  </Function>
+  <Function Name="sp_renamediagram" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+    <Parameter Name="diagramname" Type="nvarchar" Mode="In" />
+    <Parameter Name="owner_id" Type="int" Mode="In" />
+    <Parameter Name="new_diagramname" Type="nvarchar" Mode="In" />
+  </Function>
+  <Function Name="sp_upgraddiagrams" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo" />
+  <Function Name="Usp_BulkUpdateCheckOutReservations" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo" />
+  <Function Name="Usp_BulkUpdateLocallyPushedReservations" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo" />
+  <Function Name="Usp_ClearCloudData" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo" />
+  <Function Name="usp_DeleteTransactionsByReservationID" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+    <Parameter Name="ReservationNumber" Type="varchar" Mode="In" />
+  </Function>
+  <Function Name="usp_FetchPaymentAdditionalInfoforLocalPush" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+    <Parameter Name="ReservationNameID" Type="varchar" Mode="In" />
+  </Function>
+  <Function Name="usp_FetchPaymentforLocalPush" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+    <Parameter Name="ReservationNameID" Type="varchar" Mode="In" />
+  </Function>
+  <Function Name="usp_FetchPaymentHistoryforLocalPush" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+    <Parameter Name="ReservationNameID" Type="varchar" Mode="In" />
+  </Function>
+  <Function Name="usp_FetchProfileDocumentsforLocalPush" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+    <Parameter Name="ReservationNameID" Type="varchar" Mode="In" />
+  </Function>
+  <Function Name="usp_FetchReservationDocumentsforLocalPushCheckOut" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+    <Parameter Name="ReservationNameID" Type="varchar" Mode="In" />
+  </Function>
+  <Function Name="usp_FetchReservationFeedBackforLocalPush" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo" />
+  <Function Name="usp_FetchReservationforLocalPush" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+    <Parameter Name="ReservationNameID" Type="varchar" Mode="In" />
+  </Function>
+  <Function Name="usp_FetchReservationforLocalPushCheckOut" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+    <Parameter Name="ReservationNameID" Type="varchar" Mode="In" />
+  </Function>
+  <Function Name="usp_FetchReservationPackageforLocalPush" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo" />
+  <Function Name="Usp_GetActivePaymentTransctions" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+    <Parameter Name="ReservationNumber" Type="varchar" Mode="In" />
+  </Function>
+  <Function Name="Usp_GetPackageMaster" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+    <Parameter Name="RoomTypeCode" Type="varchar" Mode="In" />
+  </Function>
+  <Function Name="USp_GetPackageMasterDetailedList" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+    <Parameter Name="PackageID" Type="int" Mode="In" />
+  </Function>
+  <Function Name="Usp_GetPaymentHistory" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+    <Parameter Name="ReservationNumber" Type="varchar" Mode="In" />
+  </Function>
+  <Function Name="Usp_GetProfileDocumentsByReservationID" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+    <Parameter Name="ReservationDetailID" Type="int" Mode="In" />
+  </Function>
+  <Function Name="Usp_GetProfileInformationByReservationID" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+    <Parameter Name="ReservationDetailID" Type="int" Mode="In" />
+  </Function>
+  <Function Name="Usp_GetQuestionMaster" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo" />
+  <Function Name="usp_GetReservationDetails" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+    <Parameter Name="ReservationNumber" Type="varchar" Mode="In" />
+  </Function>
+  <Function Name="Usp_GetRoomTypeMaster" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo" />
+  <Function Name="Usp_InsertEventsTracking" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+    <Parameter Name="ReservationID" Type="int" Mode="In" />
+    <Parameter Name="EventSubModule" Type="varchar" Mode="In" />
+  </Function>
+  <Function Name="Usp_InsertFeedbackData" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+    <Parameter Name="ReservationID" Type="int" Mode="In" />
+    <Parameter Name="QuestionID" Type="int" Mode="In" />
+    <Parameter Name="Answer" Type="varchar" Mode="In" />
+  </Function>
+  <Function Name="Usp_InsertPackageMaster" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+    <Parameter Name="PackageID" Type="int" Mode="In" />
+    <Parameter Name="PackageCode" Type="varchar" Mode="In" />
+    <Parameter Name="PackageName" Type="varchar" Mode="In" />
+    <Parameter Name="PackageAmount" Type="decimal" Mode="In" />
+    <Parameter Name="PackageDesc" Type="varchar" Mode="In" />
+    <Parameter Name="PackageImage" Type="varbinary(max)" Mode="In" />
+    <Parameter Name="isActive" Type="bit" Mode="In" />
+    <Parameter Name="IsRoomUpsell" Type="bit" Mode="In" />
+    <Parameter Name="Units" Type="varchar" Mode="In" />
+  </Function>
+  <Function Name="Usp_InsertPaymentDetails" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+    <Parameter Name="TransactionID" Type="nvarchar(max)" Mode="In" />
+    <Parameter Name="ReservationNumber" Type="varchar" Mode="In" />
+    <Parameter Name="ReservationNameID" Type="varchar" Mode="In" />
+    <Parameter Name="MaskedCardNumber" Type="nvarchar(max)" Mode="In" />
+    <Parameter Name="ExpiryDate" Type="nvarchar(max)" Mode="In" />
+    <Parameter Name="FundingSource" Type="nvarchar(max)" Mode="In" />
+    <Parameter Name="Amount" Type="nvarchar(max)" Mode="In" />
+    <Parameter Name="Currency" Type="nvarchar(max)" Mode="In" />
+    <Parameter Name="RecurringIdentifier" Type="nvarchar(max)" Mode="In" />
+    <Parameter Name="AuthorisationCode" Type="nvarchar(max)" Mode="In" />
+    <Parameter Name="pspReferenceNumber" Type="nvarchar(max)" Mode="In" />
+    <Parameter Name="ParentPspRefereceNumber" Type="nvarchar(max)" Mode="In" />
+    <Parameter Name="TransactionType" Type="varchar" Mode="In" />
+    <Parameter Name="ResultCode" Type="varchar" Mode="In" />
+    <Parameter Name="ResponseMessage" Type="varchar(max)" Mode="In" />
+    <Parameter Name="CardType" Type="varchar" Mode="In" />
+  </Function>
+  <Function Name="usp_InsertPaymentHistory" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+    <Parameter Name="TransactionID" Type="nvarchar(max)" Mode="In" />
+    <Parameter Name="ReservationNameID" Type="varchar" Mode="In" />
+    <Parameter Name="ReservationNumber" Type="varchar" Mode="In" />
+    <Parameter Name="PData" Type="nvarchar(max)" Mode="In" />
+    <Parameter Name="MDData" Type="nvarchar(max)" Mode="In" />
+    <Parameter Name="PaRes" Type="nvarchar(max)" Mode="In" />
+    <Parameter Name="PSPReference" Type="nvarchar" Mode="In" />
+    <Parameter Name="ResultCode" Type="nvarchar" Mode="In" />
+    <Parameter Name="RefusalReason" Type="nvarchar(max)" Mode="In" />
+    <Parameter Name="TransactionType" Type="varchar" Mode="In" />
+  </Function>
+  <Function Name="Usp_InsertPaymentTransactionsFromLocal" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo" />
+  <Function Name="usp_InsertReservationDetails" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo" />
+  <Function Name="usp_InsertReservationDetailsCheckOut" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo" />
+  <Function Name="Usp_InsertReservationPackageDetails" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+    <Parameter Name="ReservationDetailID" Type="int" Mode="In" />
+    <Parameter Name="PackageID" Type="int" Mode="In" />
+  </Function>
+  <Function Name="Usp_InsertRoomTypeMaster" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+    <Parameter Name="RoomTypeCode" Type="varchar" Mode="In" />
+    <Parameter Name="RoomTypeDescription" Type="varchar" Mode="In" />
+  </Function>
+  <Function Name="Usp_UpdateEmailIDByReservationID" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+    <Parameter Name="ReservationID" Type="int" Mode="In" />
+    <Parameter Name="Email" Type="nvarchar" Mode="In" />
+  </Function>
+  <Function Name="Usp_UpdatePaymentHeader" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+    <Parameter Name="TransactionID" Type="nvarchar(max)" Mode="In" />
+    <Parameter Name="IsActive" Type="bit" Mode="In" />
+    <Parameter Name="ResultCode" Type="varchar" Mode="In" />
+    <Parameter Name="ResponseMessage" Type="nvarchar(max)" Mode="In" />
+    <Parameter Name="TransactionType" Type="varchar" Mode="In" />
+  </Function>
+  <Function Name="Usp_UpdatePreCheckOutFlag" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+    <Parameter Name="ReservationDetailID" Type="int" Mode="In" />
+  </Function>
+  <Function Name="Usp_UpdateReservationByGuest" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+    <Parameter Name="ReservationID" Type="int" Mode="In" />
+    <Parameter Name="ETA" Type="varchar" Mode="In" />
+    <Parameter Name="FlightNo" Type="varchar" Mode="In" />
+    <Parameter Name="ProfileDetailID" Type="int" Mode="In" />
+    <Parameter Name="MembershipNo" Type="varchar" Mode="In" />
+    <Parameter Name="Email" Type="nvarchar(max)" Mode="In" />
+    <Parameter Name="Phone" Type="nvarchar(max)" Mode="In" />
+    <Parameter Name="AddressLine1" Type="nvarchar" Mode="In" />
+    <Parameter Name="AddressLine2" Type="nvarchar" Mode="In" />
+    <Parameter Name="City" Type="varchar" Mode="In" />
+    <Parameter Name="StateMasterID" Type="int" Mode="In" />
+    <Parameter Name="PostalCode" Type="varchar" Mode="In" />
+    <Parameter Name="CountryMasterID" Type="int" Mode="In" />
+    <Parameter Name="SignatureImage" Type="varbinary(max)" Mode="In" />
+    <Parameter Name="DocumentImage1" Type="varbinary(max)" Mode="In" />
+    <Parameter Name="DocumentImage2" Type="varbinary(max)" Mode="In" />
+    <Parameter Name="DocumentImage3" Type="varbinary(max)" Mode="In" />
+    <Parameter Name="FaceImage" Type="varbinary(max)" Mode="In" />
+    <Parameter Name="IsMemberShipEnrolled" Type="bit" Mode="In" />
+    <Parameter Name="Type" Type="varchar" Mode="In" />
+    <Parameter Name="DocumentID" Type="int" Mode="In" />
+    <Parameter Name="DocumentNumber" Type="varchar" Mode="In" />
+    <Parameter Name="ExpiryDate" Type="datetime" Mode="In" />
+    <Parameter Name="IssueDate" Type="datetime" Mode="In" />
+    <Parameter Name="Gender" Type="varchar" Mode="In" />
+    <Parameter Name="IssueCountry" Type="varchar" Mode="In" />
+  </Function>
+  <Function Name="Usp_usp_FetchReservationPaymentAdditionalInfoforLocalPush" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo" />
+  <Function Name="Usp_usp_FetchReservationPaymentHeaderforLocalPush" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo" />
+  <Function Name="Usp_usp_FetchReservationPaymentHistoryforLocalPush" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo" />
+  <EntityContainer Name="CloudDBModelStoreContainer">
+    <EntitySet Name="tbCountryMaster" EntityType="Self.tbCountryMaster" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="tbDocumentMaster" EntityType="Self.tbDocumentMaster" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="tbEventModuleMaster" EntityType="Self.tbEventModuleMaster" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="tbEventSubModuleMaster" EntityType="Self.tbEventSubModuleMaster" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="tbEventTrackingDetails" EntityType="Self.tbEventTrackingDetails" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="tbFeedBackResult" EntityType="Self.tbFeedBackResult" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="tbKeyStorageManagement" EntityType="Self.tbKeyStorageManagement" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="tbOperaPaymentTypeCodeWeb" EntityType="Self.tbOperaPaymentTypeCodeWeb" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="tbPackageMaster" EntityType="Self.tbPackageMaster" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="tbPaymentAdditionalInfo" EntityType="Self.tbPaymentAdditionalInfo" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="tbPaymentHeader" EntityType="Self.tbPaymentHeader" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="tbPaymentHistory" EntityType="Self.tbPaymentHistory" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="tbProfileDetails" EntityType="Self.tbProfileDetails" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="tbProfileDocuments" EntityType="Self.tbProfileDocuments" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="tbQuestionMaster" EntityType="Self.tbQuestionMaster" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="tbRequestDetails" EntityType="Self.tbRequestDetails" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="tbRequestMaster" EntityType="Self.tbRequestMaster" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="tbReservationDetails" EntityType="Self.tbReservationDetails" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="tbReservationDocuments" EntityType="Self.tbReservationDocuments" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="tbReservationDocumentTypeMaster" EntityType="Self.tbReservationDocumentTypeMaster" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="tbReservationPackageDetails" EntityType="Self.tbReservationPackageDetails" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="tbReservationRateDetails" EntityType="Self.tbReservationRateDetails" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="tbRoomTypeMapping" EntityType="Self.tbRoomTypeMapping" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="tbRoomTypeMaster" EntityType="Self.tbRoomTypeMaster" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="tbStateMaster" EntityType="Self.tbStateMaster" Schema="dbo" store:Type="Tables" />
+    <AssociationSet Name="FK_tbEventSubModuleMaster_tbEventModuleMaster" Association="Self.FK_tbEventSubModuleMaster_tbEventModuleMaster">
+      <End Role="tbEventModuleMaster" EntitySet="tbEventModuleMaster" />
+      <End Role="tbEventSubModuleMaster" EntitySet="tbEventSubModuleMaster" />
+    </AssociationSet>
+    <AssociationSet Name="FK_tbEventTrackingDetails_tbEventSubModuleMaster" Association="Self.FK_tbEventTrackingDetails_tbEventSubModuleMaster">
+      <End Role="tbEventSubModuleMaster" EntitySet="tbEventSubModuleMaster" />
+      <End Role="tbEventTrackingDetails" EntitySet="tbEventTrackingDetails" />
+    </AssociationSet>
+    <AssociationSet Name="FK_tbEventTrackingDetails_tbReservationDetails" Association="Self.FK_tbEventTrackingDetails_tbReservationDetails">
+      <End Role="tbReservationDetails" EntitySet="tbReservationDetails" />
+      <End Role="tbEventTrackingDetails" EntitySet="tbEventTrackingDetails" />
+    </AssociationSet>
+  </EntityContainer>
+</Schema>

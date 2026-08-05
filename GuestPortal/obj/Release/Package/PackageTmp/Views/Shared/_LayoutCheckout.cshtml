@@ -1,0 +1,170 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link href="~/assets/css/paymentIcons.css" rel="stylesheet" />
+
+    @* <script src="https://checkoutshopper-live.adyen.com/checkoutshopper/sdk/3.8.1/adyen.js"
+                integrity="sha384-pLfJ6XKllmblOK86IVevGarh2cfeBr6lWAEkumlMA3hgTqKpEgNn8ID7zq4HsC6H"
+                crossorigin="anonymous"></script>
+
+        <link rel="stylesheet"
+              href="https://checkoutshopper-live.adyen.com/checkoutshopper/sdk/3.8.1/adyen.css"
+              integrity="sha384-y1lKqffK5z+ENzddmGIfP3bcMRobxkjDt/9lyPAvV9H3JXbJYxCSD6L8TdyRMCGM"
+              crossorigin="anonymous">*@
+    <link rel="stylesheet" href="https://checkoutshopper-test.adyen.com/checkoutshopper/sdk/3.8.1/adyen.css"
+          integrity="sha384-y1lKqffK5z+ENzddmGIfP3bcMRobxkjDt/9lyPAvV9H3JXbJYxCSD6L8TdyRMCGM"
+          crossorigin="anonymous">
+
+    <script src="https://checkoutshopper-test.adyen.com/checkoutshopper/sdk/3.8.1/adyen.js"
+            integrity="sha384-rGkZxBRhUfCECwNuNrllGf8dOpeUsKTMqczAkphoWMne67C32+na/29lUGT3HVOB"
+            crossorigin="anonymous"></script>
+
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="~/assets/css/bootstrap.min.css">
+    <!--Selct CSS -->
+    <link rel="stylesheet" href="~/assets/css/bootstrap-select.min.css">
+    <!--font-awsome -->
+    <link href="~/assets/css/all.css" rel="stylesheet">
+    <!-- custom CSS -->
+    <link rel="stylesheet" href="~/assets/css/custom.css">
+    <link href="~/assets/css/paymentIcons.css" rel="stylesheet" />
+    <link href="~/assets/css/signature-pad.css" rel="stylesheet" />
+    <script>
+         var getUrl = window.location;
+  var BaseURL = getUrl.protocol + "//" + getUrl.host
+  //var BaseURL = "@Request.Url.GetLeftPart(UriPartial.Authority)";
+
+        var ReservationNumber;
+        var ReservationNameID;
+
+        var IsredirectedfromPaymentPage = "@ViewBag.IsredirectedfromPaymentPage";
+        var IsPaymentSuccess = "@ViewBag.IsPaymentSuccess";
+        var PaymentFailureMessage = "@ViewBag.PaymentFailureMessage";
+        var EcomStatus = "@ViewBag.EcomStatus";
+
+    </script>
+    <link rel="icon" type="image/png" href="~/assets/images/favicon.ico" sizes="16x16">
+    <title>Guest Folio</title>
+</head>
+<body>
+
+
+
+
+    <div class="container-fluid p-0" id="divSplash" style="display:none">
+        <div class="layout-inro1">
+            <div class="logo-btn">
+                <img class="img-fluid" src="~/assets/images/logo.svg">
+            </div>
+            <div class="start">
+                <div class="arrow">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+
+                </div>
+                <a class="continue" style="width:auto" onclick="beginCheckout()" href="#">START</a>
+            </div>
+        </div>
+    </div>
+    <div class="loader-screen" style="display:none;z-index:99999">
+        <div class="loadingio-spinner-pulse-yd5dl03y9fi">
+            <div class="ldio-v55tnqe6ie">
+                <div></div><div></div><div></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container-fluid h100" id="mainDiv" style="display:none">
+        <div class="row h100 bg-blk">
+            @RenderBody()
+        </div>
+    </div>
+
+    <div class="modal fade cstm-modal" id="customMessageModal" tabindex="-1" role="dialog" aria-labelledby="customMessageModalLabel" aria-hidden="true">
+        <div class="modal-dialog  modal-dialog-centered upload-model" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="customMessageModalLabel">Message</h5>
+                </div>
+                <div class="modal-body">
+                    <div class="quest card-quest">
+                        <h5 id="customMessageModalMessage"></h5>
+                        <br />
+                        <div class="btns">
+                            <button class="yes" data-dismiss="modal" data-toggle="modal">Continue</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="~/assets/js/jquery-3.5.1.js"></script>
+    <script src="~/assets/js/bootstrap.bundle.js"></script>
+    <script src="~/assets/js/bootstrap-select.min.js"></script>
+    <script src="~/assets/js/moment.js"></script>
+    <script src="~/assets/js/commonFunctions.js"></script>
+    <script>
+        var ReservationFound = "@ViewBag.ReservationFound";
+        var PaymentProcessed = "@ViewBag.PaymentProcessed";
+
+        $('.loader-screen').fadeIn(100);
+
+        function beginCheckout() {
+            $('#divSplash').fadeOut(200);
+            $('#mainDiv').fadeIn(800);
+        }
+
+        window.onload = (event) => {
+
+            setTimeout(function () {
+                $('.loader-screen').fadeOut(500);
+
+                if (ReservationFound == "True") {
+                    if (PaymentProcessed == "True") {
+
+                        if (IsredirectedfromPaymentPage == "True") {
+                            if (IsPaymentSuccess == "True") {
+                                $('#messageContent').html('Your payment was successful.');
+                            }
+                            else {
+                                $('#messageContent').html(PaymentFailureMessage);
+                            }
+                            $('#paymentStatusPopup').modal('show');
+                        }
+
+                        $('#mainDiv').fadeIn(800);
+                    }
+                    else {
+                        $('#mainDiv').hide();
+                        $('#divSplash').fadeIn(800);
+                    }
+                }
+                else {
+                    $('#mainDiv').fadeIn(800);
+                    $('#divSplash').hide();
+                }
+            }, 800);
+
+        };
+
+        $(document).ready(function () {
+
+        });
+
+    </script>
+
+
+    @RenderSection("Scripts", false)
+
+</body>
+</html>

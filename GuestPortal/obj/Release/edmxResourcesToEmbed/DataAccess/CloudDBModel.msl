@@ -1,0 +1,765 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Mapping Space="C-S" xmlns="http://schemas.microsoft.com/ado/2009/11/mapping/cs">
+  <EntityContainerMapping StorageEntityContainer="CloudDBModelStoreContainer" CdmEntityContainer="SwissotelStamfordEntities">
+    <FunctionImportMapping FunctionImportName="CloseKeys" FunctionName="CloudDBModel.Store.CloseKeys" />
+    <FunctionImportMapping FunctionImportName="OpenKeys" FunctionName="CloudDBModel.Store.OpenKeys" />
+    <FunctionImportMapping FunctionImportName="sp_alterdiagram" FunctionName="CloudDBModel.Store.sp_alterdiagram" />
+    <FunctionImportMapping FunctionImportName="sp_creatediagram" FunctionName="CloudDBModel.Store.sp_creatediagram" />
+    <FunctionImportMapping FunctionImportName="sp_dropdiagram" FunctionName="CloudDBModel.Store.sp_dropdiagram" />
+    <FunctionImportMapping FunctionImportName="sp_helpdiagramdefinition" FunctionName="CloudDBModel.Store.sp_helpdiagramdefinition">
+      <ResultMapping>
+        <ComplexTypeMapping TypeName="CloudDBModel.sp_helpdiagramdefinition_Result">
+          <ScalarProperty Name="version" ColumnName="version" />
+          <ScalarProperty Name="definition" ColumnName="definition" />
+        </ComplexTypeMapping>
+      </ResultMapping>
+    </FunctionImportMapping>
+    <FunctionImportMapping FunctionImportName="sp_helpdiagrams" FunctionName="CloudDBModel.Store.sp_helpdiagrams">
+      <ResultMapping>
+        <ComplexTypeMapping TypeName="CloudDBModel.sp_helpdiagrams_Result">
+          <ScalarProperty Name="Database" ColumnName="Database" />
+          <ScalarProperty Name="Name" ColumnName="Name" />
+          <ScalarProperty Name="ID" ColumnName="ID" />
+          <ScalarProperty Name="Owner" ColumnName="Owner" />
+          <ScalarProperty Name="OwnerID" ColumnName="OwnerID" />
+        </ComplexTypeMapping>
+      </ResultMapping>
+    </FunctionImportMapping>
+    <FunctionImportMapping FunctionImportName="sp_renamediagram" FunctionName="CloudDBModel.Store.sp_renamediagram" />
+    <FunctionImportMapping FunctionImportName="sp_upgraddiagrams" FunctionName="CloudDBModel.Store.sp_upgraddiagrams" />
+    <FunctionImportMapping FunctionImportName="Usp_BulkUpdateLocallyPushedReservations" FunctionName="CloudDBModel.Store.Usp_BulkUpdateLocallyPushedReservations" />
+    <FunctionImportMapping FunctionImportName="usp_DeleteTransactionsByReservationID" FunctionName="CloudDBModel.Store.usp_DeleteTransactionsByReservationID" />
+    <FunctionImportMapping FunctionImportName="usp_FetchReservationforLocalPush" FunctionName="CloudDBModel.Store.usp_FetchReservationforLocalPush">
+      <ResultMapping>
+        <ComplexTypeMapping TypeName="CloudDBModel.usp_FetchReservationforLocalPush_Result">
+          <ScalarProperty Name="ReservationNameID" ColumnName="ReservationNameID" />
+          <ScalarProperty Name="ReservationNumber" ColumnName="ReservationNumber" />
+          <ScalarProperty Name="ArrivalDate" ColumnName="ArrivalDate" />
+          <ScalarProperty Name="DepartureDate" ColumnName="DepartureDate" />
+          <ScalarProperty Name="Adultcount" ColumnName="Adultcount" />
+          <ScalarProperty Name="Childcount" ColumnName="Childcount" />
+          <ScalarProperty Name="MembershipNo" ColumnName="MembershipNo" />
+          <ScalarProperty Name="MembershipType" ColumnName="MembershipType" />
+          <ScalarProperty Name="IsDepositAvailable" ColumnName="IsDepositAvailable" />
+          <ScalarProperty Name="IsCardDetailPresent" ColumnName="IsCardDetailPresent" />
+          <ScalarProperty Name="CardDetailID" ColumnName="CardDetailID" />
+          <ScalarProperty Name="IsSaavyPaid" ColumnName="IsSaavyPaid" />
+          <ScalarProperty Name="DataInsertedDate" ColumnName="DataInsertedDate" />
+          <ScalarProperty Name="Dataupdateddate" ColumnName="Dataupdateddate" />
+          <ScalarProperty Name="IsPreCheckedInPMS" ColumnName="IsPreCheckedInPMS" />
+          <ScalarProperty Name="FlightNo" ColumnName="FlightNo" />
+          <ScalarProperty Name="ETA" ColumnName="ETA" />
+          <ScalarProperty Name="ProfileID" ColumnName="ProfileID" />
+          <ScalarProperty Name="FirstName" ColumnName="FirstName" />
+          <ScalarProperty Name="MiddleName" ColumnName="MiddleName" />
+          <ScalarProperty Name="LastName" ColumnName="LastName" />
+          <ScalarProperty Name="Email" ColumnName="Email" />
+          <ScalarProperty Name="Phone" ColumnName="Phone" />
+          <ScalarProperty Name="BirthDate" ColumnName="BirthDate" />
+          <ScalarProperty Name="AddressLine1" ColumnName="AddressLine1" />
+          <ScalarProperty Name="AddressLine2" ColumnName="AddressLine2" />
+          <ScalarProperty Name="City" ColumnName="City" />
+          <ScalarProperty Name="PostalCode" ColumnName="PostalCode" />
+          <ScalarProperty Name="NationalityCode" ColumnName="NationalityCode" />
+          <ScalarProperty Name="SiteCode" ColumnName="SiteCode" />
+          <ScalarProperty Name="CountryCode" ColumnName="CountryCode" />
+        </ComplexTypeMapping>
+      </ResultMapping>
+    </FunctionImportMapping>
+    <FunctionImportMapping FunctionImportName="Usp_InsertFeedbackData" FunctionName="CloudDBModel.Store.Usp_InsertFeedbackData">
+      <ResultMapping>
+        <ComplexTypeMapping TypeName="CloudDBModel.Usp_InsertFeedbackData_Result">
+          <ScalarProperty Name="Result" ColumnName="Result" />
+          <ScalarProperty Name="Message" ColumnName="Message" />
+        </ComplexTypeMapping>
+      </ResultMapping>
+    </FunctionImportMapping>
+    <FunctionImportMapping FunctionImportName="usp_InsertReservationDetails" FunctionName="CloudDBModel.Store.usp_InsertReservationDetails" />
+    <FunctionImportMapping FunctionImportName="Usp_UpdateReservationByGuest" FunctionName="CloudDBModel.Store.Usp_UpdateReservationByGuest" />
+    <FunctionImportMapping FunctionImportName="usp_GetReservationDetails" FunctionName="CloudDBModel.Store.usp_GetReservationDetails">
+      <ResultMapping>
+        <ComplexTypeMapping TypeName="CloudDBModel.usp_GetReservationDetails_Result">
+          <ScalarProperty Name="ReservationDetailID" ColumnName="ReservationDetailID" />
+          <ScalarProperty Name="ReservationNameID" ColumnName="ReservationNameID" />
+          <ScalarProperty Name="ReservationNumber" ColumnName="ReservationNumber" />
+          <ScalarProperty Name="ArrivalDate" ColumnName="ArrivalDate" />
+          <ScalarProperty Name="DepartureDate" ColumnName="DepartureDate" />
+          <ScalarProperty Name="Adultcount" ColumnName="Adultcount" />
+          <ScalarProperty Name="Childcount" ColumnName="Childcount" />
+          <ScalarProperty Name="MembershipNo" ColumnName="MembershipNo" />
+          <ScalarProperty Name="MembershipType" ColumnName="MembershipType" />
+          <ScalarProperty Name="IsDepositAvailable" ColumnName="IsDepositAvailable" />
+          <ScalarProperty Name="IsCardDetailPresent" ColumnName="IsCardDetailPresent" />
+          <ScalarProperty Name="IsSaavyPaid" ColumnName="IsSaavyPaid" />
+          <ScalarProperty Name="IsPreCheckedInPMS" ColumnName="IsPreCheckedInPMS" />
+          <ScalarProperty Name="FlightNo" ColumnName="FlightNo" />
+          <ScalarProperty Name="ETA" ColumnName="ETA" />
+          <ScalarProperty Name="AverageRoomRate" ColumnName="AverageRoomRate" />
+          <ScalarProperty Name="TotalTax" ColumnName="TotalTax" />
+          <ScalarProperty Name="RoomType" ColumnName="RoomType" />
+          <ScalarProperty Name="RoomTypeDescription" ColumnName="RoomTypeDescription" />
+          <ScalarProperty Name="TotalAmount" ColumnName="TotalAmount" />
+          <ScalarProperty Name="FolioDocument" ColumnName="FolioDocument" />
+          <ScalarProperty Name="EcomPaymentStatus" ColumnName="EcomPaymentStatus" />
+          <ScalarProperty Name="PaidAmount" ColumnName="PaidAmount" />
+          <ScalarProperty Name="BalanceAmount" ColumnName="BalanceAmount" />
+          <ScalarProperty Name="ReservationSource" ColumnName="ReservationSource" />
+          <ScalarProperty Name="IsBreakFastAvailable" ColumnName="IsBreakFastAvailable" />
+          <ScalarProperty Name="IsMemberShipEnrolled" ColumnName="IsMemberShipEnrolled" />
+        </ComplexTypeMapping>
+      </ResultMapping>
+    </FunctionImportMapping>
+    <FunctionImportMapping FunctionImportName="Usp_GetQuestionMaster" FunctionName="CloudDBModel.Store.Usp_GetQuestionMaster">
+      <ResultMapping>
+        <ComplexTypeMapping TypeName="CloudDBModel.Usp_GetQuestionMaster_Result">
+          <ScalarProperty Name="QuestionID" ColumnName="QuestionID" />
+          <ScalarProperty Name="Question" ColumnName="Question" />
+          <ScalarProperty Name="QuestionType" ColumnName="QuestionType" />
+          <ScalarProperty Name="QuestionHint" ColumnName="QuestionHint" />
+        </ComplexTypeMapping>
+      </ResultMapping>
+    </FunctionImportMapping>
+    <FunctionImportMapping FunctionImportName="Usp_GetProfileInformationByReservationID" FunctionName="CloudDBModel.Store.Usp_GetProfileInformationByReservationID">
+      <ResultMapping>
+        <ComplexTypeMapping TypeName="CloudDBModel.Usp_GetProfileInformationByReservationID_Result">
+          <ScalarProperty Name="ProfileDetailID" ColumnName="ProfileDetailID" />
+          <ScalarProperty Name="ProfileID" ColumnName="ProfileID" />
+          <ScalarProperty Name="ReservationDetailID" ColumnName="ReservationDetailID" />
+          <ScalarProperty Name="FirstName" ColumnName="FirstName" />
+          <ScalarProperty Name="MiddleName" ColumnName="MiddleName" />
+          <ScalarProperty Name="LastName" ColumnName="LastName" />
+          <ScalarProperty Name="Email" ColumnName="Email" />
+          <ScalarProperty Name="Phone" ColumnName="Phone" />
+          <ScalarProperty Name="BirthDate" ColumnName="BirthDate" />
+          <ScalarProperty Name="Nationality" ColumnName="Nationality" />
+          <ScalarProperty Name="AddressLine1" ColumnName="AddressLine1" />
+          <ScalarProperty Name="AddressLine2" ColumnName="AddressLine2" />
+          <ScalarProperty Name="City" ColumnName="City" />
+          <ScalarProperty Name="StateMasterID" ColumnName="StateMasterID" />
+          <ScalarProperty Name="PostalCode" ColumnName="PostalCode" />
+          <ScalarProperty Name="CountryMasterID" ColumnName="CountryMasterID" />
+          <ScalarProperty Name="CreatedDateTime" ColumnName="CreatedDateTime" />
+          <ScalarProperty Name="LastModifiedDateTime" ColumnName="LastModifiedDateTime" />
+        </ComplexTypeMapping>
+      </ResultMapping>
+    </FunctionImportMapping>
+    <FunctionImportMapping FunctionImportName="Usp_GetPackageMaster" FunctionName="CloudDBModel.Store.Usp_GetPackageMaster">
+      <ResultMapping>
+        <ComplexTypeMapping TypeName="CloudDBModel.Usp_GetPackageMaster_Result">
+          <ScalarProperty Name="PackageCode" ColumnName="PackageCode" />
+          <ScalarProperty Name="PackageName" ColumnName="PackageName" />
+          <ScalarProperty Name="PackageAmount" ColumnName="PackageAmount" />
+          <ScalarProperty Name="PackageDesc" ColumnName="PackageDesc" />
+          <ScalarProperty Name="PackageImage" ColumnName="PackageImage" />
+          <ScalarProperty Name="isActive" ColumnName="isActive" />
+          <ScalarProperty Name="PackageID" ColumnName="PackageID" />
+        </ComplexTypeMapping>
+      </ResultMapping>
+    </FunctionImportMapping>
+    <FunctionImportMapping FunctionImportName="Usp_GetProfileDocumentsByReservationID" FunctionName="CloudDBModel.Store.Usp_GetProfileDocumentsByReservationID">
+      <ResultMapping>
+        <ComplexTypeMapping TypeName="CloudDBModel.Usp_GetProfileDocumentsByReservationID_Result">
+          <ScalarProperty Name="ProfileDocID" ColumnName="ProfileDocID" />
+          <ScalarProperty Name="ProfileID" ColumnName="ProfileID" />
+          <ScalarProperty Name="ProfileDetailID" ColumnName="ProfileDetailID" />
+          <ScalarProperty Name="DocumentMasterID" ColumnName="DocumentMasterID" />
+          <ScalarProperty Name="DocumentNumber" ColumnName="DocumentNumber" />
+          <ScalarProperty Name="ExpiryDate" ColumnName="ExpiryDate" />
+          <ScalarProperty Name="IssueDate" ColumnName="IssueDate" />
+          <ScalarProperty Name="DocumentImage1" ColumnName="DocumentImage1" />
+          <ScalarProperty Name="DocumentImage2" ColumnName="DocumentImage2" />
+          <ScalarProperty Name="DocumentImage3" ColumnName="DocumentImage3" />
+          <ScalarProperty Name="FaceImage" ColumnName="FaceImage" />
+        </ComplexTypeMapping>
+      </ResultMapping>
+    </FunctionImportMapping>
+    <FunctionImportMapping FunctionImportName="Usp_InsertPackageMaster" FunctionName="CloudDBModel.Store.Usp_InsertPackageMaster">
+      <ResultMapping>
+        <ComplexTypeMapping TypeName="CloudDBModel.Usp_InsertPackageMaster_Result">
+          <ScalarProperty Name="Result" ColumnName="Result" />
+          <ScalarProperty Name="Message" ColumnName="Message" />
+        </ComplexTypeMapping>
+      </ResultMapping>
+    </FunctionImportMapping>
+    <FunctionImportMapping FunctionImportName="Usp_InsertReservationPackageDetails" FunctionName="CloudDBModel.Store.Usp_InsertReservationPackageDetails">
+      <ResultMapping>
+        <ComplexTypeMapping TypeName="CloudDBModel.Usp_InsertReservationPackageDetails_Result">
+          <ScalarProperty Name="Result" ColumnName="Result" />
+          <ScalarProperty Name="Message" ColumnName="Message" />
+        </ComplexTypeMapping>
+      </ResultMapping>
+    </FunctionImportMapping>
+    <FunctionImportMapping FunctionImportName="usp_FetchProfileDocumentsforLocalPush" FunctionName="CloudDBModel.Store.usp_FetchProfileDocumentsforLocalPush">
+      <ResultMapping>
+        <ComplexTypeMapping TypeName="CloudDBModel.usp_FetchProfileDocumentsforLocalPush_Result">
+          <ScalarProperty Name="ReservationNameID" ColumnName="ReservationNameID" />
+          <ScalarProperty Name="ProfileID" ColumnName="ProfileID" />
+          <ScalarProperty Name="DocumentMasterID" ColumnName="DocumentMasterID" />
+          <ScalarProperty Name="DocumentNumber" ColumnName="DocumentNumber" />
+          <ScalarProperty Name="ExpiryDate" ColumnName="ExpiryDate" />
+          <ScalarProperty Name="IssueDate" ColumnName="IssueDate" />
+          <ScalarProperty Name="DocumentImage1" ColumnName="DocumentImage1" />
+          <ScalarProperty Name="DocumentImage2" ColumnName="DocumentImage2" />
+          <ScalarProperty Name="DocumentImage3" ColumnName="DocumentImage3" />
+          <ScalarProperty Name="FaceImage" ColumnName="FaceImage" />
+        </ComplexTypeMapping>
+      </ResultMapping>
+    </FunctionImportMapping>
+    <FunctionImportMapping FunctionImportName="usp_FetchReservationFeedBackforLocalPush" FunctionName="CloudDBModel.Store.usp_FetchReservationFeedBackforLocalPush">
+      <ResultMapping>
+        <ComplexTypeMapping TypeName="CloudDBModel.usp_FetchReservationFeedBackforLocalPush_Result">
+          <ScalarProperty Name="ReservationNameID" ColumnName="ReservationNameID" />
+          <ScalarProperty Name="QuestionID" ColumnName="QuestionID" />
+          <ScalarProperty Name="Answer" ColumnName="Answer" />
+        </ComplexTypeMapping>
+      </ResultMapping>
+    </FunctionImportMapping>
+    <FunctionImportMapping FunctionImportName="usp_FetchReservationPackageforLocalPush" FunctionName="CloudDBModel.Store.usp_FetchReservationPackageforLocalPush">
+      <ResultMapping>
+        <ComplexTypeMapping TypeName="CloudDBModel.usp_FetchReservationPackageforLocalPush_Result">
+          <ScalarProperty Name="ReservationNameID" ColumnName="ReservationNameID" />
+          <ScalarProperty Name="PackageID" ColumnName="PackageID" />
+        </ComplexTypeMapping>
+      </ResultMapping>
+    </FunctionImportMapping>
+    <FunctionImportMapping FunctionImportName="Usp_InsertEventsTracking" FunctionName="CloudDBModel.Store.Usp_InsertEventsTracking">
+      <ResultMapping>
+        <ComplexTypeMapping TypeName="CloudDBModel.Usp_InsertEventsTracking_Result">
+          <ScalarProperty Name="Result" ColumnName="Result" />
+          <ScalarProperty Name="Message" ColumnName="Message" />
+        </ComplexTypeMapping>
+      </ResultMapping>
+    </FunctionImportMapping>
+    <FunctionImportMapping FunctionImportName="Usp_BulkUpdateCheckOutReservations" FunctionName="CloudDBModel.Store.Usp_BulkUpdateCheckOutReservations" />
+    <FunctionImportMapping FunctionImportName="usp_InsertReservationDetailsCheckOut" FunctionName="CloudDBModel.Store.usp_InsertReservationDetailsCheckOut" />
+    <FunctionImportMapping FunctionImportName="Usp_UpdatePreCheckOutFlag" FunctionName="CloudDBModel.Store.Usp_UpdatePreCheckOutFlag" />
+    <EntitySetMapping Name="tbCountryMasters">
+      <EntityTypeMapping TypeName="CloudDBModel.tbCountryMaster">
+        <MappingFragment StoreEntitySet="tbCountryMaster">
+          <ScalarProperty Name="Country_2Char_code" ColumnName="Country_2Char_code" />
+          <ScalarProperty Name="Country_3Char_code" ColumnName="Country_3Char_code" />
+          <ScalarProperty Name="Country_Full_name" ColumnName="Country_Full_name" />
+          <ScalarProperty Name="CountryMasterID" ColumnName="CountryMasterID" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="tbDocumentMasters">
+      <EntityTypeMapping TypeName="CloudDBModel.tbDocumentMaster">
+        <MappingFragment StoreEntitySet="tbDocumentMaster">
+          <ScalarProperty Name="DocumentType" ColumnName="DocumentType" />
+          <ScalarProperty Name="DocumentCode" ColumnName="DocumentCode" />
+          <ScalarProperty Name="DocumentMasterID" ColumnName="DocumentMasterID" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="tbEventModuleMasters">
+      <EntityTypeMapping TypeName="CloudDBModel.tbEventModuleMaster">
+        <MappingFragment StoreEntitySet="tbEventModuleMaster">
+          <ScalarProperty Name="EventModuleName" ColumnName="EventModuleName" />
+          <ScalarProperty Name="EventModuleID" ColumnName="EventModuleID" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="tbEventSubModuleMasters">
+      <EntityTypeMapping TypeName="CloudDBModel.tbEventSubModuleMaster">
+        <MappingFragment StoreEntitySet="tbEventSubModuleMaster">
+          <ScalarProperty Name="ActionType" ColumnName="ActionType" />
+          <ScalarProperty Name="EventModuleName" ColumnName="EventModuleName" />
+          <ScalarProperty Name="EventModuleID" ColumnName="EventModuleID" />
+          <ScalarProperty Name="EventSubModuleID" ColumnName="EventSubModuleID" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="tbEventTrackingDetails">
+      <EntityTypeMapping TypeName="CloudDBModel.tbEventTrackingDetail">
+        <MappingFragment StoreEntitySet="tbEventTrackingDetails">
+          <ScalarProperty Name="StatusType" ColumnName="StatusType" />
+          <ScalarProperty Name="EventSubModuleID" ColumnName="EventSubModuleID" />
+          <ScalarProperty Name="ReservationID" ColumnName="ReservationID" />
+          <ScalarProperty Name="EventTrackingID" ColumnName="EventTrackingID" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="tbFeedBackResults">
+      <EntityTypeMapping TypeName="CloudDBModel.tbFeedBackResult">
+        <MappingFragment StoreEntitySet="tbFeedBackResult">
+          <ScalarProperty Name="Answer" ColumnName="Answer" />
+          <ScalarProperty Name="QuestionID" ColumnName="QuestionID" />
+          <ScalarProperty Name="ReservationID" ColumnName="ReservationID" />
+          <ScalarProperty Name="FeedBackID" ColumnName="FeedBackID" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="tbKeyStorageManagements">
+      <EntityTypeMapping TypeName="CloudDBModel.tbKeyStorageManagement">
+        <MappingFragment StoreEntitySet="tbKeyStorageManagement">
+          <ScalarProperty Name="IsActive" ColumnName="IsActive" />
+          <ScalarProperty Name="CreatedDateTime" ColumnName="CreatedDateTime" />
+          <ScalarProperty Name="KeyPass" ColumnName="KeyPass" />
+          <ScalarProperty Name="ID" ColumnName="ID" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="tbPackageMasters">
+      <EntityTypeMapping TypeName="CloudDBModel.tbPackageMaster">
+        <MappingFragment StoreEntitySet="tbPackageMaster">
+          <ScalarProperty Name="Units" ColumnName="Units" />
+          <ScalarProperty Name="IsRoomUpsell" ColumnName="IsRoomUpsell" />
+          <ScalarProperty Name="isActive" ColumnName="isActive" />
+          <ScalarProperty Name="PackageImage" ColumnName="PackageImage" />
+          <ScalarProperty Name="PackageDesc" ColumnName="PackageDesc" />
+          <ScalarProperty Name="PackageAmount" ColumnName="PackageAmount" />
+          <ScalarProperty Name="PackageName" ColumnName="PackageName" />
+          <ScalarProperty Name="PackageCode" ColumnName="PackageCode" />
+          <ScalarProperty Name="PackageID" ColumnName="PackageID" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="tbProfileDetails">
+      <EntityTypeMapping TypeName="CloudDBModel.tbProfileDetail">
+        <MappingFragment StoreEntitySet="tbProfileDetails">
+          <ScalarProperty Name="Gender" ColumnName="Gender" />
+          <ScalarProperty Name="LastModifiedDateTime" ColumnName="LastModifiedDateTime" />
+          <ScalarProperty Name="CreatedDateTime" ColumnName="CreatedDateTime" />
+          <ScalarProperty Name="CountryMasterID" ColumnName="CountryMasterID" />
+          <ScalarProperty Name="PostalCode" ColumnName="PostalCode" />
+          <ScalarProperty Name="StateMasterID" ColumnName="StateMasterID" />
+          <ScalarProperty Name="City" ColumnName="City" />
+          <ScalarProperty Name="AddressLine2" ColumnName="AddressLine2" />
+          <ScalarProperty Name="AddressLine1" ColumnName="AddressLine1" />
+          <ScalarProperty Name="Nationality" ColumnName="Nationality" />
+          <ScalarProperty Name="BirthDate" ColumnName="BirthDate" />
+          <ScalarProperty Name="Phone" ColumnName="Phone" />
+          <ScalarProperty Name="Email" ColumnName="Email" />
+          <ScalarProperty Name="LastName" ColumnName="LastName" />
+          <ScalarProperty Name="MiddleName" ColumnName="MiddleName" />
+          <ScalarProperty Name="FirstName" ColumnName="FirstName" />
+          <ScalarProperty Name="ReservationDetailID" ColumnName="ReservationDetailID" />
+          <ScalarProperty Name="ProfileID" ColumnName="ProfileID" />
+          <ScalarProperty Name="ProfileDetailID" ColumnName="ProfileDetailID" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="tbProfileDocuments">
+      <EntityTypeMapping TypeName="CloudDBModel.tbProfileDocument">
+        <MappingFragment StoreEntitySet="tbProfileDocuments">
+          <ScalarProperty Name="IssueCountry" ColumnName="IssueCountry" />
+          <ScalarProperty Name="lastModifiedDateTime" ColumnName="lastModifiedDateTime" />
+          <ScalarProperty Name="CreatedDateTime" ColumnName="CreatedDateTime" />
+          <ScalarProperty Name="FaceImage" ColumnName="FaceImage" />
+          <ScalarProperty Name="DocumentImage3" ColumnName="DocumentImage3" />
+          <ScalarProperty Name="DocumentImage2" ColumnName="DocumentImage2" />
+          <ScalarProperty Name="DocumentImage1" ColumnName="DocumentImage1" />
+          <ScalarProperty Name="IssueDate" ColumnName="IssueDate" />
+          <ScalarProperty Name="ExpiryDate" ColumnName="ExpiryDate" />
+          <ScalarProperty Name="DocumentNumber" ColumnName="DocumentNumber" />
+          <ScalarProperty Name="DocumentMasterID" ColumnName="DocumentMasterID" />
+          <ScalarProperty Name="ProfileDetailID" ColumnName="ProfileDetailID" />
+          <ScalarProperty Name="ProfileDocID" ColumnName="ProfileDocID" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="tbQuestionMasters">
+      <EntityTypeMapping TypeName="CloudDBModel.tbQuestionMaster">
+        <MappingFragment StoreEntitySet="tbQuestionMaster">
+          <ScalarProperty Name="QuestionHint" ColumnName="QuestionHint" />
+          <ScalarProperty Name="QuestionType" ColumnName="QuestionType" />
+          <ScalarProperty Name="Question" ColumnName="Question" />
+          <ScalarProperty Name="QuestionID" ColumnName="QuestionID" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="tbRequestDetails">
+      <EntityTypeMapping TypeName="CloudDBModel.tbRequestDetail">
+        <MappingFragment StoreEntitySet="tbRequestDetails">
+          <ScalarProperty Name="UserID" ColumnName="UserID" />
+          <ScalarProperty Name="ReqUserComment" ColumnName="ReqUserComment" />
+          <ScalarProperty Name="ReqUpdatedDateTime" ColumnName="ReqUpdatedDateTime" />
+          <ScalarProperty Name="ReqCreatedDateTime" ColumnName="ReqCreatedDateTime" />
+          <ScalarProperty Name="ReqStatus" ColumnName="ReqStatus" />
+          <ScalarProperty Name="ReservationDetailID" ColumnName="ReservationDetailID" />
+          <ScalarProperty Name="ReqTypeMasterID" ColumnName="ReqTypeMasterID" />
+          <ScalarProperty Name="ReqDetailID" ColumnName="ReqDetailID" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="tbRequestMasters">
+      <EntityTypeMapping TypeName="CloudDBModel.tbRequestMaster">
+        <MappingFragment StoreEntitySet="tbRequestMaster">
+          <ScalarProperty Name="ReqType" ColumnName="ReqType" />
+          <ScalarProperty Name="ReqTypeMasterID" ColumnName="ReqTypeMasterID" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="tbReservationDetails">
+      <EntityTypeMapping TypeName="CloudDBModel.tbReservationDetail">
+        <MappingFragment StoreEntitySet="tbReservationDetails">
+          <ScalarProperty Name="IsCheckOutFlag" ColumnName="IsCheckOutFlag" />
+          <ScalarProperty Name="EcomPaymentStatus" ColumnName="EcomPaymentStatus" />
+          <ScalarProperty Name="IsPreCheckedOutPMS" ColumnName="IsPreCheckedOutPMS" />
+          <ScalarProperty Name="RoomTypeDescription" ColumnName="RoomTypeDescription" />
+          <ScalarProperty Name="RoomType" ColumnName="RoomType" />
+          <ScalarProperty Name="IsMemberShipEnrolled" ColumnName="IsMemberShipEnrolled" />
+          <ScalarProperty Name="StatusDescription" ColumnName="StatusDescription" />
+          <ScalarProperty Name="SignatureImage" ColumnName="SignatureImage" />
+          <ScalarProperty Name="ReservationSource" ColumnName="ReservationSource" />
+          <ScalarProperty Name="ETA" ColumnName="ETA" />
+          <ScalarProperty Name="FlightNo" ColumnName="FlightNo" />
+          <ScalarProperty Name="IsPreCheckedInPMS" ColumnName="IsPreCheckedInPMS" />
+          <ScalarProperty Name="LocallySyncedDateTime" ColumnName="LocallySyncedDateTime" />
+          <ScalarProperty Name="IsLocallySynced" ColumnName="IsLocallySynced" />
+          <ScalarProperty Name="Dataupdateddate" ColumnName="Dataupdateddate" />
+          <ScalarProperty Name="DataInsertedDate" ColumnName="DataInsertedDate" />
+          <ScalarProperty Name="IsSaavyPaid" ColumnName="IsSaavyPaid" />
+          <ScalarProperty Name="IsCardDetailPresent" ColumnName="IsCardDetailPresent" />
+          <ScalarProperty Name="IsDepositAvailable" ColumnName="IsDepositAvailable" />
+          <ScalarProperty Name="MembershipType" ColumnName="MembershipType" />
+          <ScalarProperty Name="MembershipNo" ColumnName="MembershipNo" />
+          <ScalarProperty Name="Childcount" ColumnName="Childcount" />
+          <ScalarProperty Name="Adultcount" ColumnName="Adultcount" />
+          <ScalarProperty Name="DepartureDate" ColumnName="DepartureDate" />
+          <ScalarProperty Name="ArrivalDate" ColumnName="ArrivalDate" />
+          <ScalarProperty Name="ReservationNumber" ColumnName="ReservationNumber" />
+          <ScalarProperty Name="ReservationNameID" ColumnName="ReservationNameID" />
+          <ScalarProperty Name="ReservationDetailID" ColumnName="ReservationDetailID" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="tbReservationDocuments">
+      <EntityTypeMapping TypeName="CloudDBModel.tbReservationDocument">
+        <MappingFragment StoreEntitySet="tbReservationDocuments">
+          <ScalarProperty Name="Document" ColumnName="Document" />
+          <ScalarProperty Name="ReseDocTypeMasterID" ColumnName="ReseDocTypeMasterID" />
+          <ScalarProperty Name="ReservationDetailID" ColumnName="ReservationDetailID" />
+          <ScalarProperty Name="ReservationdocumentID" ColumnName="ReservationdocumentID" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="tbReservationDocumentTypeMasters">
+      <EntityTypeMapping TypeName="CloudDBModel.tbReservationDocumentTypeMaster">
+        <MappingFragment StoreEntitySet="tbReservationDocumentTypeMaster">
+          <ScalarProperty Name="DocumentType" ColumnName="DocumentType" />
+          <ScalarProperty Name="DocumentTypeCode" ColumnName="DocumentTypeCode" />
+          <ScalarProperty Name="ReseDocTypeMasterID" ColumnName="ReseDocTypeMasterID" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="tbReservationPackageDetails">
+      <EntityTypeMapping TypeName="CloudDBModel.tbReservationPackageDetail">
+        <MappingFragment StoreEntitySet="tbReservationPackageDetails">
+          <ScalarProperty Name="PackageID" ColumnName="PackageID" />
+          <ScalarProperty Name="ReservationDetailID" ColumnName="ReservationDetailID" />
+          <ScalarProperty Name="ResPackageID" ColumnName="ResPackageID" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="tbReservationRateDetails">
+      <EntityTypeMapping TypeName="CloudDBModel.tbReservationRateDetail">
+        <MappingFragment StoreEntitySet="tbReservationRateDetails">
+          <ScalarProperty Name="BalanceAmount" ColumnName="BalanceAmount" />
+          <ScalarProperty Name="PaidAmount" ColumnName="PaidAmount" />
+          <ScalarProperty Name="TotalAmount" ColumnName="TotalAmount" />
+          <ScalarProperty Name="TotalTax" ColumnName="TotalTax" />
+          <ScalarProperty Name="AverageRoomRate" ColumnName="AverageRoomRate" />
+          <ScalarProperty Name="ReservationDetailID" ColumnName="ReservationDetailID" />
+          <ScalarProperty Name="ReservationRateDetailID" ColumnName="ReservationRateDetailID" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="tbStateMasters">
+      <EntityTypeMapping TypeName="CloudDBModel.tbStateMaster">
+        <MappingFragment StoreEntitySet="tbStateMaster">
+          <ScalarProperty Name="CountryMasterID" ColumnName="CountryMasterID" />
+          <ScalarProperty Name="StateName" ColumnName="StateName" />
+          <ScalarProperty Name="StateCode" ColumnName="StateCode" />
+          <ScalarProperty Name="StateMasterID" ColumnName="StateMasterID" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="tbPaymentAdditionalInfoes">
+      <EntityTypeMapping TypeName="CloudDBModel.tbPaymentAdditionalInfo">
+        <MappingFragment StoreEntitySet="tbPaymentAdditionalInfo">
+          <ScalarProperty Name="KeyValue" ColumnName="KeyValue" />
+          <ScalarProperty Name="KeyHeader" ColumnName="KeyHeader" />
+          <ScalarProperty Name="PaymentID" ColumnName="PaymentID" />
+          <ScalarProperty Name="PaymentAddInforID" ColumnName="PaymentAddInforID" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="tbPaymentHistories">
+      <EntityTypeMapping TypeName="CloudDBModel.tbPaymentHistory">
+        <MappingFragment StoreEntitySet="tbPaymentHistory">
+          <ScalarProperty Name="TransactionType" ColumnName="TransactionType" />
+          <ScalarProperty Name="ReservationNameID" ColumnName="ReservationNameID" />
+          <ScalarProperty Name="TransactionID" ColumnName="TransactionID" />
+          <ScalarProperty Name="RefusalReason" ColumnName="RefusalReason" />
+          <ScalarProperty Name="ResultCode" ColumnName="ResultCode" />
+          <ScalarProperty Name="PSPReference" ColumnName="PSPReference" />
+          <ScalarProperty Name="UpdateDatetime" ColumnName="UpdateDatetime" />
+          <ScalarProperty Name="CreatedDatetime" ColumnName="CreatedDatetime" />
+          <ScalarProperty Name="PaRes" ColumnName="PaRes" />
+          <ScalarProperty Name="MDData" ColumnName="MDData" />
+          <ScalarProperty Name="PData" ColumnName="PData" />
+          <ScalarProperty Name="ReservationNumber" ColumnName="ReservationNumber" />
+          <ScalarProperty Name="PaymentHistoryID" ColumnName="PaymentHistoryID" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="tbRoomTypeMappings">
+      <EntityTypeMapping TypeName="CloudDBModel.tbRoomTypeMapping">
+        <MappingFragment StoreEntitySet="tbRoomTypeMapping">
+          <ScalarProperty Name="PackageTypeID" ColumnName="PackageTypeID" />
+          <ScalarProperty Name="RoomTypeID" ColumnName="RoomTypeID" />
+          <ScalarProperty Name="RoomTypeMappingID" ColumnName="RoomTypeMappingID" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="tbRoomTypeMasters">
+      <EntityTypeMapping TypeName="CloudDBModel.tbRoomTypeMaster">
+        <MappingFragment StoreEntitySet="tbRoomTypeMaster">
+          <ScalarProperty Name="RoomTypeDescription" ColumnName="RoomTypeDescription" />
+          <ScalarProperty Name="RoomTypeCode" ColumnName="RoomTypeCode" />
+          <ScalarProperty Name="RoomTypeID" ColumnName="RoomTypeID" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <FunctionImportMapping FunctionImportName="Usp_ClearCloudData" FunctionName="CloudDBModel.Store.Usp_ClearCloudData">
+      <ResultMapping>
+        <ComplexTypeMapping TypeName="CloudDBModel.Usp_ClearCloudData_Result">
+          <ScalarProperty Name="Result" ColumnName="Result" />
+          <ScalarProperty Name="ResultMessage" ColumnName="ResultMessage" />
+        </ComplexTypeMapping>
+      </ResultMapping>
+    </FunctionImportMapping>
+    <FunctionImportMapping FunctionImportName="usp_FetchReservationDocumentsforLocalPushCheckOut" FunctionName="CloudDBModel.Store.usp_FetchReservationDocumentsforLocalPushCheckOut">
+      <ResultMapping>
+        <ComplexTypeMapping TypeName="CloudDBModel.usp_FetchReservationDocumentsforLocalPushCheckOut_Result">
+          <ScalarProperty Name="ReservationNameID" ColumnName="ReservationNameID" />
+          <ScalarProperty Name="Document" ColumnName="Document" />
+          <ScalarProperty Name="DocumentType" ColumnName="DocumentType" />
+        </ComplexTypeMapping>
+      </ResultMapping>
+    </FunctionImportMapping>
+    <FunctionImportMapping FunctionImportName="usp_FetchReservationforLocalPushCheckOut" FunctionName="CloudDBModel.Store.usp_FetchReservationforLocalPushCheckOut">
+      <ResultMapping>
+        <ComplexTypeMapping TypeName="CloudDBModel.usp_FetchReservationforLocalPushCheckOut_Result">
+          <ScalarProperty Name="ReservationNameID" ColumnName="ReservationNameID" />
+          <ScalarProperty Name="ReservationNumber" ColumnName="ReservationNumber" />
+          <ScalarProperty Name="ArrivalDate" ColumnName="ArrivalDate" />
+          <ScalarProperty Name="DepartureDate" ColumnName="DepartureDate" />
+          <ScalarProperty Name="Adultcount" ColumnName="Adultcount" />
+          <ScalarProperty Name="Childcount" ColumnName="Childcount" />
+          <ScalarProperty Name="MembershipNo" ColumnName="MembershipNo" />
+          <ScalarProperty Name="MembershipType" ColumnName="MembershipType" />
+          <ScalarProperty Name="IsDepositAvailable" ColumnName="IsDepositAvailable" />
+          <ScalarProperty Name="IsCardDetailPresent" ColumnName="IsCardDetailPresent" />
+          <ScalarProperty Name="IsSaavyPaid" ColumnName="IsSaavyPaid" />
+          <ScalarProperty Name="IsPreCheckedInPMS" ColumnName="IsPreCheckedInPMS" />
+          <ScalarProperty Name="FlightNo" ColumnName="FlightNo" />
+          <ScalarProperty Name="ETA" ColumnName="ETA" />
+          <ScalarProperty Name="IsMemberShipEnrolled" ColumnName="IsMemberShipEnrolled" />
+        </ComplexTypeMapping>
+      </ResultMapping>
+    </FunctionImportMapping>
+    <FunctionImportMapping FunctionImportName="USp_GetPackageMasterDetailedList" FunctionName="CloudDBModel.Store.USp_GetPackageMasterDetailedList">
+      <ResultMapping>
+        <ComplexTypeMapping TypeName="CloudDBModel.USp_GetPackageMasterDetailedList_Result">
+          <ScalarProperty Name="UniquePackageFlag" ColumnName="UniquePackageFlag" />
+          <ScalarProperty Name="PackageID" ColumnName="PackageID" />
+          <ScalarProperty Name="PackageCode" ColumnName="PackageCode" />
+          <ScalarProperty Name="PackageName" ColumnName="PackageName" />
+          <ScalarProperty Name="PackageAmount" ColumnName="PackageAmount" />
+          <ScalarProperty Name="PackageDesc" ColumnName="PackageDesc" />
+          <ScalarProperty Name="PackageImage" ColumnName="PackageImage" />
+          <ScalarProperty Name="isActive" ColumnName="isActive" />
+          <ScalarProperty Name="IsRoomUpsell" ColumnName="IsRoomUpsell" />
+          <ScalarProperty Name="RoomTypeID" ColumnName="RoomTypeID" />
+          <ScalarProperty Name="RoomTypeCode" ColumnName="RoomTypeCode" />
+          <ScalarProperty Name="RoomTypeDescription" ColumnName="RoomTypeDescription" />
+        </ComplexTypeMapping>
+      </ResultMapping>
+    </FunctionImportMapping>
+    <FunctionImportMapping FunctionImportName="Usp_GetRoomTypeMaster" FunctionName="CloudDBModel.Store.Usp_GetRoomTypeMaster">
+      <ResultMapping>
+        <ComplexTypeMapping TypeName="CloudDBModel.Usp_GetRoomTypeMaster_Result">
+          <ScalarProperty Name="RoomTypeID" ColumnName="RoomTypeID" />
+          <ScalarProperty Name="RoomTypeCode" ColumnName="RoomTypeCode" />
+          <ScalarProperty Name="RoomTypeDescription" ColumnName="RoomTypeDescription" />
+        </ComplexTypeMapping>
+      </ResultMapping>
+    </FunctionImportMapping>
+    <FunctionImportMapping FunctionImportName="Usp_InsertPaymentDetails" FunctionName="CloudDBModel.Store.Usp_InsertPaymentDetails" />
+    <FunctionImportMapping FunctionImportName="Usp_InsertRoomTypeMaster" FunctionName="CloudDBModel.Store.Usp_InsertRoomTypeMaster">
+      <ResultMapping>
+        <ComplexTypeMapping TypeName="CloudDBModel.Usp_InsertRoomTypeMaster_Result">
+          <ScalarProperty Name="Result" ColumnName="Result" />
+          <ScalarProperty Name="Message" ColumnName="Message" />
+        </ComplexTypeMapping>
+      </ResultMapping>
+    </FunctionImportMapping>
+    <FunctionImportMapping FunctionImportName="Usp_GetPaymentHistory" FunctionName="CloudDBModel.Store.Usp_GetPaymentHistory">
+      <ResultMapping>
+        <ComplexTypeMapping TypeName="CloudDBModel.Usp_GetPaymentHistory_Result">
+          <ScalarProperty Name="RecordDescOrder" ColumnName="RecordDescOrder" />
+          <ScalarProperty Name="PaymentHistoryID" ColumnName="PaymentHistoryID" />
+          <ScalarProperty Name="ReservationNumber" ColumnName="ReservationNumber" />
+          <ScalarProperty Name="PData" ColumnName="PData" />
+          <ScalarProperty Name="MDData" ColumnName="MDData" />
+          <ScalarProperty Name="PaRes" ColumnName="PaRes" />
+          <ScalarProperty Name="CreatedDatetime" ColumnName="CreatedDatetime" />
+          <ScalarProperty Name="UpdateDatetime" ColumnName="UpdateDatetime" />
+          <ScalarProperty Name="PSPReference" ColumnName="PSPReference" />
+          <ScalarProperty Name="ResultCode" ColumnName="ResultCode" />
+          <ScalarProperty Name="RefusalReason" ColumnName="RefusalReason" />
+        </ComplexTypeMapping>
+      </ResultMapping>
+    </FunctionImportMapping>
+    <FunctionImportMapping FunctionImportName="usp_InsertPaymentHistory" FunctionName="CloudDBModel.Store.usp_InsertPaymentHistory">
+      <ResultMapping>
+        <ComplexTypeMapping TypeName="CloudDBModel.usp_InsertPaymentHistory_Result">
+          <ScalarProperty Name="Result" ColumnName="Result" />
+          <ScalarProperty Name="Message" ColumnName="Message" />
+        </ComplexTypeMapping>
+      </ResultMapping>
+    </FunctionImportMapping>
+    <FunctionImportMapping FunctionImportName="usp_FetchPaymentAdditionalInfoforLocalPush" FunctionName="CloudDBModel.Store.usp_FetchPaymentAdditionalInfoforLocalPush">
+      <ResultMapping>
+        <ComplexTypeMapping TypeName="CloudDBModel.usp_FetchPaymentAdditionalInfoforLocalPush_Result">
+          <ScalarProperty Name="PaymentID" ColumnName="PaymentID" />
+          <ScalarProperty Name="KeyHeader" ColumnName="KeyHeader" />
+          <ScalarProperty Name="KeyValue" ColumnName="KeyValue" />
+        </ComplexTypeMapping>
+      </ResultMapping>
+    </FunctionImportMapping>
+    <FunctionImportMapping FunctionImportName="usp_FetchPaymentforLocalPush" FunctionName="CloudDBModel.Store.usp_FetchPaymentforLocalPush" />
+    <FunctionImportMapping FunctionImportName="usp_FetchPaymentHistoryforLocalPush" FunctionName="CloudDBModel.Store.usp_FetchPaymentHistoryforLocalPush">
+      <ResultMapping>
+        <ComplexTypeMapping TypeName="CloudDBModel.usp_FetchPaymentHistoryforLocalPush_Result">
+          <ScalarProperty Name="PaymentHistoryID" ColumnName="PaymentHistoryID" />
+          <ScalarProperty Name="ReservationNumber" ColumnName="ReservationNumber" />
+          <ScalarProperty Name="PData" ColumnName="PData" />
+          <ScalarProperty Name="MDData" ColumnName="MDData" />
+          <ScalarProperty Name="PaRes" ColumnName="PaRes" />
+          <ScalarProperty Name="PSPReference" ColumnName="PSPReference" />
+          <ScalarProperty Name="ResultCode" ColumnName="ResultCode" />
+          <ScalarProperty Name="RefusalReason" ColumnName="RefusalReason" />
+        </ComplexTypeMapping>
+      </ResultMapping>
+    </FunctionImportMapping>
+    <FunctionImportMapping FunctionImportName="Usp_usp_FetchReservationPaymentAdditionalInfoforLocalPush" FunctionName="CloudDBModel.Store.Usp_usp_FetchReservationPaymentAdditionalInfoforLocalPush">
+      <ResultMapping>
+        <ComplexTypeMapping TypeName="CloudDBModel.Usp_usp_FetchReservationPaymentAdditionalInfoforLocalPush_Result">
+          <ScalarProperty Name="TransactionID" ColumnName="TransactionID" />
+          <ScalarProperty Name="KeyHeader" ColumnName="KeyHeader" />
+          <ScalarProperty Name="KeyValue" ColumnName="KeyValue" />
+        </ComplexTypeMapping>
+      </ResultMapping>
+    </FunctionImportMapping>
+    <FunctionImportMapping FunctionImportName="Usp_usp_FetchReservationPaymentHeaderforLocalPush" FunctionName="CloudDBModel.Store.Usp_usp_FetchReservationPaymentHeaderforLocalPush">
+      <ResultMapping>
+        <ComplexTypeMapping TypeName="CloudDBModel.Usp_usp_FetchReservationPaymentHeaderforLocalPush_Result">
+          <ScalarProperty Name="TransactionID" ColumnName="TransactionID" />
+          <ScalarProperty Name="ReservationNumber" ColumnName="ReservationNumber" />
+          <ScalarProperty Name="ReservationNameID" ColumnName="ReservationNameID" />
+          <ScalarProperty Name="MaskedCardNumber" ColumnName="MaskedCardNumber" />
+          <ScalarProperty Name="ExpiryDate" ColumnName="ExpiryDate" />
+          <ScalarProperty Name="FundingSource" ColumnName="FundingSource" />
+          <ScalarProperty Name="Amount" ColumnName="Amount" />
+          <ScalarProperty Name="Currency" ColumnName="Currency" />
+          <ScalarProperty Name="RecurringIdentifier" ColumnName="RecurringIdentifier" />
+          <ScalarProperty Name="AuthorisationCode" ColumnName="AuthorisationCode" />
+          <ScalarProperty Name="pspReferenceNumber" ColumnName="pspReferenceNumber" />
+          <ScalarProperty Name="ParentPspRefereceNumber" ColumnName="ParentPspRefereceNumber" />
+          <ScalarProperty Name="TransactionType" ColumnName="TransactionType" />
+          <ScalarProperty Name="ResultCode" ColumnName="ResultCode" />
+          <ScalarProperty Name="ResponseMessage" ColumnName="ResponseMessage" />
+        </ComplexTypeMapping>
+      </ResultMapping>
+    </FunctionImportMapping>
+    <FunctionImportMapping FunctionImportName="Usp_usp_FetchReservationPaymentHistoryforLocalPush" FunctionName="CloudDBModel.Store.Usp_usp_FetchReservationPaymentHistoryforLocalPush">
+      <ResultMapping>
+        <ComplexTypeMapping TypeName="CloudDBModel.Usp_usp_FetchReservationPaymentHistoryforLocalPush_Result">
+          <ScalarProperty Name="TransactionID" ColumnName="TransactionID" />
+          <ScalarProperty Name="ReservationNumber" ColumnName="ReservationNumber" />
+          <ScalarProperty Name="PData" ColumnName="PData" />
+          <ScalarProperty Name="MDData" ColumnName="MDData" />
+          <ScalarProperty Name="PaRes" ColumnName="PaRes" />
+          <ScalarProperty Name="PSPReference" ColumnName="PSPReference" />
+          <ScalarProperty Name="ResultCode" ColumnName="ResultCode" />
+          <ScalarProperty Name="RefusalReason" ColumnName="RefusalReason" />
+          <ScalarProperty Name="TransactionType" ColumnName="TransactionType" />
+        </ComplexTypeMapping>
+      </ResultMapping>
+    </FunctionImportMapping>
+    <EntitySetMapping Name="tbPaymentHeaders">
+      <EntityTypeMapping TypeName="CloudDBModel.tbPaymentHeader">
+        <MappingFragment StoreEntitySet="tbPaymentHeader">
+          <ScalarProperty Name="CardType" ColumnName="CardType" />
+          <ScalarProperty Name="StatusType" ColumnName="StatusType" />
+          <ScalarProperty Name="IsActive" ColumnName="IsActive" />
+          <ScalarProperty Name="UpdatedDateTime" ColumnName="UpdatedDateTime" />
+          <ScalarProperty Name="CreatedDateTime" ColumnName="CreatedDateTime" />
+          <ScalarProperty Name="ResponseMessage" ColumnName="ResponseMessage" />
+          <ScalarProperty Name="ResultCode" ColumnName="ResultCode" />
+          <ScalarProperty Name="TransactionType" ColumnName="TransactionType" />
+          <ScalarProperty Name="ParentPspRefereceNumber" ColumnName="ParentPspRefereceNumber" />
+          <ScalarProperty Name="pspReferenceNumber" ColumnName="pspReferenceNumber" />
+          <ScalarProperty Name="AuthorisationCode" ColumnName="AuthorisationCode" />
+          <ScalarProperty Name="RecurringIdentifier" ColumnName="RecurringIdentifier" />
+          <ScalarProperty Name="Currency" ColumnName="Currency" />
+          <ScalarProperty Name="Amount" ColumnName="Amount" />
+          <ScalarProperty Name="FundingSource" ColumnName="FundingSource" />
+          <ScalarProperty Name="ExpiryDate" ColumnName="ExpiryDate" />
+          <ScalarProperty Name="MaskedCardNumber" ColumnName="MaskedCardNumber" />
+          <ScalarProperty Name="ReservationNameID" ColumnName="ReservationNameID" />
+          <ScalarProperty Name="ReservationNumber" ColumnName="ReservationNumber" />
+          <ScalarProperty Name="TransactionID" ColumnName="TransactionID" />
+          <ScalarProperty Name="PaymentID" ColumnName="PaymentID" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="tbOperaPaymentTypeCodeWebs">
+      <EntityTypeMapping TypeName="CloudDBModel.tbOperaPaymentTypeCodeWeb">
+        <MappingFragment StoreEntitySet="tbOperaPaymentTypeCodeWeb">
+          <ScalarProperty Name="VendorPaymentTypeCode" ColumnName="VendorPaymentTypeCode" />
+          <ScalarProperty Name="OperaPaymentTypeCode" ColumnName="OperaPaymentTypeCode" />
+          <ScalarProperty Name="ID" ColumnName="ID" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <FunctionImportMapping FunctionImportName="Usp_GetActivePaymentTransctions" FunctionName="CloudDBModel.Store.Usp_GetActivePaymentTransctions">
+      <ResultMapping>
+        <ComplexTypeMapping TypeName="CloudDBModel.Usp_GetActivePaymentTransctions_Result">
+          <ScalarProperty Name="TransactionID" ColumnName="TransactionID" />
+          <ScalarProperty Name="ReservationNumber" ColumnName="ReservationNumber" />
+          <ScalarProperty Name="ReservationNameID" ColumnName="ReservationNameID" />
+          <ScalarProperty Name="MaskedCardNumber" ColumnName="MaskedCardNumber" />
+          <ScalarProperty Name="ExpiryDate" ColumnName="ExpiryDate" />
+          <ScalarProperty Name="FundingSource" ColumnName="FundingSource" />
+          <ScalarProperty Name="Amount" ColumnName="Amount" />
+          <ScalarProperty Name="Currency" ColumnName="Currency" />
+          <ScalarProperty Name="RecurringIdentifier" ColumnName="RecurringIdentifier" />
+          <ScalarProperty Name="AuthorisationCode" ColumnName="AuthorisationCode" />
+          <ScalarProperty Name="pspReferenceNumber" ColumnName="pspReferenceNumber" />
+          <ScalarProperty Name="ParentPspRefereceNumber" ColumnName="ParentPspRefereceNumber" />
+          <ScalarProperty Name="TransactionType" ColumnName="TransactionType" />
+          <ScalarProperty Name="ResultCode" ColumnName="ResultCode" />
+          <ScalarProperty Name="ResponseMessage" ColumnName="ResponseMessage" />
+          <ScalarProperty Name="IsActive" ColumnName="IsActive" />
+          <ScalarProperty Name="StatusType" ColumnName="StatusType" />
+          <ScalarProperty Name="CardType" ColumnName="CardType" />
+        </ComplexTypeMapping>
+      </ResultMapping>
+    </FunctionImportMapping>
+    <FunctionImportMapping FunctionImportName="Usp_InsertPaymentTransactionsFromLocal" FunctionName="CloudDBModel.Store.Usp_InsertPaymentTransactionsFromLocal" />
+    <FunctionImportMapping FunctionImportName="Usp_UpdateEmailIDByReservationID" FunctionName="CloudDBModel.Store.Usp_UpdateEmailIDByReservationID" />
+    <FunctionImportMapping FunctionImportName="Usp_UpdatePaymentHeader" FunctionName="CloudDBModel.Store.Usp_UpdatePaymentHeader">
+      <ResultMapping>
+        <ComplexTypeMapping TypeName="CloudDBModel.Usp_UpdatePaymentHeader_Result">
+          <ScalarProperty Name="Result" ColumnName="Result" />
+          <ScalarProperty Name="ResultMessage" ColumnName="ResultMessage" />
+        </ComplexTypeMapping>
+      </ResultMapping>
+    </FunctionImportMapping>
+  </EntityContainerMapping>
+</Mapping>

@@ -1,0 +1,269 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    @*<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">*@
+    <meta name="viewport" content="minimal-ui, width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+
+    @* <script src="https://checkoutshopper-live.adyen.com/checkoutshopper/sdk/3.8.1/adyen.js"
+                integrity="sha384-pLfJ6XKllmblOK86IVevGarh2cfeBr6lWAEkumlMA3hgTqKpEgNn8ID7zq4HsC6H"
+                crossorigin="anonymous"></script>
+
+        <link rel="stylesheet"
+              href="https://checkoutshopper-live.adyen.com/checkoutshopper/sdk/3.8.1/adyen.css"
+              integrity="sha384-y1lKqffK5z+ENzddmGIfP3bcMRobxkjDt/9lyPAvV9H3JXbJYxCSD6L8TdyRMCGM"
+              crossorigin="anonymous">*@
+    <link rel="stylesheet" href="https://checkoutshopper-test.adyen.com/checkoutshopper/sdk/3.8.1/adyen.css"
+          integrity="sha384-y1lKqffK5z+ENzddmGIfP3bcMRobxkjDt/9lyPAvV9H3JXbJYxCSD6L8TdyRMCGM"
+          crossorigin="anonymous">
+
+    <script src="https://checkoutshopper-test.adyen.com/checkoutshopper/sdk/3.8.1/adyen.js"
+            integrity="sha384-rGkZxBRhUfCECwNuNrllGf8dOpeUsKTMqczAkphoWMne67C32+na/29lUGT3HVOB"
+            crossorigin="anonymous"></script>
+
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="~/assets/css/bootstrap.min.css">
+    <!-- Timepicker CSS -->
+    <link href="~/assets/css/gijgo.min.css" rel="stylesheet" type="text/css" />
+    <!--Selct CSS -->
+    <link rel="stylesheet" href="~/assets/css/bootstrap-select.min.css">
+    <!--font-awsome -->
+
+    <link href="~/assets/css/all.css" rel="stylesheet">
+    <!-- custom CSS -->
+    <link rel="stylesheet" href="~/assets/css/custom.css">
+    <link href="~/assets/css/signature-pad.css" rel="stylesheet" />
+
+    <link href="~/assets/css/animatedCheck.css" rel="stylesheet" />
+    <link href="~/assets/css/intlTelInput.min.css" rel="stylesheet" />
+
+    <script>
+          var getUrl = window.location;
+   var BaseURL = getUrl.protocol + "//" + getUrl.host
+   //var BaseURL = "@Request.Url.GetLeftPart(UriPartial.Authority)";
+      var orginKey;
+        var paymentMethod;
+        var ReservationNumber;
+        var ReservationNameID;
+        var IsredirectedfromPaymentPage = "@ViewBag.IsredirectedfromPaymentPage";
+        var IsPaymentSuccess = "@ViewBag.IsPaymentSuccess";
+        var PaymentFailureMessage = "@ViewBag.PaymentFailureMessage";
+
+
+
+
+    </script>
+    <link rel="icon" type="image/png" href="~/assets/images/favicon.ico" sizes="16x16">
+    <title>GUEST DETAILS</title>
+</head>
+<body>
+
+    <div class="container-fluid p-0" id="divSplash" style="display:none">
+        <div class="layout-inro1">
+            <div class="logo-btn">
+                <img class="img-fluid" src="~/assets/images/logo-intro.png">
+            </div>
+            <div class="start">
+                <div class="arrow">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+
+                </div>
+                <a class="continue" style="width:auto" onclick="beginRegistration()" href="#">START</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="loader-screen" style="display:none;z-index:99999">
+        <div class="loadingio-spinner-pulse-yd5dl03y9fi">
+            <div class="ldio-v55tnqe6ie">
+                <div></div><div></div><div></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container-fluid h100" id="mainDiv" style="display:none">
+        <div class="row h100 bg-blk">
+
+            @*<div class="offset-md-0 col-md-3 offset-lg-0 col-lg-3  offset-xl-1 col-xl-2 left-menu h100">
+                    <div class="space"></div>
+                    <div class="menu">
+                        <div class="logo"> <img class="img-fluid" src="images/logo.png"></div>
+                        <ul>
+                            <li class="active"><a href="#"><label>Guest Details</label><span class="count">1</span></a></li>
+                            <li class="active"><a href="#"><label>Upgrade</label><span class="count">2</span></a></li>
+                            <li class="active"><a href="#"><label>Policies</label><span class="count">3</span></a></li>
+                            <li class="active"><a href="#"><label>Payment</label><span class="count">4</span></a></li>
+                            <li class="active"><a href="#"><label>Document</label><span class="count">5</span></a></li>
+                        </ul>
+                    </div>
+                </div>*@
+            @*<div class="container-fluid p-0" id="mainDiv" style="display:none">
+                    <div class="header">
+                        <img class="img-fluid" src="~/assets/images/logo.png">
+                    </div>
+
+                    @RenderBody()
+                </div>*@
+            @RenderBody()
+        </div>
+    </div>
+
+    <div class="modal fade cstm-modal" id="paymentStatusModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog  modal-dialog-centered upload-model" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">preauthorisation Status</h5>
+                </div>
+                <div class="modal-body">
+                    <div class="quest card-quest">
+                        <h5 id="paymentStatusMessage">Your preauthorisation was successful.</h5>
+                        <br />
+                        <br />
+                        <div class="button-wrapper1">
+                            <button class="yes" data-dismiss="modal" data-toggle="modal">Continue</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    @*<script src="~/assets/js/jquery-3.5.1.slim.min.js"></script>*@
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+    <script src="~/assets/js/bootstrap.bundle.js"></script>
+    <script src="~/assets/js/bootstrap-select.min.js"></script>
+    <script src="~/assets/js/gijgo.min.js" type="text/javascript"></script>
+    @*<script src="https://cdn.jsdelivr.net/jquery.validation/1.15.1/jquery.validate.min.js" type="text/javascript"></script>*@
+    <script src="~/assets/js/jquery.validate.min.js"></script>
+    <script src="~/assets/js/jquery.validate.unobtrusive.min.js"></script>
+    <script src="~/assets/js/moment.js"></script>
+    @*<script src="~/assets/js/compressor.js"></script>*@
+    <script src="~/assets/js/commonFunctions.js"></script>
+
+    <script src="~/assets/js/compress.js"></script>
+
+    @*<script src="https://unpkg.com/client-compress" type="text/javascript">
+        </script>*@
+    <script src="~/assets/js/client-compress.js"></script>
+    
+    <script src="~/assets/js/intlTelInput.min.js"></script>
+    <script src="~/assets/js/utils.js"></script>
+    <script>
+
+        //document.getElementById('imgprimaryDoc1').addEventListener('change', (e) => {
+        //    const file = e.target.files[0];
+        //    alert('compressorjs')
+        //    if (!file) {
+        //        return;
+        //    }
+
+        //    new Compressor(file, {
+        //        quality: 0.6,
+        //        success(result) {
+        //            alert('success')
+        //            console.log(result);
+
+        //        },
+        //        error(err) {
+        //            console.log(err.message);
+        //        },
+        //    });
+        //});
+
+    </script>
+
+
+
+
+
+    @RenderSection("Scripts", false)
+
+    <script>
+        function sleep(milliseconds) {
+            const date = Date.now();
+            let currentDate = null;
+            do {
+                currentDate = Date.now();
+            } while (currentDate - date < milliseconds);
+        }
+
+        var ReservationFound = "@ViewBag.ReservationFound";
+        var PaymentProcessed = "@ViewBag.PaymentProcessed";
+
+        $('.loader-screen').fadeIn(100);
+
+        function beginRegistration() {
+            $('#divSplash').fadeOut(200);
+            $('#mainDiv').fadeIn(800);
+        }
+
+        window.onload = (event) => {
+            setTimeout(function () {
+                $('.loader-screen').fadeOut(500);
+                if (ReservationFound == "True") {
+                    if (PaymentProcessed == "True") {
+
+                        if (IsredirectedfromPaymentPage == "True") {
+                            if (IsPaymentSuccess == "True") {
+                                $('#paymentStatusMessage').html("Your preauthorisation was successful.");
+                            }
+                            else {
+                                $('#paymentStatusMessage').html(PaymentFailureMessage);
+                            }
+                            $('#paymentStatusModal').modal('show');
+                        }
+
+                        $('#mainDiv').fadeIn(800);
+                    }
+                    else {
+                        $('#mainDiv').hide();
+                        $('#divSplash').fadeIn(800);
+                    }
+                }
+                else {
+                    $('#mainDiv').show();
+                    $('#divSplash').hide(800);
+                }
+            }, 500);
+        };
+
+
+        $(document).ready(function () {
+
+
+        });
+
+    </script>
+
+    <div class="modal fade cstm-modal" id="customMessageModal" tabindex="-1" role="dialog" aria-labelledby="customMessageModalLabel" aria-hidden="true">
+        <div class="modal-dialog  modal-dialog-centered upload-model" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="customMessageModalLabel">Message</h5>
+                </div>
+                <div class="modal-body">
+                    <div class="quest card-quest">
+                        <h5 id="customMessageModalMessage"></h5>
+                        <br />
+                        <br />
+                        <div class="button-wrapper1">
+                            <button class="btn_ok yes" data-dismiss="modal" data-toggle="modal">Continue</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

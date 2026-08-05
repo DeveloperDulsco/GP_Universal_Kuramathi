@@ -1,0 +1,18 @@
+﻿V1.1
+Seperated the Adaptor API base url from the payment url in web config.
+Handled null in amount variable while doing non 3ds payment
+In adyenfunction.js --> getpaymentmethod() --> default conversion of JCB and CUP to debit card is removed since it is handled in the API
+Updated Home controller -> InsertPaymentResponseHeader() --> with exception handlig and return value
+updated Reservation logic.cs --> InsertPaymentData() --> with exception handling
+In adyenfunction.js -->proceedWithPayment() --> InsertPaymentHeaderDetails() --> return value handled
+Updated Home controller -> SaveAdyenPaymentDetails() --> with exception handlig and return value
+In adyenfunction.js -->proceedWithPayment() --> SaveAdyenPaymentDetails() --> return value handled
+In the preauth rule, as per third pre auth rule room rate it should be 0
+Removed the check box validations in upsell page
+V2
+1) Added incidntal charge in the config
+2) Added incidntal cap value in the connfig
+V2.1
+1) Validation to check the breakfast special is selected or not as per that in registration page it will show breakfast included or not
+V2.2
+1) AFter payment success pre check will get completed no need to press the OK button of the qr code

@@ -1,0 +1,1849 @@
+﻿@using CheckinPortal.Helpers;
+@model CheckinPortal.Models.ReservationModel
+@{
+    var ProfileList = (List<CheckinPortal.Models.Profile>)Model.Profiles;
+    var primaryProfile = ProfileList[0];
+
+    var PackageList = (List<CheckinPortal.Models.PackageMasterModal>)ViewBag.PackageList;
+
+    var PackageListForRoomUpsell = PackageList.Where(x => x.IsRoomUpsell).ToList();
+    var PackageListForSpecials = PackageList.Where(x => x.IsRoomUpsell == false).ToList();
+
+    string RoomUpsellPackages = ViewBag.RoomUpsellPackages;
+    string SpecialPackages = ViewBag.SpecialPackages;
+
+}
+
+
+
+<script>
+        var AdaptorAPIBaseURL = "@ViewBag.AdaptorAPIBaseURL";
+        ReservationNumber = "@Model.ReservationNumber"
+        ReservationNameID = "@Model.ReservationNameID"
+        var IsDepositAvailable = "@Model.IsDepositAvailable";
+        var TotalRoomRate = "@Model.TotalRoomRate";
+        var TotalSpecialCharges = 0;
+        var selectedUpsellPackage = [];
+    var selectedSpecialPackage = [];
+    var language = "@(Request.Cookies.AllKeys.Contains("culture") ? @Request.Cookies["culture"].Value : "en")";
+
+
+        selectedUpsellPackage = "@RoomUpsellPackages".split(",")
+        selectedSpecialPackage = "@SpecialPackages".split(",")
+
+
+        selectedUpsellPackage = selectedUpsellPackage.filter(function (value, index, arr) {
+            return value != "";
+        });
+
+        selectedSpecialPackage = selectedSpecialPackage.filter(function (value, index, arr) {
+            return value != "";
+        });
+
+</script>
+
+<style>
+    .adyen-checkout__button__text {
+        width: 100% !important;
+    }
+</style>
+
+
+<link href="~/assets/css/bootstrap-datepicker.css" rel="stylesheet" />
+
+<link href="~/assets/css/additionalStyles.css" rel="stylesheet" />
+<div class="fxd-tab">
+    <div class="container">
+        <div class="steps-wrap">
+            <div class="row">
+                <div class="col">
+                    <a class="d-flex justify-content-center active tabs @(ViewBag.PaymentProcessed ? "paymentdone active " : "")" href="#guestDetails">
+                        <div class="count">
+                            <span class="number">1</span><span class="value">@CultureHelper.GetCultureLabel("GUEST DETAILS")</span>
+                        </div>
+                    </a>
+                </div>
+                <div class="col">
+                    <a class="d-flex justify-content-center tabs @(ViewBag.PaymentProcessed ? "paymentdone active" : "")" href="#upgrade" style="display:none;">
+                        <div class="count">
+                            <span class="number">2</span><span class="value">@CultureHelper.GetCultureLabel("Upgrade")</span>
+                        </div>
+                    </a>
+                </div>
+                <div class="col">
+                    <a class="d-flex justify-content-center tabs @(ViewBag.PaymentProcessed ? "paymentdone active" : "")" href="#policies">
+                        <div class="count">
+                            <span class="number">3</span><span class="value">@CultureHelper.GetCultureLabel("Policies")</span>
+                        </div>
+                    </a>
+                </div>
+                <div class="col">
+                    <a class="d-flex justify-content-center tabs @((ViewBag.PaymentProcessed && ViewBag.IsPaymentSuccess) ? "paymentdone active" : "")" href="#payment">
+                        <div class="count">
+                            <span class="number">4</span><span class="value">@CultureHelper.GetCultureLabel("Payment")</span>
+                        </div>
+                    </a>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="layout">
+    <div class="container">
+        <div class="tab-content">
+            <div class="tab-pane content-wrapper cstm-form @(ViewBag.PaymentProcessed ? "paymentdone" : "active") " id="guestDetails">
+                <form id="frm_guestdetails" name="frm_guestdetails">
+
+                    @Html.HiddenFor(model => model.ReservationID)
+                    @Html.HiddenFor(model => model.AdultCount)
+                    @Html.HiddenFor(model => model.ChildCount)
+                    @Html.HiddenFor(model => model.ReservationNumber)
+                    @if (Model.Profiles.Count > 0)
+                    {
+                        @Html.HiddenFor(model => model.Profiles[0].ProfileDetailID)
+                        @Html.HiddenFor(model => model.Profiles[0].ProfileID)
+                    }
+                    @if (Model.Profiles.Count > 1)
+                    {
+                        @Html.HiddenFor(model => model.Profiles[1].ProfileDetailID)
+                        @Html.HiddenFor(model => model.Profiles[1].ProfileID)
+                    }
+                    @if (Model.Profiles.Count > 2)
+                    {
+                        @Html.HiddenFor(model => model.Profiles[2].ProfileDetailID)
+                        @Html.HiddenFor(model => model.Profiles[2].ProfileID)
+                    }
+
+                    <h1>@CultureHelper.GetCultureLabel("GUEST DETAILS")</h1>
+                    <div class="detail-wrapper">
+                        <ul>
+                            <li>
+                                <label>@CultureHelper.GetCultureLabel("ROOM TYPE")</label>
+                                <span>@Model.RoomTypeDescription</span>
+                            </li>
+                            <li>
+                                <label>@CultureHelper.GetCultureLabel("CHECK-IN DATE")</label>
+                                <span>@Model.ArrivalDate</span>
+                            </li>
+                            <li>
+                                <label>@CultureHelper.GetCultureLabel("CHECK-OUT DATE")</label>
+                                <span>@Model.DepartureDate</span>@*02 June 2020*@
+                            </li>
+                            <li>
+                                <label>@CultureHelper.GetCultureLabel("Adult/Child")</label>
+                                <span>@Model.AdultCount / @Model.ChildCount</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <!-- details -->
+                    <h2>@CultureHelper.GetCultureLabel("Personal Information")</h2>
+                    <div class="form-row">
+                        <div class="form-group col-md-4">
+                            <label>@CultureHelper.GetCultureLabel("Email  Address") <span class="error">*</span></label>
+
+
+                            @Html.TextBoxFor(model => model.Profiles[0].Email, new { @class = "form-control", type = "email" })
+                            @*<input type="email" class="form-control" value="@primaryProfile.Email" id="email" name="Profile[0].Email">*@
+                        </div>
+                        <div class="form-group col-md-4">
+                            <label>@CultureHelper.GetCultureLabel("Phone Number") <span class="error">*</span></label>
+                            @*@Html.TextBoxFor(model => model.Profiles[0].Phone, new { @class = "form-control", type = "number" })*@
+                            <input type="text" class="form-control" id="phone" name="Profiles[0].Phone" value="@primaryProfile.Phone">
+                        </div>
+                        <div class="form-group col-md-4">
+                            <label>@CultureHelper.GetCultureLabel("Address") <span class="error">*</span></label>
+                            @Html.TextBoxFor(model => model.Profiles[0].AddressLine1, new { @class = "form-control" })
+                            @*<input type="text" class="form-control" id="address" name="Profile[0].AddressLine1" value="@primaryProfile.AddressLine1">*@
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-4">
+                            <label>@CultureHelper.GetCultureLabel("Country")  <span class="error">*</span></label>
+                            @Html.DropDownListFor(model => model.Profiles[0].CountryID, (SelectList)ViewBag.CountryList, "Select Country", new { @class = "form-control selectpicker selectCountry", @data_live_search = "true" })
+
+                        </div>
+                        <div class="form-group col-md-4">
+                            <label>@CultureHelper.GetCultureLabel("State")  <span class="error"></span></label>
+                            @Html.DropDownListFor(model => model.Profiles[0].StateID, (SelectList)ViewBag.StateList, "Select State", new { @class = "form-control selectpicker state", @data_live_search = "true" })
+
+                            @*<select class="selectpicker form-control" id="state" name="state"></select>*@
+                        </div>
+                        <div class="form-group col-md-4">
+                            <label>@CultureHelper.GetCultureLabel("City")  <span class="error">*</span></label>
+                            @Html.TextBoxFor(model => model.Profiles[0].City, new { @class = "form-control" })
+                            @*<input type="text" class="form-control" id="city" name="city" @Model.Profiles[0].City>*@
+                        </div>
+
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-4">
+                            <label>@CultureHelper.GetCultureLabel("Postal code")  <span class="error">*</span></label>
+                            @Html.TextBoxFor(model => model.Profiles[0].PostalCode, new { @class = "form-control", value = "1212" })
+                            @*<input type="text" class="form-control" id="postalcode" name="postalcode" value="@primaryProfile.PostalCode">*@
+                        </div>
+                        <div class="form-group col-md-4">
+                            <label>@CultureHelper.GetCultureLabel("ALL Membership Number")<a class="info" href="#" data-toggle="tooltip" title="Accor Live Limitless membership no."></a></label>
+                            @Html.TextBoxFor(model => model.MembershipNo, new { @class = "form-control", onchange = "enableDisableMembershipCheckbox()" })
+                            @*<input type="text" class="form-control" value="@Model.MembershipNo" id="membershipno" name="membershipno">*@
+                        </div>
+                        <!--<div class="form-group col-md-4">
+                        <div class="form-check chk-cu">
+                            @Html.CheckBoxFor(model => model.IsMembershipRequested, new { @class = "form-check-input", onchange = "enableDisableMembership(this.checked)" })-->
+                        @*<input class="form-check-input" @( !string.IsNullOrEmpty(Model.MembershipNo) ? "disabled" : "") type="checkbox" onchange="enableDisableMembership(this.checked)" id="joinmembership" name="joinmembership">*@
+                        <!--<label class="form-check-label" for="IsMembershipRequested">
+                                    I would like to receive an invitation on the ALL membership program.
+                                </label>
+                            </div>
+                        </div>-->
+                        <div class="form-group col-md-4 time-cstm">
+                            <label>@CultureHelper.GetCultureLabel("Expected Arrival Time (Hotel)") <span class="error">*</span></label>
+                            @Html.TextBoxFor(model => model.ExpectedTimeofArrival, new { @class = "form-control", id = "timepicker1", type = "time" })
+                            @*<span>Hotel Check In Time is 03.00pm</span>*@
+                            @*<input type="time" id="timepicker1" class="form-control" name="expected_arrival" value="@Model.ExpectedTimeofArrival">*@
+                        </div>
+                    </div>
+
+                    <h2>@CultureHelper.GetCultureLabel("Document Details")</h2>
+                    <div class="form-row">
+                        <div class="form-group col-md-4">
+                            <label>@CultureHelper.GetCultureLabel("Nationality")  <span class="error">*</span></label>
+                            @Html.DropDownListFor(model => model.Profiles[0].NationnalityID, (SelectList)ViewBag.NationalityList, "Select Nationality", new { @class = "form-control selectpicker selectNationality", @data_live_search = "true" })
+
+                        </div>
+                        <div class="form-group col-md-4">
+                            <label>@CultureHelper.GetCultureLabel("Passport Number") <span class="error" style="display:none">*</span></label>
+                            @*@Html.TextBoxFor(model => model.Profiles[0].Phone, new { @class = "form-control", type = "number" })*@
+                            <input type="text" class="form-control" id="passportnumber" name="Profiles[0].DocumentNumber">
+                        </div>
+                        <div class="form-group col-md-4">
+                            <label>@CultureHelper.GetCultureLabel("Expiry Date") <span class="error" style="display:none">*</span></label>
+                            <div class="date-icon">
+                                <span class="icon-append"><i class="far fa-calendar-alt"></i></span>
+                                <input type="text" placeholder="DD/MM/YYYY" class="form-control py-3 datepicker" id="ExpiryDate" name="Profiles[0].ExpiryDate">
+                            </div>
+                        </div>
+                        <div class="form-group col-md-4">
+                            <label>@CultureHelper.GetCultureLabel("Place Of Issue") <span class="error" style="display:none">*</span></label>
+                            @*@Html.TextBoxFor(model => model.Profiles[0].Phone, new { @class = "form-control", type = "number" })*@
+                            <input type="text" class="form-control" id="placeofissue" name="Profiles[0].placeofissue">
+                        </div>
+                        <div class="form-group col-md-4">
+                            <label>
+                                @CultureHelper.GetCultureLabel("Date Of Birth")
+                                <span class="error" style="display:none">*</span>
+                            </label>
+                            @*@Html.TextBoxFor(model => model.Profiles[0].Phone, new { @class = "form-control", type = "number" })*@
+
+                            <div class="date-icon">
+                                <span class="icon-append"><i class="far fa-calendar-alt"></i></span>
+                                <input type="text" placeholder="DD/MM/YYYY" class="form-control py-3 datepicker" id="DateOfBirth" name="Profiles[0].DateOfBirth">
+                            </div>
+                        </div>
+                        <div class="form-group col-md-4">
+                            <label>
+                                @CultureHelper.GetCultureLabel("Place Of Birth")
+                                <span class="error" style="display:none">*</span>
+                            </label>
+                            @*@Html.TextBoxFor(model => model.Profiles[0].Phone, new { @class = "form-control", type = "number" })*@
+
+                            <input type="text" class="form-control" id="PlaceOfBirth" name="Profiles[0].PlaceOfBirth">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="form-group col-md-6">
+                            <div class="form-check chk-cu">
+                                @Html.CheckBoxFor(model => model.IsMembershipRequested, new { @class = "form-check-input", onchange = "enableDisableMembership(this.checked)" })
+
+                                <label class="form-check-label" for="gridCheck">
+                                    @CultureHelper.GetCultureLabel("Enrollment Message")
+                                </label>
+                            </div>
+                        </div>
+
+                    </div>
+                    <div class="row">
+                        <div class="col-lg-6 col-xl-4 offset-xl-8 offset-lg-6">
+                            <div class="btn-grp d-flex justify-content-between">
+                                @*<button class="btn_cancel">@CultureHelper.GetCultureLabel("Back")</button>*@
+                                <button type="button" class="btn_next " onclick="SaveReservationAndMoveNext(this)">@CultureHelper.GetCultureLabel("Next")<img src="~/assets/images/arrow_icon.png"></button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="tab-pane content-wrapper cstm-form  @(ViewBag.PaymentProcessed ? "paymentdone" : "") " id="upgrade">
+                <h1>@CultureHelper.GetCultureLabel("Upgrade")</h1>
+                @if (PackageListForRoomUpsell != null && PackageListForRoomUpsell.Count > 0)
+                {
+                    <h2>@CultureHelper.GetCultureLabel("AVAILABLE ROOM UPGRADE")</h2>
+                }
+                @*<span style="text-transform:none">(Subject to availability)</span>*@
+                <div class="row">
+                    @foreach (var package in PackageListForRoomUpsell)
+                    {
+                        var url = $"data:image/png;base64,{Convert.ToBase64String(package.PackageImage)}";
+                        var isUpsellSelected = ((List<CheckinPortal.Models.ReservationPackageModel>)ViewBag.ReservationPackagesList).Any(x => x.PackageID == package.PackageID);
+
+
+                        <div class="col-md-6 col-lg-4 col-xl-3 @package.PackageID">
+                            <div class="upg-wrap">
+                                <div class="upgrade">
+                                    <span class="tick" data-upselltype="Upsell" style="display:@(isUpsellSelected ? "block" : "none")"></span>
+                                    <img class="img-fluid" src="@url">
+                                </div>
+                                <div class="btn-wrap" style="height:120px">
+                                    <div class="row">
+                                        <div class="col"><label>@package.PackageName</label> </div>
+                                        <div class="col-auto">
+                                            <a href="#/" class="selectUpsell" onclick="showUpsellPopup(this,'Upsell')">@CultureHelper.GetCultureLabel("DETAILS")</a>
+                                            <input type="hidden" value="@package.PackageName" class="upsellPackageName" />
+                                            <input type="hidden" value="@url" class="upsellImage" />
+                                            <input type="hidden" value="@package.PackageAmount" class="packageAmount" />
+                                            <input type="hidden" value="@package.PackageCode" class="packageCode" />
+                                            <input type="hidden" value="@package.PackageDesc" class="packageDesc" />
+                                            <input type="hidden" value="@package.PackageID" class="packageID" />
+                                            <input type="hidden" value="@package.Units" class="packageUnits" />
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                </div>
+                @if (PackageListForSpecials != null && PackageListForSpecials.Count > 0)
+                {
+                    <h2>@CultureHelper.GetCultureLabel("Specials") @*<span style="text-transform:none">(Instant confirmation)</span>*@</h2>
+                }
+                <div class="row">
+
+                    @foreach (var package in PackageListForSpecials)
+                    {
+                        string url = string.Empty;
+                        if (package.PackageImage != null)
+                        {
+                            url = $"data:image/png;base64,{Convert.ToBase64String(package.PackageImage)}";
+                        }
+
+                        var isUpsellSelected = ((List<CheckinPortal.Models.ReservationPackageModel>)ViewBag.ReservationPackagesList).Any(x => x.PackageID == package.PackageID);
+
+                        <div class="col-md-6 col-lg-4 col-xl-3 @package.PackageID">
+                            <div class="upg-wrap">
+                                <div class="upgrade">
+                                    <span class="tick" data-upselltype="Package" style="display:@(isUpsellSelected ? "block" : "none")"></span>
+                                    <img class="img-fluid" src="@url">
+                                </div>
+                                <div class="btn-wrap" style="height:120px">
+                                    <div class="row">
+                                        <div class="col"><label>@package.PackageName</label> </div>
+                                        <div class="col-auto">
+                                            <a href="#/" class="selectUpsell" onclick="showUpsellPopup(this,'Package')">@CultureHelper.GetCultureLabel("DETAILS")</a>
+                                            <input type="hidden" value="@package.PackageName" class="upsellPackageName" />
+                                            <input type="hidden" value="@url" class="upsellImage" />
+                                            <input type="hidden" value="@package.PackageAmount" class="packageAmount" />
+                                            <input type="hidden" value="@package.PackageCode" class="packageCode" />
+                                            <input type="hidden" value="@package.PackageDesc" class="packageDesc" />
+                                            <input type="hidden" value="@package.PackageID" class="packageID" />
+                                            <input type="hidden" value="@package.Units" class="packageUnits" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <div class="message" id="upgradeTerms" style="display:none">
+                    @CultureHelper.GetCultureLabel("The selected upgrade option is subject to availability at the time of reservation. Our team will be in touch shortly to confirm.")<br />
+                    @*<div>
+                            <input type="checkbox" value="1" id="upgradeTermsCheckbox" /> By checking this box, I acknowledge and agree for my credit card to be charged the additional fees should my requested room upgrade be available.
+                        </div>*@
+                </div>
+
+                <div class="message" id="upgradeTermsSpecials" style="display:none">
+                    @CultureHelper.GetCultureLabel("Request for Specials is confirmed instantly and your card will be charged in the next page.")<br />
+                </div>
+
+                <div class="row">
+                    <div class="col-lg-6 col-xl-4 offset-xl-8 offset-lg-6">
+                        <div class="btn-grp d-flex justify-content-between">
+                            <button class="btn_cancel" value='Back'>@CultureHelper.GetCultureLabel("Back")</button>
+                            <button class="btn_next " onclick="savePackages(this)">@CultureHelper.GetCultureLabel("Next")<img src="~/assets/images/arrow_icon.png"></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="tab-pane content-wrapper cstm-form @(ViewBag.PaymentProcessed ? "paymentdone" : "") " id="policies">
+
+                <h1>Policies</h1>
+                @*<h2 class="mb-none">Policies</h2>*@
+                <div class="plcy-wrapper">
+                    <div class="row">
+                        <div class="col-xl-6">
+                            <div class="form-group row">
+                                <label class="col-7 col-lg-4 col-xl-4">@CultureHelper.GetCultureLabel("CONFIRMATION NUMBER")</label>
+                                <div class="col-5 col-lg-8 col-xl-8">
+                                    <span>@Model.ReservationNumber</span>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-7 col-lg-4 col-xl-4">@CultureHelper.GetCultureLabel("ROOM TYPE")</label>
+                                <div class="col-5 col-lg-8 col-xl-8">
+                                    <span>@Model.RoomTypeDescription</span>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-7 col-lg-4 col-xl-4">@CultureHelper.GetCultureLabel("CHECK-IN DATE")</label>
+                                <div class="col-5 col-lg-8 col-xl-8">
+                                    <span>@Model.ArrivalDate</span>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-7 col-lg-4 col-xl-4">@CultureHelper.GetCultureLabel("CHECK-OUT DATE")</label>
+                                <div class="col-5 col-lg-8 col-xl-8">
+                                    <span>@Model.DepartureDate</span>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-7 col-lg-4 col-xl-4">@CultureHelper.GetCultureLabel("Adult/Child")</label>
+                                <div class="col-5 col-lg-8 col-xl-8">
+                                    <span>@Model.AdultCount / @Model.ChildCount</span>
+                                </div>
+                            </div>
+
+                            @*<div class="form-group row">
+                                    <label class="col-7 col-lg-4 col-xl-4">Avg. Room Rate </label>
+                                    <div class="col-5 col-lg-8 col-xl-8">
+                                        <span> @Model.AverageRoomRate.ToString("0.00") £ </span>
+                                    </div>
+                                </div>*@
+                            <div class="form-group row">
+                                <label class="col-7 col-lg-4 col-xl-4">@CultureHelper.GetCultureLabel("BREAKFAST")</label>
+                                <div class="col-5 col-lg-8 col-xl-8">
+                                    <span>@(Model.IsBreakFastAvailable ? @CultureHelper.GetCultureLabel("Included") : @CultureHelper.GetCultureLabel("Not Included"))</span>
+                                </div>
+                            </div>
+                            <hr>
+                            <div class="form-group row total">
+                                <label class="col-7 col-lg-4 col-xl-4">@CultureHelper.GetCultureLabel("TOTAL ROOM CHARGES")</label>
+                                <div class="col-5 col-lg-8 col-xl-8">
+
+                                    @{
+                                        var totalcharge = "--";
+
+                                        if (Model.TotalRoomRate > 0)
+                                        {
+
+                                            totalcharge = "EUR " + Model.TotalRoomRate.ToString("0.00");
+
+                                        }
+                                    }
+
+
+                                    <span id="spanTotalCharges">@totalcharge </span><span>@CultureHelper.GetCultureLabel("(Inclusive of 10 % service charge and prevailing government taxes)")</span>
+                                </div>
+                            </div>
+
+
+                        </div>
+                        <div class="col-xl-5 sign-here">
+
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="receviceUpdate" name="checkbox1">
+                                <label class="form-check-label" for="receviceUpdate">
+                                    @CultureHelper.GetCultureLabel("I would like to receive marketing information from Novotel Paris Vaugirard* related to our services, including dedicated offers and promotions, on the provided email address or by sms to a given mobile phone number.")
+                                </label>
+
+                            </div>
+                            <div class="form-check">
+                                <label class="form-check-label" for="acceptTermsAndCondition"> @CultureHelper.GetCultureLabel("Please be informed, that by completing this pre-arrival registration you also accept our") <a style="color: #1e22aa" href="~/Resources/Customers_Privacy_Policy.pdf" target="_blank">@CultureHelper.GetCultureLabel("Customers Privacy Policy")</a> @CultureHelper.GetCultureLabel("which includes all relevant information regarding processing of your personal data by our hotel.")</label>
+                            </div>
+                            <div class="form-check">
+                                <label class="form-check-label" for="acceptTermsAndCondition">
+                                    @CultureHelper.GetCultureLabel("Please be informed, that by completing this pre-arrival registration you also accept hotels regulations that might apply to your stay depending on a hotel you choose. For any further information with this regard, please contact with a reception desk of hotel your are staying with.")
+                                </label>
+                            </div>
+
+                            @*<div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="chkFine" name="checkbox2">
+                                    <label class="form-check-label" for="chkFine">
+                                        <font color="red">*</font> The hotel is a smoke-free hotel. A cleaning fee of S$275 nett per incident will be charged to a guest smoking in the room and/or within the hotel premises.</a>
+                                    </label>
+                                </div>*@
+
+                            @*<div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="IsTermsAndConditionAccepted" name="IsTermsAndConditionAccepted" value="True">
+                                    <label class="form-check-label" for="acceptTermsAndCondition">
+                                        <font color="red">*</font> I agree to the <a href="#" data-toggle="modal" data-target="#termsAndConditionModal">terms and conditions</a>
+                                    </label>
+                                </div>*@
+                            <div class="sign1" style="max-width;width:auto">
+                                <div id="signature-pad" class="signature-pad">
+                                    <div class="signature-pad--body">
+                                        <canvas></canvas>
+                                    </div>
+                                    <div class="signature-pad--footer">
+                                        <div class="signature-pad--actions">
+                                            <div class="buttons">
+                                                <button type="button" class="button clear" data-action="clear">@CultureHelper.GetCultureLabel("Clear")</button>
+                                            </div>
+                                            <div class="description">@CultureHelper.GetCultureLabel("Sign above")</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-lg-6 col-xl-4 offset-xl-8 offset-lg-6">
+                        <div class="btn-grp d-flex justify-content-between">
+                            <button class="btn_cancel" value='Back'>@CultureHelper.GetCultureLabel("Back")</button>
+                            <button class="btn_next" onclick="return SavePolicies(this)">@CultureHelper.GetCultureLabel("Next")<img src="~/assets/images/arrow_icon.png"></button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            <div class="tab-pane content-wrapper cstm-form @((ViewBag.PaymentProcessed && !ViewBag.IsPaymentSuccess)  ? "active" : "paymentdone")" id="payment">
+                <h1>@CultureHelper.GetCultureLabel("Payment")</h1>
+                @*<h2 class="mb-none">PAYMENT</h2>\*@
+                <div class="row">
+                    <div class="col-lg-4 col-md-2 col-sm-1">
+
+                    </div>
+                    <div class="col-lg-4 col-md-6 col-sm-10  payment">
+                        <div id="dropin-container"></div>
+                    </div>
+                    <div class="col-lg-4 col-md-2 col-sm-1">
+
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-lg-6 col-xl-4 offset-xl-8 offset-lg-6">
+                        <div class="btn-grp d-flex justify-content-between">
+                            <button class="btn_cancel" value='Back'>@CultureHelper.GetCultureLabel("Back")</button>
+                            <button style="display:none" class="btn_next moveNext" id="btnPaymentNextButton">@CultureHelper.GetCultureLabel("Next")<img src="~/assets/images/arrow_icon.png"></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="tab-pane  content-wrapper cstm-form @((ViewBag.PaymentProcessed && ViewBag.IsPaymentSuccess)  ? "active" : "")" id="qrCode">
+                <div class="content">
+                    <div class="qr">
+                        <div class="code">
+                            <img height="180" src="data:image/jpeg;base64,@ViewBag.QRcode">
+                            <p>@Model.ReservationNumber</p>
+
+                        </div>
+                        <p>@CultureHelper.GetCultureLabel("Thank you for taking the time to complete the PRE-ARRIVAL REGISTRATION. Please find the attached QR code and confirmation number, and save it for presentation at the hotel to collect your room key.")</p>
+
+                        <p>@CultureHelper.GetCultureLabel("Novotel Paris Vaugirard wishes you a pleasant day ahead!")</p>
+                        <div class="row">
+                            <div class="col-md-12 text-center mt-5">
+                                @*<div class="buttonwrapper">
+                                        <ul>
+                                            <li><a class="apple" href="#"></a></li>
+                                            <li><a class="google" href="#"></a></li>
+                                        </ul>
+                                        <a href="#">Save to Photo Library</a>
+                                    </div>*@
+                                @*<img src="data:image/jpeg;base64,@ViewBag.CalQRcode" height="200" />*@
+                                <br /><br />
+                                <iframe id="my_iframe" style="display:none;"></iframe>
+
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12 text-center ">
+                            <a href="@Url.Action("CompletePreCheckin","Home",new { ReservationID = Model.ReservationID })" class="ok_btn mt-2"><img src="~/assets/images/tick_icon.png">OK</a>
+                        </div>
+                    </div>
+                    <div class="address">
+                        <label>Mercure Amsterdam City, Netherlands, Tel : +31207219176, Email de contact :  H1244@accor.com</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<div class="modal fade cstm-modal" id="termsAndConditionModal" tabindex="-1" role="dialog" aria-labelledby="termsAndConditionModalLabel" aria-hidden="true">
+    <div class="modal-dialog  modal-dialog-centered privacy-model" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="termsAndConditionModalLabel">Terms and Conditions </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true" class="close_icon"></span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>
+                    <strong>
+                        Practical information<br>
+                    </strong> Important: Unless specifically stated otherwise by the country you are staying in, this reservation request does not commit the hotel to assisting with a guest’s request for assistance from the consular authorities.
+                    <strong>
+                        &nbsp;
+                    </strong>
+                </p>
+                <p>
+                    <strong>
+                        Guarantee<br>
+                    </strong>
+                    Depending on the terms and conditions applicable to the rates reserved, the guest accepts to be charged by the hotel for any payment required under these same terms.&nbsp;
+                </p>
+
+                <p>
+                    <strong>
+                        Sales conditions<br>
+                    </strong> The price indicated is per accommodation for the number of persons and dates selected in advance, unless otherwise specified (fixed price). However, additional taxes may apply and be payable on arrival at the hotel, depending on local regulations. Only the local currency of the country is guaranteed. Any amount specified in a currency other than the local currency is for informational purposes only and non-contractual.<br>
+                </p>
+                <p>
+                    <strong>
+                        Cancellation Policy: <br>
+                    </strong>No cancellation charge applies prior to 14:00(local time) on the day of arrival. Beyond that time, the first night will be charged.&nbsp;
+                </p>
+                <p>
+                    <strong>
+                        Check in Policy:<br>
+                    </strong> The room is available from 14:00 except in case of Early Check In.&nbsp;
+                </p>
+                <p>
+                    <strong>
+                        Check out Policy: <br>
+                    </strong>The room must be vacated by 12:00 at the latest except in case of Late Check Out.&nbsp;
+                </p>
+                <p>
+                    <strong>
+                        Guarantee Policy: <br>
+                    </strong>Guests arriving after 14:00 (local time) must provide a guarantee.&nbsp;
+                </p>
+                <p>
+                    <strong>
+                        Special term for children:<br>
+                    </strong> Reservations can only be made by guests 18 years old or over. When arriving at the hotel, no guests under 18 years of age will be permitted to stay without being accompanied by a guest 18 years old or over.~&nbsp;
+                </p>
+                <p>
+                    <strong>
+                        Special Assistance-Accessibility:<br>
+                    </strong> Where available, rooms that are prioritized for people with accessibility requirements can be selected and booked directly online. For further details about possible adjustments to rooms, please contact the hotel directly (see hotel's description page)&nbsp;
+                </p>
+                <p>
+                    <strong>
+                        Special requirements:<br>
+                    </strong> The hotel will accommodate specific needs you may have to the best of its ability. If you have specific requirements you would like the hotel to consider, e.g. to<br>
+                    assist with a disability, please contact the hotel directly (see hotel's description page)&nbsp;
+                </p>
+                <p>
+                    <strong>
+                        Taxes<br>
+                    </strong><strong>
+                        The total amount of your reservation includes the following taxes:<br>
+                    </strong> VAT National taxes on accommodation : 5.00 % per Room AND per Night.
+                </p>
+                <p>
+                    <br><br>
+                    The collected data are processed by Accor SA, and are mandatory for the purposes of managing your bookings and sending you information on Accor Group products and services. The data are intended to Accor SA, Accor SA legal entities, Accor SA hotels and Accor SA service providers that might be based outside the European Union. The data are transferred for the purposes of managing and following-up of your file in the framework of pre-contractual measures intended to fulfil the booking, of implementing the booking or on the basis of an authorisation by the French Data Protection Authority. In accordance with the Data Protection Act of 6 January 1978, you have a right to interrogate, to access, to rectify and to object to the processing to the Data privacy department of Accor SA – data.privacy@accor.com.
+                </p>
+                <p>The Hotel, as data controller, processes your personal data in the purposes of bookings and guests management, billing and payment, canvassing, special offers and sales events, commercial surveys and satisfaction enquiries. The data are intended to the Hotel as well as its services providers and the various Accor SA departments, to the extent of each entity involvement. In accordance with the Data Protection Act of 6 January 1978, you have a right to interrogate, to access, to rectify, to object on legitimate grounds to the processing, and to object to direct marketing. You can exercise such right by writing to the Hotel manger‘s office to the address above-mentioned.</p>
+                <p>Note: for some rates, cancelation of a reservation may be subject to conditions. Please see the terms and conditions of sale associated with the rate to find out more. You are reminded that prepaid rates cannot be reimbursed and cannot be cancelled.</p>
+                <p>Accor, a public limited company, registered in the Trade and Companies Register under no. RCS NANTERRE B 602 036 444, with its head office at 82 rue Henri Farman, 92130 Issy-les-Moulineaux, France, with intra-community VAT no. FR 93 602 036 444, registered in the Register of Travel Agents and Other Tour Operators under no. IM091100035. </p>
+                <div class="mt-4 text-center">
+                    <button class="btnstyle blue" data-dismiss="modal" aria-label="Close">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade cstm-modal" id="upgradeConditionModal" tabindex="-1" role="dialog" aria-labelledby="upgradeConditionModalLabel" aria-hidden="true">
+    <div class="modal-dialog  modal-dialog-centered privacy-model" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="upgradeConditionModalLabel">Message</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true" class="close_icon"></span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <h5>Please accept the upgrade terms and conditions</h5>
+                <div class="mt-4 text-center">
+                    <button class="btnstyle blue" data-dismiss="modal" aria-label="Close">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade cstm-modal" id="exampleModal3" tabindex="-1" role="dialog" data-backdrop="static" data-keyboard="false" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog  modal-dialog-centered upload-model" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">uPLOAD</h5>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="file-up-wrap">
+                            <label class="lb suces-sp"><span>1</span>Document</label>
+                            <div class="custom-file">
+                                <input type="file" class="custom-file-input" id="customFile11">
+                                <label class="custom-file-label" for="customFile" style=" position: relative; width: 100%; margin-top: 10px;">Choose file</label>
+                            </div>
+                            <label class="lb"><span>2</span>Document</label>
+                            <div class="custom-file">
+                                <input type="file" class="custom-file-input" id="customFile12">
+                                <label class="custom-file-label" for="customFile">Choose file</label>
+                            </div>
+                            <label class="lb"><span>3</span>Document</label>
+                            <div class="custom-file">
+                                <input type="file" class="custom-file-input" id="customFile13">
+                                <label class="custom-file-label" for="customFile" style=" position: relative; width: 100%; margin-top: 10px;">Choose file</label>
+                            </div>
+                            <!--<div class="progress mb-2">
+                              <div class="progress-bar bg-success" role="progressbar" style="width: 25%;" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100">25%</div>
+                            </div>-->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="button-wrapper1">
+                    <button class="btnstyle " data-dismiss="modal" aria-label="Close">Cancel</button>
+                    <button class="btnstyle btnUploadDoc" data-guestid="" aria-label="Close">OK</button>
+
+                </div>
+                <div class="mt-4 text-center mb-4">
+                    <span class="support">Supported File Type is .jpb and .png With Max Size Of 2MB</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade cstm-modal" id="DocumentUploadprimaryGuest" tabindex="-1" role="dialog" data-backdrop="static" data-keyboard="false" aria-labelledby="DocumentUploadprimaryGuestLabel" aria-hidden="true">
+    <div class="modal-dialog  modal-dialog-centered upload-model" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="DocumentUploadprimaryGuestLabel">UPLOAD</h5>
+                <input type="hidden" value="" id="currentProfileID" />
+                <input type="hidden" value="" id="currentGuestIndex" />
+            </div>
+            <div class="modal-body">
+                <div class="row">
+
+                    <div class="message" id="upgradeTerms" style="margin:0;text-align:left">
+                        <ul>
+                            <li>For Singaporeans & Permanent Residents, please upload the front and back of your Identity Card separately.</li>
+                            <li>For non-residents, please upload an image of the information page from your passport</li>
+                        </ul>
+
+                        @*1. For Singaporeans & Permanent Residents, please upload the front and back of your Identity Card separately.<br>
+                            2. For non-residents, please upload an image of the information page from your passport.*@
+
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="file-up-wrap">
+                            <label class="lb suces-sp"><span>1</span>Document</label>
+                            <div class="custom-file">
+                                <div class="row" style="margin:auto">
+                                    <img src="" id="imgprimaryDoc1" class="img-fluid " style="display: none;margin: auto;height: 200px;" />
+                                </div>
+                                <input type="file" class="custom-file-input docUploadFile" id="primaryDoc1">
+                                <label class="custom-file-label" for="customFile" style="width: 100%;margin-top: -30px;position: relative;">Choose file</label>
+                                <div id="primaryDoc1_alert" class="row alert-success alert" style="margin: 0px; padding: 10px; margin-top: -22px;display: none">
+                                    <span class="" style="display:none">document not validated</span>
+                                </div>
+                            </div>
+                            <br />
+                            <br />
+                            <br />
+                            <label class="lb"><span>2</span>Document</label>
+                            <div class="custom-file">
+                                <div class="row" style="margin:auto">
+                                    <img src="" id="imgprimaryDoc2" class="img-fluid " style="display:none;margin: auto;height: 200px;" />
+                                </div>
+                                <input type="file" class="custom-file-input docUploadFile" id="primaryDoc2" disabled>
+                                <label class="custom-file-label" for="customFile" style="width: 100%;margin-top: -30px;position: relative;">Choose file</label>
+                                <div id="primaryDoc2_alert" class="row alert-success alert" style="margin: 0px; padding: 10px; margin-top: -22px;display:none">
+                                    <span class="display:none">document not validated</span>
+                                </div>
+                            </div>
+                            <label class="lb" style="display:none"><span>3</span>Document</label>
+                            <div class="custom-file" style="display:none">
+                                <div class="row" style="margin:auto">
+                                    <img src="" id="imgprimaryDoc3" class="img-fluid " style="display:none;margin: auto;height: 200px;" />
+                                </div>
+                                <input type="file" class="custom-file-input  docUploadFile" id="primaryDoc3">
+                                <label class="custom-file-label" for="customFile" style="width: 100%;margin-top: -30px;position: relative;">Choose file</label>
+                                <span class="" style="display: none">document not validated</span>
+                            </div>
+                            <br />
+                            <br />
+                            <!--<div class="progress mb-2">
+                              <div class="progress-bar bg-success" role="progressbar" style="width: 25%;" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100">25%</div>
+                            </div>-->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="button-wrapper1">
+                    <button class="btnstyle " data-dismiss="modal" aria-label="Close" onclick="resetDocumentInfo(); clearFileUpload();">Cancel</button>
+                    <button class="btnstyle btnUploadPrimaryDoc" data-guestid="1">OK</button>
+
+                </div>
+                <div class="mt-4 text-center mb-4">
+                    <span class="support">Supported file types are .jpg and .png with max. size of 2MB.</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="upsellModal" tabindex="-1" role="dialog" aria-labelledby="upsellModalLabel" aria-hidden="true">
+    <div class="modal-dialog hotel-view modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-body">
+                <div class="hotel-details">
+                    <div class="row">
+                        <div class="col-md-5">
+                            <div class="image-wrap">
+                                <img class="img-fluid" src="" id="upsellModalImg">
+                            </div>
+                        </div>
+                        <div class="col-md-7">
+                            <div class="logosm">
+                                <h2 id="upsellModalPackageName"></h2>
+                            </div>
+                            <p id="upsellModaldescription"></p>
+                            <span class="amount" id="upsellModalAmount"></span>
+                            <span class="amountCondition">@CultureHelper.GetCultureLabel("per room per night")</span>
+                            <div class="row upsell-amount-description">
+                                <!--                                <span>Price stated is inclusive of 10% service charge and prevailing government taxes.</span>-->
+                            </div>
+
+                            <div class="btn-grp upsellconfirmDiv">
+                                <button class="btn_cancel" id="upsellDetailCancelButton" onclick="cancelPackageDetailPopup(this)" data-dismiss="modal" data-packageID="">@CultureHelper.GetCultureLabel("Cancel")</button>  @*data-toggle="modal" data-target="#ConfirmCancelUpsell"*@
+                                <button class="btn_next" onclick="confirmPackage(this)" id="upsellConfirmButton" data-packageID="" data-upselltype="">
+                                    <i class="fas fa-check-circle"></i> @CultureHelper.GetCultureLabel("Confirm")
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="ConfirmCancelUpsell" tabindex="-1">
+    <div class="modal-dialog confirm modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-body">
+                <div class="hotel-details">
+                    <div class="row">
+                        <div class="col-md-12 text-center">
+                            <p>@CultureHelper.GetCultureLabel("Are you sure you want to discard this option?")</p>
+                            <div class="button-wrapper text-center mt-4">
+                                <button class="btnstyle grey" data-dismiss="modal" data-toggle="modal" data-target="#upsellModal">@CultureHelper.GetCultureLabel("No")</button>
+                                <button class="btnstyle blue" data-dismiss="modal" data-packageID="" data-upselltype="" id="upsellCancelButton" onclick="cancelPackage(this)"><i class="fas fa-check-circle"></i> @CultureHelper.GetCultureLabel("Yes")</button>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade cstm-modal" id="paymentAmountConfirmationModal_old" tabindex="-1" role="dialog" data-backdrop="static" data-keyboard="false" aria-labelledby="paymentAmountConfirmationModalLabel" aria-hidden="true">
+    <div class="modal-dialog  modal-dialog-centered upload-model" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="paymentAmountConfirmationModalLabel">confirmation</h5>
+            </div>
+            <div class="modal-body">
+                <div class="quest card-quest">
+                    <h5>Please verify your authorisation details </h5>
+                    <div class="card-det" style="color:black">
+                        <div class="row">
+                            <div class="col-md-1"></div>
+                            <div class="col-md-10 ">
+                                <div class="payment-details">
+                                    <h3>AUTHORISATION DETAILS</h3>
+                                    <div class="form-group row">
+                                        <label class="col-7 col-lg-4 col-xl-5">AMOUNT</label>
+                                        <div class="col-5 col-lg-8 col-xl-7">
+                                            <span id="spanRoomRate1" style="text-shadow: none;">220 EUR</span>
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <label class="col-7 col-lg-4 col-xl-5">Incidental Charges</label>
+                                        <div class="col-5 col-lg-8 col-xl-7">
+                                            <span id="spanIncidential1" style="text-shadow: none;">100 EUR</span>
+                                        </div>
+                                    </div>
+                                    <hr>
+                                    <div class="form-group row">
+                                        <label class="col-7 col-lg-4 col-xl-5">Total</label>
+                                        <div class="col-5 col-lg-8 col-xl-7">
+                                            <span id="spanTotalAmount1" style="text-shadow: none;">320 EUR<span style="text-shadow: none;">(Inclusive of Charges to Tax)</span></span>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+                            <div class="col-md-1"></div>
+                        </div>
+                    </div>
+
+                    <div class="btns">
+                        <button class="no" data-dismiss="modal" aria-label="Close">No</button>
+                        <button class="yes" data-dismiss="modal" data-toggle="modal" onclick="proceedWithPayment()">Yes</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="paymentAmountConfirmationModal" tabindex="-1" role="dialog" aria-labelledby="paymentAmountConfirmationModalLabel" aria-hidden="true">
+    <div class="modal-dialog bill-view modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="paymentAmountConfirmationModalLabel">@CultureHelper.GetCultureLabel("Please verify your authorisation details")</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true" class="close_icon"></span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="cstm-payment">
+                    <h4 id="idPaymentTitleLable">@CultureHelper.GetCultureLabel("AUTHORISATION DETAILS")</h4>
+
+                    <hr>
+                    <div class="form-group total row">
+                        <label class="col-7 col-lg-4 col-xl-5">@CultureHelper.GetCultureLabel("ESTIMATED INCIDENTAL CHARGES")</label>
+                        <div class="col-5 col-lg-8 col-xl-7">
+                            <span id="spanTotalAmount">0.00 €<span style="text-shadow: none;">@CultureHelper.GetCultureLabel("(Inclusive of Charges to Tax)")</span></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="button-wrapper text-center mt-3 mb-3">
+                    <button class="btnstyle grey" data-dismiss="modal" aria-label="Close">@CultureHelper.GetCultureLabel("No")</button>
+                    <button class="btnstyle blue" data-guestid="" onclick="proceedWithPayment()">@CultureHelper.GetCultureLabel("Yes")</button>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section Scripts{
+    <script src="~/assets/js/multilang.js"></script>
+    <script src="~/assets/js/adyenFunctions.js"></script>
+    <script>
+        var upselAvailable="@(PackageList.Count > 0)"
+    </script>
+
+    <script src="~/assets/js/signature_pad.umd.js"></script>
+    <script src="~/assets/js/main.js"></script>
+    @*<script src="~/assets/js/documentUpload.js"></script>*@
+    <script src="~/assets/js/wizard.js"></script>
+    <script src="~/assets/js/bootstrap-datepicker.min.js"></script>
+    @*<script src="~/assets/js/app.js"></script>*@
+
+    <script>
+
+        //$('select').selectpicker();
+        $(function () {
+            $('[data-toggle="tooltip"]').tooltip()
+        })
+
+        $('.datepicker').datepicker({
+            clearBtn: true,
+            format: "dd/mm/yyyy"
+        });
+
+        function enableDisableNextInput(obj) {
+            if ($(obj).is(':checked')) {
+                $(':input:eq(' + ($(':input').index(obj) + 1) + ')').parents('div.qs').show();
+                $(':input:eq(' + ($(':input').index(obj) + 2) + ')').parents('div.qs').show();
+
+                $(':input:eq(' + ($(':input').index(obj) + 1) + ')').attr('disabled', false);
+                $(':input:eq(' + ($(':input').index(obj) + 2) + ')').attr('disabled', false);
+            }
+            else {
+                $(':input:eq(' + ($(':input').index(obj) + 1) + ')').parents('div.qs').hide();
+                $(':input:eq(' + ($(':input').index(obj) + 2) + ')').parents('div.qs').hide();
+
+                $(':input:eq(' + ($(':input').index(obj) + 1) + ')').attr('disabled', true);
+                $(':input:eq(' + ($(':input').index(obj) + 2) + ')').attr('disabled', true);
+            }
+        }
+        enableDisableNextInput(document.getElementsByClassName('passholder')[0]);
+
+
+
+        function clearAndRemoveAllPackage(packageID) {
+
+            selectedUpsellPackage = selectedUpsellPackage.filter(function (value, index, arr) {
+                return value == packageID;
+            });
+
+            $('.tick').each(function () {
+                if ($(this).data('upselltype') == "Upsell") {
+                    $(this).hide();
+                }
+            });
+        }
+
+        function cancelPackageDetailPopup(obj) {
+
+            var packageid = $(obj).data('packageID');
+
+            if (selectedUpsellPackage.indexOf(packageid) >= 0) {
+                $('#ConfirmCancelUpsell').modal('show');
+            }
+            else if (selectedSpecialPackage.indexOf(packageid) >= 0) {
+                $('#ConfirmCancelUpsell').modal('show');
+            }
+            else {
+                $('#upsellModal').modal('hide');
+            }
+
+        }
+
+        function savePackages(btn) {
+
+            var packages = selectedUpsellPackage.concat(selectedSpecialPackage)
+            //if (selectedUpsellPackage.length > 0) {
+            //    var upgradTerms = $('#upgradeTermsCheckbox').is(':checked');
+            //    if (!upgradTerms) {
+            //        $('#customMessageModalMessage').html('Please accept the upgrade terms and conditions')
+            //        $('#customMessageModal').modal('show');
+            //        return;
+            //    }
+            //}
+
+            const data = new FormData();
+            data.append('ReservationID', $('#ReservationID').val());
+
+            TotalSpecialCharges = 0;
+            $(selectedSpecialPackage).each(function (i, p) {
+                var packageAmount = $('div .' + p).find('.packageAmount').val();
+                //TotalSpecialCharges += +packageAmount;
+                TotalSpecialCharges += parseFloat(packageAmount);
+            });
+
+            //if ((+TotalSpecialCharges + +TotalRoomRate) > 0) {
+            if ((parseFloat(TotalSpecialCharges) + parseFloat(TotalRoomRate)) > 0) {
+
+                $('#spanTotalCharges').html((parseFloat(TotalSpecialCharges) + parseFloat(TotalRoomRate)).toFixed(2) + " EUR");
+            }
+            else {
+                $('#spanTotalCharges').html('--');
+            }
+
+            data.append('Packages', packages)
+            $('.loader-screen').fadeIn(100);
+            fetch(BaseURL + '/Home/savePackages', {
+                method: "POST",
+                body: data,
+            }).then(response => response = response.json()).then(response => {
+                moveToNextTab(btn);
+                $('.loader-screen').fadeOut(1000);
+            });
+        }
+
+        function showUpsellPopup(obj, type) {
+
+            var description = $(obj).parent('div').find('.packageDesc').val();
+            var PackageAmount = $(obj).parent('div').find('.packageAmount').val();
+            var upsellImage = $(obj).parent('div').find('.upsellImage').val();
+            var upsellPackageName = $(obj).parent('div').find('.upsellPackageName').val();
+            var packageID = $(obj).parent('div').find('.packageID').val();
+            var packageUnits = $(obj).parent('div').find('.packageUnits').val();
+
+
+            $('#upsellModalPackageName').html(upsellPackageName)
+            $('#upsellModalImg').attr('src', upsellImage)
+            $('#upsellModalAmount').html(PackageAmount + "€")
+            $('.amountCondition').html(packageUnits)
+
+            $('#upsellModaldescription').empty().html(description)
+
+            $('#upsellConfirmButton').data('upselltype', type);
+            $('#upsellConfirmButton').data('packageID', packageID);
+            $('#upsellCancelButton').data('upselltype', type);
+            $('#upsellCancelButton').data('packageID', packageID);
+            $('#upsellDetailCancelButton').data('packageID', packageID);
+
+
+
+            $('#upsellModal').modal('show');
+        }
+
+        function confirmPackage(obj) {
+
+            var packageID = $(obj).data('packageID');
+            var type = $(obj).data('upselltype');
+            if (type == "Upsell") {
+                if (!selectedUpsellPackage.includes(packageID)) {
+                    selectedUpsellPackage.push(packageID);
+                }
+
+                clearAndRemoveAllPackage(packageID);
+            }
+            else {
+                if (!selectedSpecialPackage.includes(packageID)) {
+                    selectedSpecialPackage.push(packageID)
+                }
+            }
+
+
+            $('div.' + packageID).find('.tick').css('z-index', '1');
+            $('div.' + packageID).find('.tick').show();
+            $('#upsellModal').modal('hide');
+
+            showHideUpsellTerms();
+
+
+        }
+
+
+        function showHideUpsellTerms() {
+            if (selectedUpsellPackage.length > 0) {
+                $('#upgradeTerms').show();
+            }
+            else {
+                $('#upgradeTerms').hide();
+            }
+
+            if (selectedSpecialPackage.length > 0) {
+                $('#upgradeTermsSpecials').show();
+            }
+            else {
+                $('#upgradeTermsSpecials').hide();
+            }
+        }
+
+        function cancelPackage(obj) {
+
+            $('#ConfirmCancelUpsell').modal();
+
+            var packageID = $(obj).data('packageID');
+            var type = $(obj).data('upselltype');
+
+            if (type == "Upsell") {
+                selectedUpsellPackage = selectedUpsellPackage.filter(function (value, index, arr) {
+                    return value != packageID;
+                });
+            }
+            else {
+                selectedSpecialPackage = selectedSpecialPackage.filter(function (value, index, arr) {
+                    return value != packageID;
+                });
+            }
+
+            $('div.' + packageID).find('.tick').css('z-index', '1');
+            $('div.' + packageID).find('.tick').hide();
+            $('#upsellModal').modal('hide');
+
+
+            if (selectedUpsellPackage.length > 0) {
+                $('#upgradeTerms').show();
+            }
+            else {
+                $('#upgradeTerms').hide();
+            }
+
+            if (selectedSpecialPackage.length > 0) {
+                $('#upgradeTermsSpecials').show();
+            }
+            else {
+                $('#upgradeTermsSpecials').hide();
+            }
+
+
+
+        }
+
+        $('select.selectCountry').on('change', function () {
+            $('#frm_guestdetails').validate();
+            LoadStateByCountry(this.value)
+
+        });
+
+
+
+        $('select.selectNationality').on('change', function () {
+
+            var nationality = $('#Profiles_0__NationnalityID').val();
+
+            if (nationality != '') {
+                if (nationality == "15") {
+                    $('#passportnumber').parent().find('span.error').hide();
+                    $('#ExpiryDate').parents().find('span.error').hide();
+                    $('#placeofissue').parent().find('span.error').hide();
+                    $('#nextdestination').parent().find('span.error').hide();
+                    $('#DateOfBirth').parent().find('span.error').hide();
+                    $('#PlaceOfBirth').parent().find('span.error').hide();
+
+
+
+                }
+                else {
+                    $('#passportnumber').parent().find('span.error').show();
+                    $('#ExpiryDate').parents().find('span.error').show();
+                    $('#placeofissue').parent().find('span.error').show();
+                    $('#nextdestination').parent().find('span.error').show();
+                    $('#DateOfBirth').parent().find('span.error').show();
+                    $('#PlaceOfBirth').parent().find('span.error').show();
+                }
+            }
+            else {
+                $('#passportnumber').parent().find('span.error').hide();
+                $('#ExpiryDate').parents().find('span.error').hide();
+                $('#placeofissue').parent().find('span.error').hide();
+                $('#nextdestination').parent().find('span.error').hide();
+                $('#DateOfBirth').parent().find('span.error').hide();
+                $('#PlaceOfBirth').parent().find('span.error').hide();
+            }
+
+
+
+        });
+
+        function SaveReservationAndMoveNext(btn) {
+            $('#frm_guestdetails').validate();
+            if ($('#frm_guestdetails').valid()) {
+
+                $('.loader-screen').fadeIn(100);
+                const data = new URLSearchParams();
+                for (const pair of new FormData(document.getElementById('frm_guestdetails'))) {
+                    data.append(pair[0], pair[1]);
+                }
+
+                fetch(BaseURL + '/Home/UpdateReservation', {
+                    method: "POST",
+                    body: data,
+                }).then(response => response = response.json()).then(response => {
+                    moveToNextTab(btn);
+                    $('.loader-screen').fadeOut(1000);
+                });
+            }
+        }
+
+        function SavePolicies(btn) {
+
+            const data = new FormData();
+            //var terms = $('#IsTermsAndConditionAccepted').is(':checked')
+            var receviceUpdate = $('#receviceUpdate').is(':checked');
+            //var chkFine = $('#chkFine').is(':checked');
+            //if (terms) {
+
+            //data.append('IsTermsAndConditionAccepted', terms);
+            data.append('ReservationID', $('#ReservationID').val());
+            data.append('CheckBox1', receviceUpdate);
+            //data.append('CheckBox2', chkFine);
+            //data.append('CheckBox2', terms);
+
+            if (signaturePad.isEmpty()) {
+                $('#customMessageModalMessage').html(language == "fr" ? "Veuillez fournir la signature!" : "Please provide the signature!");
+                $('#customMessageModal').modal('show');
+
+
+                return false;
+            } else {
+                var dataURL = signaturePad.toDataURL();
+                var strImage = dataURL.replace(/^data:image\/[a-z]+;base64,/, "");
+                data.append('Base64Signature', strImage);
+            }
+
+
+            $('.loader-screen').fadeIn(100);
+            fetch(BaseURL + '/Home/UpdatePolicies', {
+                method: "POST",
+                body: data,
+            }).then(response => response = response.json()).then(response => {
+                moveToNextTab(btn);
+                $('.loader-screen').fadeOut(1000);
+            });
+            //}
+            //else {
+            //    if (!terms) {
+            //        $('#customMessageModalMessage').html("Please accept terms and conditions.");
+            //        $('#customMessageModal').modal('show');
+            //    }
+            //    //                else {
+            //    //                    $('#customMessageModalMessage').html("Please accept hotel policy.");
+            //    //                    $('#customMessageModal').modal('show');
+            //    //                }
+            //}
+        }
+
+        $('.confirmDeclaration').on('click', function (e) {
+            e.preventDefault();
+            var btn = $(this);
+
+            if ($('#frmDeclaration').valid()) {
+
+                const data = new URLSearchParams();
+                for (const pair of new FormData(document.getElementById('frmDeclaration'))) {
+                    data.append(pair[0], pair[1]);
+                }
+                data.append('ReservationID', $('#ReservationID').val());
+                $('.loader-screen').fadeIn(100);
+                fetch(BaseURL + '/Home/SaveDeclaration', {
+                    method: "POST",
+                    body: data,
+                }).then(response => response = response.json()).then(response => {
+                    moveToNextTab(btn);
+                    $('.loader-screen').fadeOut(1000);
+                });
+            }
+
+        });
+
+        function LoadStateByCountry(countryID) {
+            $.ajax({
+                url: BaseURL + "/api/PortalService/GetStateByCountryID/",
+                data: {
+                    "CountryID": countryID
+                },
+                type: "GET",
+                dataType: "json",
+                success: function (data) {
+                    var state = $('select.state');
+                    $(state).find('option').remove().end();
+                    $(state).append("<option>Select State</option>");
+                    $(data).each(function (i, obj) {
+                        $(state).append("<option value='" + obj.StateMasterID + "'>" + obj.Statename + "</option>");
+                    });
+                    $(state).selectpicker('refresh');
+                },
+                error: function (data) {
+                    console.error(data);
+                }
+            });
+        }
+
+        function pageLoad() {
+
+            if ($('#MembershipNo').val() != '') {
+                $('#IsMembershipRequested').attr('disabled', true);
+                $('#MembershipNo').attr('readonly', true);
+            }
+            else {
+                $('#IsMembershipRequested').attr('disabled', false);
+                $('#MembershipNo').attr('readonly', false);
+            }
+
+            if ($('#IsMembershipRequested').is(':checked')) {
+                $('#MembershipNo').attr('readonly', true);
+            }
+
+        }
+
+        pageLoad();
+
+    </script>
+
+    <script>
+
+        $('.tick').each(function () {
+            // $(this).hide();
+        })
+
+
+
+        showHideUpsellTerms();
+
+        $('.fileUpload').on('click', function (e) {
+            e.preventDefault();
+            var upload1 = $(this).data('upload');
+            var guestprofileid = $(this).data('guestprofileid');
+            var currentGuestIndex = $(this).data('guestid');
+            $('#currentProfileID').val(guestprofileid);
+            $('#currentGuestIndex').val(currentGuestIndex);
+
+            $('.spanDocumentNotValidated').each(function (i, o) {
+                $(o).html('');
+                $(o).hide();
+            });
+
+            $('#imgprimaryDoc1').hide();
+            $('#imgprimaryDoc2').hide();
+            $('#imgprimaryDoc3').hide();
+
+            $('#imgprimaryDoc1').attr('src', '');
+            $('#imgprimaryDoc2').attr('src', '');
+            $('#imgprimaryDoc3').attr('src', '');
+
+
+            if (upload1 != "completed") {
+                $('#DocumentUploadprimaryGuest').modal('show');
+            }
+        });
+
+
+        $('.btnUploadPrimaryDoc').on('click', function (e) {
+
+            uploadDocumentToCloud();
+
+            //if (checkFileExtensions()) {
+            //    uploadDocumentToCloud()
+            //}
+            //else {
+            //    $('#customMessageModalMessage').html("Invalid file format selected");
+            //    $('#customMessageModal').modal('show');
+            //}
+        });
+
+        $('.checkUpload').on('click', function (e) {
+            isFileUploadComplete = true;
+            $('.fileUpload,.fileUpload1,.fileUpload2').each(function (i, obj) {
+                if ($(this).data('upload') == "incomplete") {
+                    isFileUploadComplete = false;
+                }
+            });
+
+            if (!isFileUploadComplete) {
+
+                $('#customMessageModalMessage').html("Please upload guest document.");
+                $('#customMessageModal').modal('show');
+
+            }
+            else {
+                moveToNextTab($(this));
+            }
+        });
+
+        function checkFileExtensions() {
+
+            var isValid = true;
+            $('.docUploadFile').each(function (i, o) {
+                var filename = $(this).val();
+                if (filename) {
+                    var extension = filename.replace(/^.*\./, '');
+
+                    if (extension == filename) {
+                        extension = '';
+                    }
+                    else {
+                        extension = extension.toLowerCase();
+                    }
+
+                    if (extension == 'jpg' || extension == 'jpeg' || extension == 'png') {
+
+                    }
+                    else {
+                        isValid = false;
+                    }
+                }
+            });
+            return isValid;
+        }
+
+        var documentInformation = {
+            documentType: "",
+            documentNumber: "",
+            issueDate: "",
+            expiryDate: "",
+            gender: "",
+            firstName: "",
+            middleName: "",
+            lastName: "",
+            nationality: "",
+            issueCountry: "",
+            birthDate: "",
+            faceImage: ""
+        };
+
+        function uploadDocumentToCloud() {
+
+            var Img1 = $('#imgprimaryDoc1').attr('src');
+            var Img2 = $('#imgprimaryDoc2').attr('src');
+
+            var profileDetailID = $('#currentProfileID').val();
+
+            var guestID = $('#currentGuestIndex').val();
+
+            if (Img1 != '') {
+                var formdata = new FormData();
+                formdata.append("Doc1Base64", Img1.replace(/^data:image.+;base64,/, ''));
+                formdata.append("Doc2Base64", Img2.replace(/^data:image.+;base64,/, ''));
+
+
+                if ((documentInformation.documentType == "Identity Card" || documentInformation.documentType == "NID") ||
+                    (documentInformation.documentType == "" && documentInformation.issueCountry == "SGP")) {
+                    if (Img1 != '' && Img2 != '') {
+
+                    }
+                    else {
+                        $('#customMessageModalMessage').html('Please upload other side of the document');
+                        $('#customMessageModal').modal('show');
+                        return;
+                    }
+                }
+
+                formdata.append('ReservationID', $('#ReservationID').val());
+                formdata.append('ProfileDetailID', profileDetailID);
+                formdata.append('documentInformation', JSON.stringify(documentInformation));
+
+                $('.loader-screen').fadeIn(100);
+
+                fetch(BaseURL + '/Home/UploadDocument', {
+                    method: "POST",
+                    body: formdata,
+                }).then(response => response = response.json()).then(response => {
+
+                    resetDocumentInfo();
+
+                    clearFileUpload();
+
+                    $('.loader-screen').fadeOut(500);
+
+                    setTimeout(function () {
+
+                        $('#DocumentUploadprimaryGuest').modal('hide');
+                        $('#guestid_' + guestID).parent('li').addClass("sucess");
+                        $('#guestid_' + guestID).data('upload', 'completed');
+                        $('#guestid_' + guestID).html('<i class="fas fa-check-circle"></i> COMPLETE');
+                    }, 1000);
+                });
+            }
+            else {
+                $('#customMessageModalMessage').html("Please select file.");
+                $('#customMessageModal').modal('show');
+            }
+        }
+
+        const validateDocument = (document) => httpPost(BaseURL + '/api/portalservice/ValidateDocument', document).then(response => {
+            return response;
+        });
+
+        const ValidateDocumentIssueCountry = (docType, issueCountry) => httpPost(BaseURL + '/Home/ValidateDocumentIssueCountry?idType=' + docType + '&issueCountry=' + issueCountry).then(response => {
+            return response;
+        });
+
+        const validateDocumentDirect = (document) => httpPost(AdaptorAPIBaseURL + '/ProcessDocument', document).then(response => {
+            return response;
+        });
+
+        const getProcessedImage = (transaction) => httpPost(AdaptorAPIBaseURL + '/GetProcessedImage', transaction).then(response => {
+            return response;
+        });
+
+        const GetProcessedDocumentType = (transaction) => httpPost(AdaptorAPIBaseURL + '/GetProcessedDocumentType', transaction).then(response => {
+            return response;
+        });
+
+        const GetProcessedDocumentFaceImage = (transaction) => httpPost(AdaptorAPIBaseURL + '/GetProcessedDocumentFaceImage', transaction).then(response => {
+            return response;
+        });
+
+        const upload = document.getElementById('primaryDoc1');
+
+        const upload2 = document.getElementById('primaryDoc2');
+
+        function blobToDataURL(blob, callback) {
+            var a = new FileReader();
+            a.onload = function (e) { callback(e.target.result); }
+            a.readAsDataURL(blob);
+        }
+
+
+        //uploadold.addEventListener("change", (evt) => {
+        //    processDocument(evt);
+        //}, false);
+
+        //upload2old.addEventListener("change", (evt) => {
+        //    processDocument(evt);
+        //}, false);
+
+
+
+        upload.addEventListener('change', (evt) => {
+            const files = [...evt.target.files]
+            processDocumentNew(files, evt.target);
+        }, false)
+
+        upload2.addEventListener('change', (evt) => {
+            const files = [...evt.target.files]
+            processDocumentNew(files, evt.target);
+
+        }, false)
+
+        function processDocumentNew(files, target) {
+            var fileControl = $(target);
+
+            var fileName = $(fileControl).val().split("\\").pop();
+            var imgPreview = $(fileControl).parent('div').find('img');
+            var filextension = fileName.split(".");
+            var documentReadStatus = $(fileControl).parent('div').find(".alert");
+            $(documentReadStatus).hide();
+
+            if ($('.docUploadFile').index(fileControl) == 0) {
+                resetDocumentInfo();
+
+                $('#primaryDoc2').val('');
+                $('#primaryDoc2').siblings(".custom-file-label").removeClass("selected").html('Choose file');
+                $('#primaryDoc2').parent('div').find('img').attr('src', '');
+                $('#primaryDoc2').parent('div').find('img').hide();
+                $('#primaryDoc2').attr('disabled', false);
+                var primaryDoc2alert = $('#primaryDoc2').parent('div').find(".alert")
+                $(primaryDoc2alert).hide();
+            }
+
+
+            var filext = "." + filextension.slice(-1)[0];
+            var valid = [".jpg", ".png", ".jpeg"];
+
+            if (valid.indexOf(filext.toLowerCase()) == -1) {
+
+                $('#customMessageModalMessage').html('File type not supported');
+                $('#customMessageModal').modal('show');
+
+                $(fileControl).val('');
+                $(fileControl).siblings(".custom-file-label").removeClass("selected").html('Choose file');
+                $(fileControl).parent('div').find('img').attr('src', '');
+                $(fileControl).parent('div').find('img').hide();
+                $(documentReadStatus).hide();
+            }
+            else {
+                $('.loader-screen').fadeIn(100);
+                compress.compress(files, {
+                    size: 2,
+                    quality: 0.75,
+                    maxWidth: 1920,
+                    maxHeight: 1920,
+                    resize: true
+                }).then((images) => {
+                    const imgout = images[0]
+                    var imageBase64 = imgout.data;
+
+                    validateDocumentDirect({
+                        RequestObject: {
+                            Base64Image: imageBase64,
+                            ImageFormat: ".jpg"
+                        }
+
+                    }).then(response => {
+                        if (response.result) {
+                            assignDocumentInfo(response);
+
+                            var transactionIDRequestObj = {
+                                "RequestObject": response.responseData.TransactionID
+                            };
+
+                            if (!response.responseData.IsExpired) {
+
+                                getProcessedImage(transactionIDRequestObj).then(response1 => {
+
+                                    if (response1.responseData && response1.responseData[0].Base64ImageString) {
+                                        $(imgPreview).attr('src', "data:image/jpg;base64," + response1.responseData[0].Base64ImageString);
+                                        $(imgPreview).show();
+                                    }
+                                    else {
+                                        $(imgPreview).attr('src', `${imgout.prefix}${imgout.data}`);
+                                        $(imgPreview).show();
+                                    }
+
+                                    GetProcessedDocumentType(transactionIDRequestObj).then(response2 => {
+
+
+                                        if (response2.responseData.documentTypeCode != "Passport" || response2.responseData.documentTypeCode == "") {
+                                            $('#primaryDoc2').attr('disabled', false);
+                                        }
+                                        else {
+                                            $('#primaryDoc2').attr('disabled', true);
+                                        }
+
+                                        documentInformation.documentType = response2.responseData.documentTypeCode;
+                                        documentInformation.issueCountry = response2.responseData.issueCountryCode;
+
+
+                                        GetProcessedDocumentFaceImage(transactionIDRequestObj).then(response3 => {
+                                            documentInformation.faceImage = response3.responseData;
+                                        });
+
+                                        ValidateDocumentIssueCountry(response2.responseData.documentTypeCode, response2.responseData.issueCountryCode).then(docIssueCountryResponse => {
+
+                                            if (docIssueCountryResponse.result) {
+                                                $('.loader-screen').fadeOut(100);
+                                                //$(documentReadStatus).html('document validated');
+                                                //$(documentReadStatus).hide();
+                                                //$(documentReadStatus).removeClass('alert-success');
+                                                //$(documentReadStatus).removeClass('alert-danger');
+                                                //$(documentReadStatus).addClass('alert-success');
+                                            }
+                                            else {
+                                                $('.loader-screen').fadeOut(100);
+                                                //$(documentReadStatus).html('document not validated');
+                                                //$(documentReadStatus).hide();
+                                                //$(documentReadStatus).removeClass('alert-success');
+                                                //$(documentReadStatus).removeClass('alert-danger');
+                                                //$(documentReadStatus).addClass('alert-danger');
+                                            }
+                                        });
+                                    });
+                                });
+                            }
+                            else {
+                                $('.loader-screen').fadeOut(100);
+                                $(documentReadStatus).html('document expired')
+                                $(documentReadStatus).hide();
+                                $(documentReadStatus).removeClass('alert-success');
+                                $(documentReadStatus).removeClass('alert-danger');
+                                $(documentReadStatus).addClass('alert-danger');
+                            }
+
+                        }
+                        else {
+                            $(imgPreview).attr('src', `${imgout.prefix}${imgout.data}`);
+                            $(imgPreview).show();
+                            $('.loader-screen').fadeOut(100);
+                            //$(documentReadStatus).html('document not validated');
+                            //$(documentReadStatus).hide();
+                            //$(documentReadStatus).removeClass('alert-success');
+                            //$(documentReadStatus).removeClass('alert-danger');
+                            //$(documentReadStatus).addClass('alert-danger');
+                        }
+
+                    });
+
+                });
+
+                $(fileControl).siblings(".custom-file-label").addClass("selected").html(fileName);
+            }
+        }
+
+        $(".custom-file-input1").on("change", function () {
+
+            var fileControl = $(this);
+            var fileName = $(this).val().split("\\").pop();
+            var img = $(this).parent('div').find('img');
+            var filextension = fileName.split(".");
+            var documentReadStatus = $(this).parent('div').find("div .alert");
+            $(documentReadStatus).hide();
+
+
+            if ($('.docUploadFile').index(fileControl) == 0) {
+                resetDocumentInfo();
+            }
+
+            var filext = "." + filextension.slice(-1)[0];
+            var valid = [".jpg", ".png", ".jpeg"];
+
+            if (valid.indexOf(filext.toLowerCase()) == -1) {
+
+                // file format not supported
+                $('#customMessageModalMessage').html('File type not supported');
+                $('#customMessageModal').modal('show');
+                $(this).val('');
+                $(this).siblings(".custom-file-label").removeClass("selected").html('Choose file');
+                $(this).parent('div').find('img').attr('src', '');
+                $(this).parent('div').find('img').hide();
+                return;
+            }
+            else {
+
+
+
+                // read the image file as a data URL.
+                // reader.readAsDataURL(this.files[0]);
+                $(this).siblings(".custom-file-label").addClass("selected").html(fileName);
+
+            }
+
+        });
+        //file upload
+        $(".custom-file-input").on("change", function () {
+            var fileName = $(this).val().split("\\").pop();
+            $(this).siblings(".custom-file-label").addClass("selected").html(fileName);
+        });
+
+
+        function assignDocumentInfo(response) {
+            if (!documentInformation.documentType)
+                documentInformation.documentType = response.responseData.idType;
+            if (!documentInformation.documentNumber)
+                documentInformation.documentNumber = response.responseData.documentNumber;
+            if (!documentInformation.issueDate)
+                documentInformation.issueDate = response.responseData.issueDate;
+            if (!documentInformation.expiryDate)
+                documentInformation.expiryDate = response.responseData.expiryDate;
+            if (!documentInformation.gender)
+                documentInformation.gender = response.responseData.gender;
+            if (!documentInformation.firstName)
+                documentInformation.firstName = response.responseData.firstName;
+            if (!documentInformation.middleName)
+                documentInformation.middleName = response.responseData.middleName;
+            if (!documentInformation.lastName)
+                documentInformation.lastName = response.responseData.lastName;
+            if (!documentInformation.nationality)
+                documentInformation.nationality = response.responseData.nationality;
+            if (!documentInformation.issueCountry)
+                documentInformation.issueCountry = response.responseData.issueCountry;
+            if (!documentInformation.dateOfBirth)
+                documentInformation.birthDate = response.responseData.dateOfBirth;
+            if (!documentInformation.faceImage)
+                documentInformation.faceImage = response.responseData.faceImage;
+        }
+
+        function resetDocumentInfo() {
+            documentInformation = {
+                documentType: "",
+                documentNumber: "",
+                issueDate: "",
+                expiryDate: "",
+                gender: "",
+                firstName: "",
+                middleName: "",
+                lastName: "",
+                nationality: "",
+                issueCountry: "",
+                birthDate: "",
+                faceImage: ""
+            };
+        }
+
+        function clearFileUpload() {
+            $('#primaryDoc1').val('');
+            $('#primaryDoc1').siblings(".custom-file-label").removeClass("selected").html('Choose file');
+            $('#primaryDoc1').parent('div').find('img').attr('src', '');
+            $('#primaryDoc1').parent('div').find('img').hide();
+            $('#primaryDoc1').parent('div').find('.alert').hide();
+
+            $('#primaryDoc2').val('');
+            $('#primaryDoc2').siblings(".custom-file-label").removeClass("selected").html('Choose file');
+            $('#primaryDoc2').parent('div').find('img').attr('src', '');
+            $('#primaryDoc2').parent('div').find('img').hide();
+            $('#primaryDoc2').parent('div').find('.alert').hide();
+
+            $('#primaryDoc3').val('');
+            $('#primaryDoc3').siblings(".custom-file-label").removeClass("selected").html('Choose file');
+            $('#primaryDoc3').parent('div').find('img').attr('src', '');
+            $('#primaryDoc3').parent('div').find('img').hide();
+            $('#primaryDoc3').parent('div').find('.alert').hide();
+
+
+            $('#primaryDoc2').attr('disabled', true);
+            $('#primaryDoc3').attr('disabled', true);
+        }
+
+    </script>
+}
