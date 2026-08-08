@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="..\packages\PdfiumViewer.Native.x86.v8-xfa.2018.4.8.256\build\PdfiumViewer.Native.x86.v8-xfa.props" Condition="Exists('..\packages\PdfiumViewer.Native.x86.v8-xfa.2018.4.8.256\build\PdfiumViewer.Native.x86.v8-xfa.props')" />
   <Import Project="..\packages\PdfiumViewer.Native.x86_64.v8-xfa.2018.4.8.256\build\PdfiumViewer.Native.x86_64.v8-xfa.props" Condition="Exists('..\packages\PdfiumViewer.Native.x86_64.v8-xfa.2018.4.8.256\build\PdfiumViewer.Native.x86_64.v8-xfa.props')" />
@@ -448,6 +448,11 @@
     <Content Include="assets\images\logo-hotel.png" />
     <Content Include="assets\images\logo-intro.png" />
     <Content Include="assets\images\logo.png" />
+    <Content Include="assets\images\brand-bg-primary.jpg" />
+    <Content Include="assets\images\brand-bg-water.jpg" />
+    <Content Include="assets\images\brand-bg-sunset.jpg" />
+    <Content Include="assets\images\intro-bg-kuramathi.jpg" />
+    <Content Include="assets\images\hotel-full-bg-kuramathi.jpg" />
     <Content Include="assets\images\mail-bg.png" />
     <Content Include="assets\images\mastercard_icon.png" />
     <Content Include="assets\images\nl.png" />
@@ -670,7 +675,7 @@
           <AutoAssignPort>True</AutoAssignPort>
           <DevelopmentServerPort>52383</DevelopmentServerPort>
           <DevelopmentServerVPath>/</DevelopmentServerVPath>
-          <IISUrl>http://localhost:8083</IISUrl>
+          <IISUrl>http://localhost:8081</IISUrl>
           <NTLMAuthentication>False</NTLMAuthentication>
           <UseCustomServer>False</UseCustomServer>
           <CustomServerUrl>

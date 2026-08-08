@@ -557,6 +557,49 @@ namespace CheckinPortal.Helpers
                 };
             }
         }
+
+        public async Task<Models.APIResponseModel> UpsertPolicyDetails(string reservationNameID, APIRequestModel localRequest, string groupName, string api_url)
+        {
+            try
+            {
+                new LogHelper().Debug("Upserting policy details using web api", reservationNameID, "UpsertPolicyDetails", groupName);
+                HttpClient httpClient = new HttpClient();
+                httpClient.DefaultRequestHeaders.Clear();
+                var accessToken = AuthenticationHelper.GetAPIAccessToken();
+                if (!string.IsNullOrEmpty(accessToken))
+                {
+                    httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+                }
+                string requestString = JsonConvert.SerializeObject(localRequest, Formatting.None);
+                new LogHelper().Debug("web api url :- " + api_url + @"/local/UpsertPolicyDetails", reservationNameID, "UpsertPolicyDetails", groupName);
+                new LogHelper().Debug("web api request :- " + requestString, reservationNameID, "UpsertPolicyDetails", groupName);
+                var requestContent = new StringContent(requestString, Encoding.UTF8, "application/json");
+                HttpResponseMessage response = await httpClient.PostAsync(api_url + @"/local/UpsertPolicyDetails", requestContent);
+                if (response != null && response.IsSuccessStatusCode)
+                {
+                    string apiResponse = await response.Content.ReadAsStringAsync();
+                    new LogHelper().Debug("web API response :- " + apiResponse, reservationNameID, "UpsertPolicyDetails", groupName);
+                    return JsonConvert.DeserializeObject<Models.APIResponseModel>(apiResponse)
+                        ?? new APIResponseModel() { result = false, responseMessage = "Empty response" };
+                }
+
+                return new APIResponseModel()
+                {
+                    result = false,
+                    responseMessage = response != null ? response.ReasonPhrase : "No response"
+                };
+            }
+            catch (Exception ex)
+            {
+                new LogHelper().Error(ex, reservationNameID, "UpsertPolicyDetails", groupName);
+                return new APIResponseModel()
+                {
+                    result = false,
+                    responseMessage = "Generic Exception : " + ex.Message
+                };
+            }
+        }
+
         public async Task<Models.APIResponseModel> InsertReservationDocuments(string reservationNameID, Models.APIRequestModel localRequest, string groupName, string api_url)
         {
             try

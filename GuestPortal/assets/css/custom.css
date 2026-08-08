@@ -1,51 +1,29 @@
 
-/*fonts - Niva Kuramathi / MCI brand*/
+/*fonts*/
 @font-face {
-  font-family: 'Inter';
-  src: url('../fonts/Inter-Light.ttf') format('truetype');
-  font-weight: 300;
+  font-family: 'Agenda-Light';
+  src: url('../fonts/Agenda-Light.eot');
+  src: url('../fonts/Agenda-Light.eot?#iefix') format('embedded-opentype'),
+      url('../fonts/Agenda-Light.woff2') format('woff2'),
+      url('../fonts/Agenda-Light.woff') format('woff'),
+      url('../fonts/Agenda-Light.ttf') format('truetype'),
+      url('../fonts/Agenda-Light.svg#GillSansMT') format('svg');
+  font-weight: normal;
   font-style: normal;
 }
+
 @font-face {
-  font-family: 'Inter';
-  src: url('../fonts/Inter-Regular.ttf') format('truetype');
-  font-weight: 400;
+  font-family: "Montserrat", sans-serif;font-weight: 600;
+  src: url('../fonts/Agenda-Medium.eot');
+  src: url('../fonts/Agenda-Medium.eot?#iefix') format('embedded-opentype'),
+      url('../fonts/Agenda-Medium.woff2') format('woff2'),
+      url('../fonts/Agenda-Medium.woff') format('woff'),
+      url('../fonts/Neutraface2Display-Bold.ttf') format('truetype'),
+      url('../fonts/Agenda-Medium.svg#Neutraface2Display-Bold') format('svg');
+  font-weight: bold;
   font-style: normal;
 }
-@font-face {
-  font-family: 'Inter';
-  src: url('../fonts/Inter-Medium.ttf') format('truetype');
-  font-weight: 500;
-  font-style: normal;
-}
-@font-face {
-  font-family: 'Inter';
-  src: url('../fonts/Inter-SemiBold.ttf') format('truetype');
-  font-weight: 600;
-  font-style: normal;
-}
-@font-face {
-  font-family: 'Inter';
-  src: url('../fonts/Inter-Bold.ttf') format('truetype');
-  font-weight: 700;
-  font-style: normal;
-}
-@font-face {
-  font-family: 'GT Super Display';
-  src: url('../fonts/GT-Super-Display-Regular.woff2') format('woff2'),
-       url('../fonts/GT-Super-Display-Regular.woff') format('woff'),
-       url('../fonts/GT-Super-Display-Regular.ttf') format('truetype');
-  font-weight: 400;
-  font-style: normal;
-}
-@font-face {
-  font-family: 'GT Super Display';
-  src: url('../fonts/GT-Super-Display-Bold.woff2') format('woff2'),
-       url('../fonts/GT-Super-Display-Bold.woff') format('woff'),
-       url('../fonts/GT-Super-Display-Bold.ttf') format('truetype');
-  font-weight: 700;
-  font-style: normal;
-}
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
 * {
   box-sizing: border-box;
 }
@@ -67,23 +45,22 @@ ul {
     transition: all .3s ease;
 }
 
-body{background: #f8f8f8; font-family: 'Inter', sans-serif; font-weight:400;overflow: auto;}
-h1{font-size: 18px;font-family: 'GT Super Display', serif;font-weight: 700;color: #000000;text-transform: uppercase;position: relative;padding-bottom: 10px;margin-bottom: 15px;display: none;}
+body{background: #f8f8f8; font-family: "Montserrat", sans-serif; font-weight:400;overflow: auto;}
+h1{font-size: 18px;font-family: "Montserrat", sans-serif;font-weight: 600;color: #000000;text-transform: uppercase;position: relative;padding-bottom: 10px;margin-bottom: 15px;display: none;}
 h1::after{content:''; width:20px;height: 3px;background:#acacac;position: absolute ;bottom: 0;left: 0;}
-h2{font-size: 16px;font-family: 'GT Super Display', serif;font-weight: 700;color: #000000;text-transform: uppercase;}
+h2{font-size: 16px;font-family: "Montserrat", sans-serif;font-weight: 600;color: #000000;text-transform: uppercase;}
 .header{background: #ffffff;text-align: center;padding:25px 25px;
     -webkit-box-shadow: 0px 5px 26px -18px rgba(0,0,0,0.24);
 -moz-box-shadow: 0px 5px 26px -18px rgba(0,0,0,0.24);
 box-shadow: 0px 5px 26px -18px rgba(0,0,0,0.24);
 position: fixed;width: 100%;z-index:5;height: 110px;
 }
-.header img{max-height: 100%; max-width: 280px; width: auto;}
-.logo-btn img{max-width: 280px; width: auto; height: auto;}
+.header img{max-height: 100%;}
 .layout{padding-top:205px;}
 .layout1{padding-top:140px;}
 
 .fxd-tab{position: fixed;width: 100%;top: 100px;padding-top: 40px;background: #f8f8f8;z-index:3;}
-.steps-wrap{font-family: 'Inter', sans-serif;font-weight: 600;font-size: 16px;background: #ffffff;}
+.steps-wrap{font-family: "Montserrat", sans-serif;font-weight: 600;font-size: 16px;background: #ffffff;}
 .steps-wrap .row{border-bottom:2px #e0e0e0 solid;}
 .steps-wrap a{display: block;padding: 20px 5px;}
 .steps-wrap a:hover{text-decoration: none;}
@@ -110,8 +87,8 @@ position: fixed;width: 100%;z-index:5;height: 110px;
 .detail-wrapper{background:#e2f5ef;border: dashed 1px #5c5b5b;color: #000000;text-align: center;padding: 10px;margin-bottom: 30px;border-radius:8px;}
 .detail-wrapper ul{padding: 0;margin: 0;}
 .detail-wrapper ul li{display: inline-block;padding:10px 30px;}
-.detail-wrapper ul li span{ font-family: 'Inter';font-size: 14px;}
-.detail-wrapper ul li label{ font-family: 'Inter', sans-serif;font-weight: 600;text-transform: uppercase;font-size: 14px;}
+.detail-wrapper ul li span{ font-family: 'Agenda-Light';font-size: 14px;}
+.detail-wrapper ul li label{ font-family: "Montserrat", sans-serif;font-weight: 600;text-transform: uppercase;font-size: 14px;}
 .detail-wrapper ul li span,.detail-wrapper ul li label{display: block;}
 .detail-wrapper ul li:last-child{border-right: 0;}
 
@@ -129,14 +106,14 @@ position: fixed;width: 100%;z-index:5;height: 110px;
 .dropdown-item.active, .dropdown-item:active{background: #737271;color: #ffffff;}
 
 .btn-grp{margin-top:25px;}
-.btn-grp button{font-size: 14px;text-transform: uppercase;font-family: 'Inter', sans-serif;font-weight: 600;border: 0 none;padding:10px 0;width:148px;}
+.btn-grp button{font-size: 14px;text-transform: uppercase;font-family: "Montserrat", sans-serif;font-weight: 600;border: 0 none;padding:10px 0;width:148px;}
 .btn-grp .btn_cancel{background: #acacac;color: #ffffff;border: 1px solid #acacac;border-radius: 24px;}
 .btn-grp .btn_next{background:#2D586C;color: #ffffff;border: 1px solid #2D586C;border-radius: 24px;margin-left: 5px;}
 .btn-grp .btn_cancel:hover{background: #969696;}
 .btn-grp .btn_next:hover{background:#1e3d4c;color:#ffffff;border: 1px solid #1e3d4c;}
 .btn-grp .btn_next span{display: inline-block;position: relative;background:url("../images/arrow_icon.png") ;height: 12px;width: 20px;}
 
-.btnstyle{font-size: 14px;text-transform: uppercase;font-family: 'Inter', sans-serif;font-weight: 600;border: 0 none;padding:10px 0;border-radius: 20px;}
+.btnstyle{font-size: 14px;text-transform: uppercase;font-family: "Montserrat", sans-serif;font-weight: 600;border: 0 none;padding:10px 0;border-radius: 20px;}
 .blue{background:#2D586C;color: #ffffff;border: 1px solid #2D586C;border-radius: 24px;padding:10px 25px;}
 .blue:hover{background:#1e3d4c;color:#ffffff;border: 1px solid #1e3d4c;}
 
@@ -154,9 +131,9 @@ position: fixed;width: 100%;z-index:5;height: 110px;
 .supreme{background:url("../images/sample-upgrade3.png");height: 175px; background-size: 100% 100%;}
 .supreme1{background:url("../images/sample-upgrade3.png");height: 175px; background-size: 100% 100%;}
 .upgrade img{position: relative;}
-.upg-wrap .btn-wrap{ align-self: flex-end;;background:#f7e3d8;position: relative;padding:8px 8px;font-family: 'Inter', sans-serif;font-weight: 600;width: 100%; bottom: 0;font-size: 16px;border-radius: 0 0 12px 12px;}
-.btn-wrap label{margin:5px 2px 0 3px; font-family: 'Inter';font-size: 16px;}
-.upg-wrap .btn-wrap a{font-family: 'Inter', sans-serif;font-weight: 600;display: inline-block;background: #2D586C;border-radius: 3px;padding: 5px 15px;text-transform: uppercase;color: #ffffff;border: 1px solid #2D586C;border-radius: 18px;font-size: 12px;}
+.upg-wrap .btn-wrap{ align-self: flex-end;;background:#f7e3d8;position: relative;padding:8px 8px;font-family: "Montserrat", sans-serif;font-weight: 600;width: 100%; bottom: 0;font-size: 16px;border-radius: 0 0 12px 12px;}
+.btn-wrap label{margin:5px 2px 0 3px; font-family: 'Agenda-Light';font-size: 16px;}
+.upg-wrap .btn-wrap a{font-family: "Montserrat", sans-serif;font-weight: 600;display: inline-block;background: #2D586C;border-radius: 3px;padding: 5px 15px;text-transform: uppercase;color: #ffffff;border: 1px solid #2D586C;border-radius: 18px;font-size: 12px;}
 .upg-wrap .btn-wrap a:hover{text-decoration: none;color: #ffffff;background:#1e3d4c;border: 1px solid #1e3d4c}
 .tick{background:url("../images/tick.png") center;height:50px;width:60px;display: block;position: absolute;right: -5px;top: 0px;z-index: 1; }
 .message{padding:10px 20px;text-align: center;background:#f7e3d8;border-radius: 5px;margin-top: 40px;color:#5c5b5b;border: dashed 1px #e8e8e8;border-radius: 12px;font-size: 14px;}
@@ -170,7 +147,7 @@ position: fixed;width: 100%;z-index:5;height: 110px;
 
 
 .plcy-wrapper{background: #CDE9E0;padding:25px;border-radius: 12px;}
-.plcy-wrapper label{font-size: 13px;color: #000000;font-family: 'Inter', sans-serif;font-weight: 600;text-transform: uppercase;}
+.plcy-wrapper label{font-size: 13px;color: #000000;font-family: "Montserrat", sans-serif;font-weight: 600;text-transform: uppercase;}
 .plcy-wrapper span{font-size: 13px;display: block;}
 .plcy-wrapper span span{display: inline;color: #000000;}
 .plcy-wrapper .total label{font-size: 13px;}
@@ -180,9 +157,9 @@ position: fixed;width: 100%;z-index:5;height: 110px;
 .plcy-wrapper hr{margin-right:100px;}
 
 .sign-here .form-check{margin-bottom:30px;}
-.sign-here .form-check label{font-family: 'Inter';font-size: 16px;text-transform: none;color: #000000;}
+.sign-here .form-check label{font-family: 'Agenda-Light';font-size: 16px;text-transform: none;color: #000000;}
 .sign-here .form-check label a{color:#000000;text-decoration: underline;}
-label.signlbl{font-family: 'Inter';font-size: 16px;text-transform: none;color: #000000;margin-top:10px}
+label.signlbl{font-family: 'Agenda-Light';font-size: 16px;text-transform: none;color: #000000;margin-top:10px}
 .sign{position: relative;}
 /*canvas*/
 .signature-pad--actions .buttons button{background:#2D586C;color: #ffffff;border: 0 none;padding: 5px 10px;border-radius: 20px;}
@@ -199,25 +176,25 @@ label.signlbl{font-family: 'Inter';font-size: 16px;text-transform: none;color: #
 .payment .radio-wrap .form-check-inline{margin-right: 25px;}
 
 .payment-details{background: #f5f5f5;padding: 20px;border-radius: 20px;} 
-.payment-details h3{font-size: 16px;font-family: 'Inter', sans-serif;font-weight: 600;margin-bottom: 25px;}
-.payment-details label{font-size: 13px;color: #606060;font-family: 'Inter', sans-serif;font-weight: 600;text-transform: uppercase;}
+.payment-details h3{font-size: 16px;font-family: "Montserrat", sans-serif;font-weight: 600;margin-bottom: 25px;}
+.payment-details label{font-size: 13px;color: #606060;font-family: "Montserrat", sans-serif;font-weight: 600;text-transform: uppercase;}
 .payment-details span{font-size: 13px;display: block;}
 .payment-details span span{color: #606060;font-size: 13px;padding-left: 5px;display: inline;}
 
 .cstm-payment{background: #fff9ec url("../images/bg-bill.png") repeat-x bottom;padding: 20px;} 
-.cstm-payment h4{font-size: 16px;font-family: 'Inter', sans-serif;font-weight: 600;margin-bottom: 25px;}
-.cstm-payment label{font-size: 13px;color: #606060;font-family: 'Inter', sans-serif;font-weight: 600;text-transform: uppercase;}
+.cstm-payment h4{font-size: 16px;font-family: "Montserrat", sans-serif;font-weight: 600;margin-bottom: 25px;}
+.cstm-payment label{font-size: 13px;color: #606060;font-family: "Montserrat", sans-serif;font-weight: 600;text-transform: uppercase;}
 .cstm-payment span{font-size: 13px;display: block;}
 .cstm-payment span span{color: #606060;font-size: 13px;padding-left: 5px;display: inline;}
 .cstm-payment hr{border-style: dashed;}
 .cstm-payment .total label,.cstm-payment .total span{color: #000;}
 
-.bill-view h3{font-size:18px;font-family: 'Inter', sans-serif;font-weight: 600;margin-bottom:15px;}
+.bill-view h3{font-size:18px;font-family: "Montserrat", sans-serif;font-weight: 600;margin-bottom:15px;}
 
 .content{min-height:350px;}
 .content p{font-size: 14px;}
 
-.btn_upload{font-size: 16px;text-transform: uppercase;font-family: 'Inter', sans-serif;font-weight: 600;border: 0 none;padding:10px 15px;background: #ae8d4a;border-radius: 3px;color: #ffffff;min-width:140px;}
+.btn_upload{font-size: 16px;text-transform: uppercase;font-family: "Montserrat", sans-serif;font-weight: 600;border: 0 none;padding:10px 15px;background: #ae8d4a;border-radius: 3px;color: #ffffff;min-width:140px;}
 .btn_upload img{display: inline-block;position: relative;top: -3px;margin-right: 8px;}
 .btn_upload:hover{background: #8b6a28;}
 .button-wrapper1{text-align: center;}
@@ -283,7 +260,7 @@ label.signlbl{font-family: 'Inter';font-size: 16px;text-transform: none;color: #
 .file-up-wrap .custom-file label{white-space: pre;overflow: hidden;}
 .file-up-wrap .lb{display: block;padding-left:28px;position: relative;}
 .file-up-wrap .lb span{display: inline-block;background:#e5e5e5;color:#717171;padding:1px 4px;margin-right:8px;line-height: normal;
-    font-family: 'Inter', sans-serif;font-weight: 600;height:20px;width: 20px;border-radius: 20px;text-align: center;
+    font-family: "Montserrat", sans-serif;font-weight: 600;height:20px;width: 20px;border-radius: 20px;text-align: center;
     line-height: 19px;position: absolute;left: 0;top:1px}
 .support{display: inline-block;padding: 3px 12px;border-radius: 3px;background-color: #e5e5e5;color: #9f9f9f;font-size: 13px;}
 .file-up-wrap  .suces-sp.lb span{background:#e5e5e5;color:#717171;}
@@ -297,13 +274,13 @@ label.signlbl{font-family: 'Inter';font-size: 16px;text-transform: none;color: #
 
 .user-list{text-align: center;}
 .user-list ul{margin:0;padding: 0;display: flex;flex-wrap: wrap;justify-content: center;align-items: stretch;}
-.user-list ul li{display: inline-flex;flex-direction: column;align-items: center;background: #f3f5f3;border-radius:20px;padding:30px 25px;font-family: 'Inter', sans-serif;font-weight: 600;margin: 20px;width:215px;min-height: 280px;vertical-align: top;box-sizing: border-box;
+.user-list ul li{display: inline-flex;flex-direction: column;align-items: center;background: #f3f5f3;border-radius:20px;padding:30px 25px;font-family: "Montserrat", sans-serif;font-weight: 600;margin: 20px;width:215px;min-height: 280px;vertical-align: top;box-sizing: border-box;
   border: 1px solid #e3e3e3;
   -webkit-box-shadow: -3px 12px 15px -10px rgba(0,0,0,0.43);
   -moz-box-shadow: -3px 12px 15px -10px rgba(0,0,0,0.43);
   box-shadow: -3px 12px 15px -10px rgba(0,0,0,0.43);
 }
-.user-list ul li label{display: block;text-transform: uppercase;font-size: 16px; font-family: 'Inter', sans-serif;font-weight: 500;min-height: 52px;line-height: 1.3;margin-bottom: 10px;}
+.user-list ul li label{display: block;text-transform: uppercase;font-size: 16px; font-family: "Montserrat", sans-serif;font-weight: 500;min-height: 52px;line-height: 1.3;margin-bottom: 10px;}
 .user-list ul li .pic{margin-bottom:15px;flex-shrink: 0;}
 .user-list ul li a{background:#2D586C;display: flex;align-items: center;justify-content: center;color: #fff;padding:12px 20px;font-size: 12px;border-radius:20px;width: 100%;min-height: 44px;margin-top: auto;box-sizing: border-box;}
 .user-list ul li a:hover{text-decoration: none;background:#19333f;}
@@ -329,7 +306,7 @@ width:150px;padding:58px 0;margin: 0 auto;content:''!important;word-break: break
 .qr .code{margin-bottom:30px;}
 
 .buttonwrapper{padding-bottom:5px;}
-.buttonwrapper a{font-family: 'Inter', sans-serif;font-weight: 600;text-transform: uppercase;color: #202020;display: inline-block; margin-top:20px;}
+.buttonwrapper a{font-family: "Montserrat", sans-serif;font-weight: 600;text-transform: uppercase;color: #202020;display: inline-block; margin-top:20px;}
 .buttonwrapper ul{margin: 0;padding: 0;}
 .buttonwrapper ul li{display:inline-block;}
 .buttonwrapper ul li a{display: inline-block;border: 2px solid #000000;width: 160px;height: 50px;border-radius:8px;margin: 0 5px;}
@@ -338,14 +315,14 @@ width:150px;padding:58px 0;margin: 0 auto;content:''!important;word-break: break
 .buttonwrapper a.apple:hover{background:#323232 url("../images/apple-button.png") no-repeat center center;}
 .buttonwrapper a.google:hover{background:#323232 url("../images/gpay-button.png") no-repeat center center;}
 
-.ok_btn{display:inline-block;font-size: 16px;text-transform: uppercase;font-family: 'Inter', sans-serif;font-weight: 600;border: 0 none;padding:12px 40px;background: #2D586C;border-radius: 3px;color: #ffffff;min-width:140px;border-radius: 24px;}
+.ok_btn{display:inline-block;font-size: 16px;text-transform: uppercase;font-family: "Montserrat", sans-serif;font-weight: 600;border: 0 none;padding:12px 40px;background: #2D586C;border-radius: 3px;color: #ffffff;min-width:140px;border-radius: 24px;}
 .ok_btn img{display: inline-block;position: relative;top: -3px;margin-right: 8px;}
 .ok_btn:hover{background:#1e3d4c;text-decoration: none;color: #ffffff;}
 
 
 /*modal*/
 .cstm-modal .modal-content{border-radius:20px;}
-.cstm-modal .modal-header{background: none;color:#000000;border-radius: 0;font-family: 'Inter', sans-serif;font-weight: 600;text-transform: uppercase;}
+.cstm-modal .modal-header{background: none;color:#000000;border-radius: 0;font-family: "Montserrat", sans-serif;font-weight: 600;text-transform: uppercase;}
 .cstm-modal .modal-header h5{font-size: 16px;}
 .cstm-modal .close{opacity:1;}
 .cstm-modal .close_icon{background:url("../images/close_icon.png");height:23px;width: 23px;display: block;}
@@ -389,7 +366,7 @@ body.modal-open {
     padding: 1px 4px;
     margin-right: 8px;
     line-height: normal;
-    font-family: 'Inter', sans-serif;font-weight: 600;
+    font-family: "Montserrat", sans-serif;font-weight: 600;
     height: 24px;
     width: 24px;
     border-radius: 24px;
@@ -404,7 +381,7 @@ body.modal-open {
 .button-center .btn_blue{background: #2D586C;font-size: 16px;
   border-radius: 22px;
     text-transform: uppercase;
-   font-family: 'Inter', sans-serif;font-weight: 600;
+   font-family: "Montserrat", sans-serif;font-weight: 600;
     border: 0 none;
     padding: 10px 0;
     width: 150px;color: #ffffff;}
@@ -438,10 +415,10 @@ body.modal-open {
 .menu .logo{margin:0 50px 40px 0;}
 .menu ul{margin: 0;padding: 0;}
 .menu ul li{margin: 0 0 10px 0;padding: 0;list-style-type: none;display: block;position: relative;z-index: 1;border: 1px solid transparent;border-radius: 35px;}
-.menu ul li a{font-family: 'Inter', sans-serif;font-weight: 600;display: block;color: #616365;padding:15px 20px;text-transform: uppercase;font-size: 14px;}
+.menu ul li a{font-family: "Montserrat", sans-serif;font-weight: 600;display: block;color: #616365;padding:15px 20px;text-transform: uppercase;font-size: 14px;}
 .menu ul li a label{margin-bottom: 0;display: inline-block;}
 .menu ul li a:hover{text-decoration: none;}
-.menu ul li a span{font-family: 'Inter', sans-serif;font-weight: 600;display: inline-block;background: #fff;color: #161819;border-radius: 28px;min-width: 33px;height: 33px;font-size:18px;
+.menu ul li a span{font-family: "Montserrat", sans-serif;font-weight: 600;display: inline-block;background: #fff;color: #161819;border-radius: 28px;min-width: 33px;height: 33px;font-size:18px;
   text-align: center;margin-left: 10px;font-weight: 500;line-height:32px;border: 1px solid #acacac;position: absolute;right:15px;top:10px;
   -webkit-box-shadow: -3px 12px 15px -10px rgba(0,0,0,0.43);
   -moz-box-shadow: -3px 12px 15px -10px rgba(0,0,0,0.43);
@@ -555,7 +532,7 @@ body.modal-open {
   justify-content: center;
   flex-direction: column;
 }
-.layout-inro .continue{text-align: center;display: block;padding:16px 20px;border-radius: 35px;background-color: #97824b;font-family: 'Inter', sans-serif;font-weight: 600;
+.layout-inro .continue{text-align: center;display: block;padding:16px 20px;border-radius: 35px;background-color: #97824b;font-family: "Montserrat", sans-serif;font-weight: 600;
   -webkit-box-shadow: 10px 10px 68px 39px rgba(0,0,0,0.75);
   -moz-box-shadow: 10px 10px 68px 39px rgba(0,0,0,0.75);
   box-shadow: 10px 10px 68px 39px rgba(0,0,0,0.75);
@@ -570,7 +547,7 @@ body.modal-open {
   align-items:flex-end;
   justify-content: center;
 }
-.layout-inro1 .continue{text-align: center;display: block;padding:16px 20px;border-radius: 35px;background-color:#2D586C; font-family: 'Inter', sans-serif;font-weight: 600;
+.layout-inro1 .continue{text-align: center;display: block;padding:16px 20px;border-radius: 35px;background-color:#2D586C; font-family: "Montserrat", sans-serif;font-weight: 600;
   -webkit-box-shadow: 2px 7px 78px -19px rgba(0,0,0,0.52);
   -moz-box-shadow: 2px 7px 78px -19px rgba(0,0,0,0.52);
   box-shadow: 2px 7px 78px -19px rgba(0,0,0,0.52);

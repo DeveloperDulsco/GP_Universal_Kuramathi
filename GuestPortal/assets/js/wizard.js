@@ -1,13 +1,241 @@
 ﻿
+// Precheckin wizard steps (must match visible tab panes / menu)
+var PRECHECKIN_STEPS = [
+    { pageName: 'GuestDetails', tabId: 'guestDetails', tabIndex: 0 },
+    { pageName: 'Policies', tabId: 'policies', tabIndex: 1 },
+    { pageName: 'Document', tabId: 'document', tabIndex: 2 },
+    { pageName: 'ThankYou', tabId: 'qrCode', tabIndex: 3 }
+];
+
+function getPrecheckinStepByTabId(tabId) {
+    for (var i = 0; i < PRECHECKIN_STEPS.length; i++) {
+        if (PRECHECKIN_STEPS[i].tabId === tabId) {
+            return PRECHECKIN_STEPS[i];
+        }
+    }
+    return null;
+}
+
+function getPrecheckinStepByIndex(tabIndex) {
+    var idx = parseInt(tabIndex, 10);
+    if (isNaN(idx)) {
+        return null;
+    }
+    for (var i = 0; i < PRECHECKIN_STEPS.length; i++) {
+        if (PRECHECKIN_STEPS[i].tabIndex === idx) {
+            return PRECHECKIN_STEPS[i];
+        }
+    }
+    return null;
+}
+
+function getPrecheckinStepByPageName(pageName) {
+    if (!pageName) {
+        return null;
+    }
+    var name = String(pageName).toLowerCase();
+    for (var i = 0; i < PRECHECKIN_STEPS.length; i++) {
+        if (PRECHECKIN_STEPS[i].pageName.toLowerCase() === name) {
+            return PRECHECKIN_STEPS[i];
+        }
+    }
+    return null;
+}
+
+/** Read CompletedTabIndex from new metadata shape (also tolerates old TabIndex). */
+function metaCompletedTabIndex(row) {
+    if (!row) {
+        return -1;
+    }
+    var raw = (row.CompletedTabIndex != null) ? row.CompletedTabIndex
+        : (row.completedTabIndex != null) ? row.completedTabIndex
+        : (row.TabIndex != null) ? row.TabIndex
+        : row.tabIndex;
+    var idx = parseInt(raw, 10);
+    return isNaN(idx) ? -1 : idx;
+}
+
+function normalizeMetaRows(responseData) {
+    var rows = responseData;
+    if (typeof rows === 'string') {
+        try { rows = JSON.parse(rows); } catch (e) { rows = []; }
+    }
+    if (!$.isArray(rows)) {
+        rows = [];
+    }
+    return rows;
+}
+
+function hasPrecheckinProgress(rows) {
+    if (!rows || !rows.length) {
+        return false;
+    }
+    for (var i = 0; i < rows.length; i++) {
+        if (metaCompletedTabIndex(rows[i]) >= 0) {
+            return true;
+        }
+    }
+    return false;
+}
+
+function showPrecheckinSplash() {
+    $('#mainDiv').hide();
+    $('#divSplash').fadeIn(800);
+}
+
+function showPrecheckinWizard() {
+    if (typeof beginRegistration === 'function') {
+        beginRegistration();
+    } else {
+        $('#divSplash').hide();
+        $('#mainDiv').fadeIn(800);
+    }
+}
+
+function savePrecheckinProgress(completedTabIndex, allergies) {
+    if (typeof ReservationNumber === 'undefined' || !ReservationNumber) {
+        return;
+    }
+    if (typeof BaseURL === 'undefined' || !BaseURL) {
+        return;
+    }
+
+    var payload = {
+        ReservationNumber: String(ReservationNumber),
+        CompletedTabIndex: String(completedTabIndex)
+    };
+    if (allergies != null && allergies !== undefined) {
+        payload.Allergies = String(allergies);
+    }
+
+    $.ajax({
+        url: BaseURL + '/api/portalservice/SaveReservationMetaData',
+        type: 'POST',
+        contentType: 'application/json',
+        dataType: 'json',
+        data: JSON.stringify(payload)
+    });
+}
+
+function activatePrecheckinStep(step) {
+    if (!step) {
+        return;
+    }
+
+    try {
+        var $target = $('#' + step.tabId);
+        if (!$target.length) {
+            // Document pane can be omitted when upload already complete
+            if (step.tabId === 'document') {
+                step = getPrecheckinStepByPageName('ThankYou') || step;
+                $target = $('#' + step.tabId);
+            }
+            if (!$target.length) {
+                return;
+            }
+        }
+
+        $('.tab-pane').removeClass('active');
+        $target.addClass('active');
+
+        if (step.tabId === 'policies' && typeof initCanvas === 'function') {
+            try { initCanvas(); } catch (e) { }
+        }
+
+        if (typeof setActiveTabs === 'function') {
+            setActiveTabs(Math.max(step.tabIndex - 1, -1));
+        }
+        $("html, body").animate({ scrollTop: 0 }, "slow");
+    } catch (e) {
+        // Never block entry UI if tab activation fails
+        console && console.error && console.error('activatePrecheckinStep', e);
+    }
+}
+
+/**
+ * New schema stores the highest completed tab index in CompletedTabIndex.
+ * Resume opens the next incomplete step (completed + 1), capped at Thank You.
+ */
+function resolveResumeStep(rows) {
+    if (!rows || !rows.length) {
+        return PRECHECKIN_STEPS[0];
+    }
+
+    var latest = rows[0];
+    var completedIdx = metaCompletedTabIndex(latest);
+    if (completedIdx < 0) {
+        return PRECHECKIN_STEPS[0];
+    }
+
+    if (completedIdx >= PRECHECKIN_STEPS.length - 1) {
+        return PRECHECKIN_STEPS[PRECHECKIN_STEPS.length - 1];
+    }
+
+    return getPrecheckinStepByIndex(completedIdx + 1) || PRECHECKIN_STEPS[0];
+}
+
+/**
+ * @param {boolean} handleEntry - when true, skip START splash if progress exists
+ */
+function resumePrecheckinProgress(handleEntry) {
+    if (typeof ReservationNumber === 'undefined' || !ReservationNumber) {
+        return;
+    }
+    if (typeof BaseURL === 'undefined' || !BaseURL) {
+        return;
+    }
+
+    $.ajax({
+        url: BaseURL + '/api/portalservice/FetchReservationMetaData',
+        type: 'POST',
+        contentType: 'application/json',
+        dataType: 'json',
+        timeout: 8000,
+        data: JSON.stringify({
+            ReservationNumber: String(ReservationNumber)
+        }),
+        success: function (response) {
+            var rows = [];
+            if (response && (response.result === true || response.Result === true)) {
+                var data = response.responseData != null ? response.responseData : response.ResponseData;
+                if (data) {
+                    rows = normalizeMetaRows(data);
+                }
+            }
+
+            if (!hasPrecheckinProgress(rows)) {
+                // Keep existing START splash (already shown by layout)
+                return;
+            }
+
+            var step = resolveResumeStep(rows);
+            if (handleEntry) {
+                showPrecheckinWizard();
+            }
+            activatePrecheckinStep(step);
+        },
+        error: function () {
+            // Keep START splash already shown by layout — never leave a blank page
+        }
+    });
+}
+
 function moveToNextTab(currentTab) {
 
-    var currentTabIndex = $('.tab-pane').index($(currentTab).parents('div.tab-pane'));
+    var $pane = $(currentTab).parents('div.tab-pane');
+    var currentStep = getPrecheckinStepByTabId($pane.attr('id'));
+    if (currentStep) {
+        // Persist highest completed tab index for this reservation
+        savePrecheckinProgress(currentStep.tabIndex);
+    }
 
-    var nextTab = $(currentTab).parents('div.tab-pane').next();
+    var currentTabIndex = $('.tab-pane').index($pane);
+
+    var nextTab = $pane.next();
 
     if (nextTab.length > 0) {
-        $(currentTab).parents('div.tab-pane').removeClass('active');
-        $(currentTab).parents('div.tab-pane').next().addClass('active');
+        $pane.removeClass('active');
+        $pane.next().addClass('active');
         $("html, body").animate({ scrollTop: 0 }, "slow");
         setActiveTabs(currentTabIndex);
         if (+currentTabIndex == 0) {
@@ -93,6 +321,8 @@ $(document).ready(function () {
             $(this).parents('div.tab-pane').prev().addClass('active');
             setActiveTabs(currentTabIndex - 2);
             $("html, body").animate({ scrollTop: 0 }, "slow");
+            // Do not update tbReservationMetaData on Back — prior steps stay completed;
+            // Back is only for reviewing entered details.
         }
     });
 });
@@ -256,7 +486,6 @@ $(function () {
 });
 
 function validateSetp() {
-
 
 
 

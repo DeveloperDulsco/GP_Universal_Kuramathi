@@ -34,5 +34,7 @@ namespace CheckinPortal.DataAccess
         public byte[] DocumentImage1 { get; set; }
         public string DocumentNumber { get; set; }
         public string NationalityCode { get; set; }
+        public string VisitPurposeCode { get; set; }
+        
     }
 }

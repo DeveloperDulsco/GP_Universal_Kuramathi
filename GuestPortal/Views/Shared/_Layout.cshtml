@@ -73,7 +73,7 @@
                     <span></span>
 
                 </div>
-                <a class="continue" style="width:auto" onclick="beginRegistration()" href="#">START</a>
+                <a class="continue" style="width:auto" onclick="beginRegistration(true)" href="#">START</a>
             </div>
         </div>
     </div>
@@ -203,9 +203,10 @@
 
         $('.loader-screen').fadeIn(100);
 
-        function beginRegistration() {
+        function beginRegistration(fromUserStart) {
             $('#divSplash').fadeOut(200);
             $('#mainDiv').fadeIn(800);
+            // Do not seed tbReservationMetaData here — CompletedTabIndex is written on Next only.
         }
 
         window.onload = (event) => {
@@ -225,10 +226,19 @@
                         }
 
                         $('#mainDiv').fadeIn(800);
+                        // Still restore wizard tab if progress exists (payment flow)
+                        if (typeof resumePrecheckinProgress === 'function') {
+                            resumePrecheckinProgress(false);
+                        }
                     }
                     else {
+                        // Always show START first so the page is never blank while resume loads.
+                        // If progress exists, resume will skip splash and open the last tab.
                         $('#mainDiv').hide();
                         $('#divSplash').fadeIn(800);
+                        if (typeof resumePrecheckinProgress === 'function') {
+                            resumePrecheckinProgress(true);
+                        }
                     }
                 }
                 else {

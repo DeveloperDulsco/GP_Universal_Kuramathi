@@ -320,6 +320,9 @@ namespace CheckinPortal.Controllers
                         ViewBag.Profiles = ProfileList;
                         ViewBag.CountryList = new SelectList(CountryList, "CountryMasterID", "Country_Full_name", ProfileList[0].CountryMasterID);
                         ViewBag.NationalityList = BuildNationalityList(CountryList, ProfileList[0].NationalityCode);
+                        ViewBag.VisitPurposeCode = !string.IsNullOrEmpty(ProfileList[0].VisitPurposeCode)
+                            ? ProfileList[0].VisitPurposeCode
+                            : reservations.VisitPurposeCode;
                         try
                         {
                             if (ProfileList[0].CountryMasterID != null)
@@ -490,6 +493,9 @@ namespace CheckinPortal.Controllers
                             IsDepositAvailable = reservations.IsDepositAvailable != null ? reservations.IsDepositAvailable.Value : false,
                             IsBreakFastAvailable = reservations.IsBreakFastAvailable != null ? reservations.IsBreakFastAvailable.Value : false,
                             IsUploadComplete = reservations.IsUploadComplete != null ? reservations.IsUploadComplete.Value : false,
+                            VisitPurposeCode = !string.IsNullOrEmpty(ProfileList[0].VisitPurposeCode)
+                                ? ProfileList[0].VisitPurposeCode
+                                : reservations.VisitPurposeCode,
                         };
 
                         if (reservationModel.IsUploadComplete)
@@ -677,6 +683,9 @@ namespace CheckinPortal.Controllers
                         ViewBag.Profiles = ProfileList;
                         ViewBag.CountryList = new SelectList(CountryList, "CountryMasterID", "Country_Full_name", ProfileList[0].CountryMasterID);
                         ViewBag.NationalityList = BuildNationalityList(CountryList, ProfileList[0].Nationality);
+                        ViewBag.VisitPurposeCode = !string.IsNullOrEmpty(ProfileList[0].VisitPurposeCode)
+                            ? ProfileList[0].VisitPurposeCode
+                            : reservations.VisitPurposeCode;
 
                         if (ProfileList[0].CountryMasterID != null)
                         {
@@ -784,6 +793,9 @@ namespace CheckinPortal.Controllers
                             TotalRoomRate = TotalRoomRate,
                             IsDepositAvailable = reservations.IsDepositAvailable != null ? reservations.IsDepositAvailable.Value : false,
                             IsBreakFastAvailable = reservations.IsBreakFastAvailable != null ? reservations.IsBreakFastAvailable.Value : false,
+                            VisitPurposeCode = !string.IsNullOrEmpty(ProfileList[0].VisitPurposeCode)
+                                ? ProfileList[0].VisitPurposeCode
+                                : reservations.VisitPurposeCode,
                         };
 
                         QRCodeGenerator qrGenerator = new QRCodeGenerator();
@@ -1123,46 +1135,39 @@ namespace CheckinPortal.Controllers
 
             session.GuestSignedSignature = !string.IsNullOrEmpty(policiesModel.Base64Signature) ? policiesModel.Base64Signature : "";
             #endregion
-            List<ReservationPolicyModel> reservationPolicyTable = new List<ReservationPolicyModel>();
-            var policymasterist = await new CloudHelper().fetchPolicyMaster(ConfigurationManager.AppSettings
-                    ["APIBaseUrl"].ToString(), ActionGroup);
-            if (policiesModel.CheckBox1.Value)
-            {
-                var policyModel = policymasterist == null ? null : policymasterist.Where(x => x.PolicyType == "CheckBox1").FirstOrDefault();
-                if (policyModel != null && !string.IsNullOrEmpty(policyModel.PolicyDescription) && policyModel.PolicyDescription.ToLower().Contains("marketing")
-                   )
+
+            // Promotional consent (optional) -> TbPolicyDetails via scalar UpsertPolicyDetails
+            bool promotionalConsent = policiesModel.CheckBox2.HasValue && policiesModel.CheckBox2.Value;
+            Helpers.LogHelper.Instance.Log(
+                $"Saving promotional consent CheckBox2={promotionalConsent} for ReservationID={policiesModel.ReservationID}",
+                $"{policiesModel.ReservationNumber}", ActionName, ActionGroup);
+
+            var policyResponse = await new CloudHelper().UpsertPolicyDetails(
+                policiesModel.ReservationNameID,
+                new Models.APIRequestModel()
                 {
-                    Models.ReservationPolicyModel reservationPolicy = new Models.ReservationPolicyModel()
+                    RequestObject = new
                     {
-                        IsRoomUpsell = false,
-                        PackageCode = null,
-                        PackageDescription = null,
-                        ReqStatus = true,
-                        RequestType = "Marketing Email",
-                        ReservationNameID = session.ReservationNameID.ToString(),
-                        UserID = 0
-                    };
-                    reservationPolicyTable.Add(reservationPolicy);
+                        ResID = policiesModel.ReservationID,
+                        PolicyValue = promotionalConsent,
+                        PolicyType = "CheckBox2"
+                    }
+                },
+                ActionGroup,
+                ConfigurationManager.AppSettings["APIBaseUrl"].ToString());
 
-                }
-            }
-
-            if (reservationPolicyTable != null && reservationPolicyTable.Count > 0)
+            if (policyResponse == null || !policyResponse.result)
             {
-                var localResponse = await new CloudHelper().PushReservationPolicies(session.ReservationNameID, new Models.APIRequestModel()
-                {
-                    RequestObject = reservationPolicyTable
-                }, "Pre-Checkin", ConfigurationManager.AppSettings["APIBaseUrl"].ToString());
-                if (!localResponse.result)
-                {
-                    new LogHelper().Log("Failed to push reservation policy with reason :- " + localResponse.responseMessage, policiesModel?.ReservationNameID, ActionName, ActionGroup);
-                    new LogHelper().Warn("Failed to update reservation policy with reason :- " + localResponse.responseMessage, policiesModel?.ReservationNameID, ActionName, ActionGroup);
-                }
-                else
-                    new LogHelper().Log("reservation policy updated successfully", policiesModel?.ReservationNameID, ActionName, ActionGroup);
+                new LogHelper().Warn(
+                    "Failed to save promotional consent to TbPolicyDetails :- " + (policyResponse != null ? policyResponse.responseMessage : "null"),
+                    policiesModel?.ReservationNameID, ActionName, ActionGroup);
+            }
+            else
+            {
+                new LogHelper().Log("Promotional consent saved to TbPolicyDetails", policiesModel?.ReservationNameID, ActionName, ActionGroup);
             }
 
-            return Json(new { result = count > 0 });
+            return Json(new { result = true, promotionalConsentSaved = policyResponse != null && policyResponse.result });
         }
 
         public async Task<ActionResult> savePackages(int ReservationID, string Packages)
@@ -3179,7 +3184,11 @@ namespace CheckinPortal.Controllers
             #region Get Regcard
             string ActionName = "CompletedocUploadAsync", ActionGroup = "Pre-Checkin";
             string RegcardBase64 = null;
-            bool PreCheckInWhatsappMsg = bool.TryParse(System.Configuration.ConfigurationManager.AppSettings["PreCheckInWhatsappMsg"], out bool result) ? result : false;
+            bool NotificationEnabled = bool.TryParse(System.Configuration.ConfigurationManager.AppSettings["NotificationEnabled"], out bool nresult) ? nresult : false;
+            string NotificationChannels = System.Configuration.ConfigurationManager.AppSettings["NotificationChannels"] ?? "";
+            string[] channels = NotificationChannels.Split(new char[] { ',' });
+
+            //bool PreCheckInWhatsappMsg = bool.TryParse(System.Configuration.ConfigurationManager.AppSettings["PreCheckInWhatsappMsg"], out bool result) ? result : false;
 
             SessionDt session = new SessionDt();
             session.ReservationNumber = ReservationNumber;
@@ -3360,117 +3369,120 @@ namespace CheckinPortal.Controllers
                 new LogHelper().Log("Failed to update reservation track in local DB with reason :- " + localResponses.responseMessage, session.ReservationNameID, ActionName, ActionGroup);
             }
 
-            if (!PreCheckInWhatsappMsg)
+            if (NotificationEnabled)
             {
-                #region Sending Email
-                new LogHelper().Log("Sending confirmation email", session.ReservationNameID, ActionName, ActionGroup);
-                if (operaReservation != null && operaReservation.GuestProfiles != null && operaReservation.GuestProfiles[0].Email != null && operaReservation.GuestProfiles[0].Email.Count > 0)
+                if (channels.Contains("Email"))
                 {
-                    foreach (Models.OWS.Email email in operaReservation.GuestProfiles[0].Email)
+                    #region Sending Email
+                    new LogHelper().Log("Sending confirmation email", session.ReservationNameID, ActionName, ActionGroup);
+                    if (operaReservation != null && operaReservation.GuestProfiles != null && operaReservation.GuestProfiles[0].Email != null && operaReservation.GuestProfiles[0].Email.Count > 0)
                     {
-                        if (email.primary != null && email.primary.Value)
+                        foreach (Models.OWS.Email email in operaReservation.GuestProfiles[0].Email)
                         {
-                            // if (!string.IsNullOrEmpty(session.OperaReservation.GuestProfiles[0].Email[0].email))
+                            if (email.primary != null && email.primary.Value)
                             {
-                                TextInfo textInfo = new CultureInfo("en-US", false).TextInfo;
-                                Models.Emails.EmailResponse emailResponse = await new CloudHelper().SendEmail(operaReservation.ReservationNameID, new Models.Emails.EmailRequest()
+                                // if (!string.IsNullOrEmpty(session.OperaReservation.GuestProfiles[0].Email[0].email))
                                 {
-                                    FromEmail = ConfigurationManager.AppSettings["PreArrivalConfirmationEmail"].ToString(),
-                                    ToEmail = email.email,
-
-                                    GuestName = "" + (!string.IsNullOrEmpty(operaReservation.GuestProfiles[0].FirstName) ? textInfo.ToTitleCase(operaReservation.GuestProfiles[0].FirstName) + " " : "")
-                                                    + (!string.IsNullOrEmpty(operaReservation.GuestProfiles[0].MiddleName) ? textInfo.ToTitleCase(operaReservation.GuestProfiles[0].MiddleName) + " " : "")
-                                                    + (!string.IsNullOrEmpty(operaReservation.GuestProfiles[0].LastName) ? textInfo.ToTitleCase(operaReservation.GuestProfiles[0].LastName) : ""),
-
-                                    Subject = ConfigurationManager.AppSettings["PreArrivalConfirmationEmailSubject"].ToString(),
-                                    confirmationNumber = session.ReservationNumber,
-                                    displayFromEmail = ConfigurationManager.AppSettings["EmailDisplayName"].ToString(),
-                                    EmailType = Models.Emails.EmailType.CheckinConfirmation,
-                                    ArrivalDate = operaReservation.ArrivalDate.Value.ToString("dd-MMM-yyyy"),
-                                    DepartureDate = operaReservation.DepartureDate.Value.ToString("dd-MMM-yyy")
-
-                                }, "Pre-Checkin", ConfigurationManager.AppSettings["APIBaseUrl"].ToString());
-
-                                if (!emailResponse.result)
-                                {
-                                    new LogHelper().Log("Failed to send confirmation email with reason :- " + emailResponse.responseMessage, session.ReservationNameID, ActionName, ActionGroup);
-                                    new LogHelper().Warn("Failed to send confirmation email with reason :- " + emailResponse.responseMessage, session.ReservationNameID, ActionName, ActionGroup);
-                                }
-                                else
-                                    new LogHelper().Log("Email send successfully", session.ReservationNameID, ActionName, ActionGroup);
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    new LogHelper().Log("Failed to send confirmation email since email address not found from pre checked in list response", session.ReservationNameID, ActionName, ActionGroup);
-                    new LogHelper().Warn("Failed to send confirmation email since email address not found from pre checked in list response", session.ReservationNameID, ActionName, ActionGroup);
-                }
-                #endregion
-            }
-            else
-            {
-                #region Sending Whatsapp Message
-
-                try
-                {
-
-                    new LogHelper().Log("Sending confirmation whatsapp SMS", session.ReservationNameID, ActionName, ActionGroup);
-                    if (operaReservation != null && operaReservation.GuestProfiles != null && operaReservation.GuestProfiles[0].Phones != null && operaReservation.GuestProfiles[0].Phones.Count > 0)
-                    {
-                        foreach (Models.OWS.Phone phone in operaReservation.GuestProfiles[0].Phones)
-                        {
-                            if (phone.primary != null && phone.primary.Value && !string.IsNullOrEmpty(phone.PhoneNumber))
-                            {
-                                TextInfo textInfo = new CultureInfo("en-US", false).TextInfo;
-                                
-                                string fullName = string.Join(" ",
-                                                            new[]
-                                                            {
-                                                                operaReservation.GuestProfiles[0].FirstName,
-                                                                operaReservation.GuestProfiles[0].MiddleName,
-                                                                operaReservation.GuestProfiles[0].LastName
-                                                            }.Where(x => !string.IsNullOrWhiteSpace(x))
-                                                        );
-                                Models.Whatsapp.WhatsAppResponse whatsappResponse = await new CloudHelper().SendWhatsappMsg(operaReservation.ReservationNameID, new Models.Whatsapp.WhatsAppTemplateRequest()
-                                {
-                                    ReceiverPhone= phone.PhoneNumber,
-                                    TemplateName = EmailType.CheckinConfirmation,
-                                    LanguageCode="en",
-                                    BodyParameters = new List<string>
+                                    TextInfo textInfo = new CultureInfo("en-US", false).TextInfo;
+                                    Models.Emails.EmailResponse emailResponse = await new CloudHelper().SendEmail(operaReservation.ReservationNameID, new Models.Emails.EmailRequest()
                                     {
-                                        operaReservation.GuestProfiles[0].Title??"Mr/Ms",
-                                        fullName,
-                                        operaReservation.ReservationNumber
-                                    }                                   
+                                        FromEmail = ConfigurationManager.AppSettings["PreArrivalConfirmationEmail"].ToString(),
+                                        ToEmail = email.email,
 
-                                }, "Pre-Checkin", ConfigurationManager.AppSettings["APIBaseUrl"].ToString());
+                                        GuestName = "" + (!string.IsNullOrEmpty(operaReservation.GuestProfiles[0].FirstName) ? textInfo.ToTitleCase(operaReservation.GuestProfiles[0].FirstName) + " " : "")
+                                                        + (!string.IsNullOrEmpty(operaReservation.GuestProfiles[0].MiddleName) ? textInfo.ToTitleCase(operaReservation.GuestProfiles[0].MiddleName) + " " : "")
+                                                        + (!string.IsNullOrEmpty(operaReservation.GuestProfiles[0].LastName) ? textInfo.ToTitleCase(operaReservation.GuestProfiles[0].LastName) : ""),
 
-                                if (!whatsappResponse.result)
-                                {
-                                    new LogHelper().Log("Failed to send confirmation whatsapp with reason :- " + whatsappResponse.responseMessage, session.ReservationNameID, ActionName, ActionGroup);
-                                    new LogHelper().Warn("Failed to send confirmation whatsapp with reason :- " + whatsappResponse.responseMessage, session.ReservationNameID, ActionName, ActionGroup);
+                                        Subject = ConfigurationManager.AppSettings["PreArrivalConfirmationEmailSubject"].ToString(),
+                                        confirmationNumber = session.ReservationNumber,
+                                        displayFromEmail = ConfigurationManager.AppSettings["EmailDisplayName"].ToString(),
+                                        EmailType = Models.Emails.EmailType.CheckinConfirmation,
+                                        ArrivalDate = operaReservation.ArrivalDate.Value.ToString("dd-MMM-yyyy"),
+                                        DepartureDate = operaReservation.DepartureDate.Value.ToString("dd-MMM-yyy")
+
+                                    }, "Pre-Checkin", ConfigurationManager.AppSettings["APIBaseUrl"].ToString());
+
+                                    if (!emailResponse.result)
+                                    {
+                                        new LogHelper().Log("Failed to send confirmation email with reason :- " + emailResponse.responseMessage, session.ReservationNameID, ActionName, ActionGroup);
+                                        new LogHelper().Warn("Failed to send confirmation email with reason :- " + emailResponse.responseMessage, session.ReservationNameID, ActionName, ActionGroup);
+                                    }
+                                    else
+                                        new LogHelper().Log("Email send successfully", session.ReservationNameID, ActionName, ActionGroup);
                                 }
-                                else
-                                    new LogHelper().Log("Whatsapp message send successfully", session.ReservationNameID, ActionName, ActionGroup);
                             }
-                        
                         }
                     }
                     else
                     {
-                        new LogHelper().Log("Failed to send pre-checkin since phone number not found from pre checked in list response", operaReservation.ReservationNameID, ActionName, "Due-In push");
-                        new LogHelper().Warn("Failed to send pre-checkin since phone number not found from pre checked in list response", operaReservation.ReservationNameID, ActionName, "Due-In push");
+                        new LogHelper().Log("Failed to send confirmation email since email address not found from pre checked in list response", session.ReservationNameID, ActionName, ActionGroup);
+                        new LogHelper().Warn("Failed to send confirmation email since email address not found from pre checked in list response", session.ReservationNameID, ActionName, ActionGroup);
                     }
-
-
+                    #endregion
                 }
-                catch (Exception ex)
+                if (channels.Contains("WhatsApp"))
                 {
-                    new LogHelper().Error(ex, operaReservation.ReservationNameID,ActionName, "Due-In push");
+                    #region Sending Whatsapp Message
+
+                    try
+                    {
+
+                        new LogHelper().Log("Sending confirmation whatsapp SMS", session.ReservationNameID, ActionName, ActionGroup);
+                        if (operaReservation != null && operaReservation.GuestProfiles != null && operaReservation.GuestProfiles[0].Phones != null && operaReservation.GuestProfiles[0].Phones.Count > 0)
+                        {
+                            foreach (Models.OWS.Phone phone in operaReservation.GuestProfiles[0].Phones)
+                            {
+                                if (phone.primary != null && phone.primary.Value && !string.IsNullOrEmpty(phone.PhoneNumber))
+                                {
+                                    TextInfo textInfo = new CultureInfo("en-US", false).TextInfo;
+
+                                    string fullName = string.Join(" ",
+                                                                new[]
+                                                                {
+                                                                operaReservation.GuestProfiles[0].FirstName,
+                                                                operaReservation.GuestProfiles[0].MiddleName,
+                                                                operaReservation.GuestProfiles[0].LastName
+                                                                }.Where(x => !string.IsNullOrWhiteSpace(x))
+                                                            );
+                                    Models.Whatsapp.WhatsAppResponse whatsappResponse = await new CloudHelper().SendWhatsappMsg(operaReservation.ReservationNameID, new Models.Whatsapp.WhatsAppTemplateRequest()
+                                    {
+                                        ReceiverPhone = phone.PhoneNumber,
+                                        TemplateName = EmailType.CheckinConfirmation,
+                                        LanguageCode = "en",
+                                        BodyParameters = new List<string>
+                                    {
+                                        operaReservation.GuestProfiles[0].Title??"Mr/Ms",
+                                        fullName,
+                                        operaReservation.ReservationNumber
+                                    }
+
+                                    }, "Pre-Checkin", ConfigurationManager.AppSettings["APIBaseUrl"].ToString());
+
+                                    if (!whatsappResponse.result)
+                                    {
+                                        new LogHelper().Log("Failed to send confirmation whatsapp with reason :- " + whatsappResponse.responseMessage, session.ReservationNameID, ActionName, ActionGroup);
+                                        new LogHelper().Warn("Failed to send confirmation whatsapp with reason :- " + whatsappResponse.responseMessage, session.ReservationNameID, ActionName, ActionGroup);
+                                    }
+                                    else
+                                        new LogHelper().Log("Whatsapp message send successfully", session.ReservationNameID, ActionName, ActionGroup);
+                                }
+
+                            }
+                        }
+                        else
+                        {
+                            new LogHelper().Log("Failed to send pre-checkin since phone number not found from pre checked in list response", operaReservation.ReservationNameID, ActionName, "Due-In push");
+                            new LogHelper().Warn("Failed to send pre-checkin since phone number not found from pre checked in list response", operaReservation.ReservationNameID, ActionName, "Due-In push");
+                        }
+
+
+                    }
+                    catch (Exception ex)
+                    {
+                        new LogHelper().Error(ex, operaReservation.ReservationNameID, ActionName, "Due-In push");
+                    }
+                    #endregion
                 }
-                #endregion
             }
             return Json(new { result = true }, JsonRequestBehavior.AllowGet);
         }
@@ -3846,6 +3858,10 @@ namespace CheckinPortal.Controllers
                         ViewBag.CountryList = new SelectList(CountryList, "CountryMasterID", "Country_Full_name", ProfileList[0].CountryMasterID);
                         ViewBag.NationalityList = BuildNationalityList(CountryList, ProfileList[0].Nationality);
 
+                        ViewBag.VisitPurposeCode = !string.IsNullOrEmpty(ProfileList[0].VisitPurposeCode)
+                            ? ProfileList[0].VisitPurposeCode
+                            : reservations.VisitPurposeCode;
+
                         if (ProfileList[0].CountryMasterID != null)
                         {
                             var StateList = await mastersLogics.GetStateListByCountryID(ProfileList[0].CountryMasterID.Value);
@@ -3990,6 +4006,9 @@ namespace CheckinPortal.Controllers
                             IsDepositAvailable = reservations.IsDepositAvailable != null ? reservations.IsDepositAvailable.Value : false,
                             IsBreakFastAvailable = reservations.IsBreakFastAvailable != null ? reservations.IsBreakFastAvailable.Value : false,
                             IsUploadComplete = reservations.IsUploadComplete != null ? reservations.IsUploadComplete.Value : false,
+                            VisitPurposeCode = !string.IsNullOrEmpty(ProfileList[0].VisitPurposeCode)
+                                ? ProfileList[0].VisitPurposeCode
+                                : reservations.VisitPurposeCode,
                         };
 
                         if (reservationModel.IsUploadComplete)

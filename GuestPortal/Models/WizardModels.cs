@@ -32,6 +32,20 @@ namespace CheckinPortal.Models
 
     }
 
+    /// <summary>
+    /// Guest portal wizard progress (maps to Local API tbReservationMetaData).
+    /// </summary>
+    public class ReservationMetaDataModel
+    {
+        public long Id { get; set; }
+        public string ReservationNumber { get; set; }
+        /// <summary>completed index</summary>
+        public string CompletedTabIndex { get; set; }
+        public string Allergies { get; set; }
+        public DateTime CreatedDate { get; set; }
+        public DateTime? UpdatedDate { get; set; }
+    }
+
     public class ReservationPackageModel
     {
         //PM.PackageID,RD.ReservationNameID,PM.PackageCode,PM.PackageName,PM.PackageDesc,PM.PackageAmount

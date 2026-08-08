@@ -536,5 +536,129 @@ namespace CheckinPortal.Controllers
             }
         }
 
+        /// <summary>
+        /// Upsert precheckin wizard progress via Local API (tbReservationMetaData).
+        /// </summary>
+        [HttpPost]
+        [ActionName("SaveReservationMetaData")]
+        [Route("api/portalservice/SaveReservationMetaData")]
+        public async Task<APIResponseModel> SaveReservationMetaData([FromBody] ReservationMetaDataModel metaData)
+        {
+            try
+            {
+                if (metaData == null || string.IsNullOrWhiteSpace(metaData.ReservationNumber))
+                {
+                    return new APIResponseModel()
+                    {
+                        result = false,
+                        responseMessage = "ReservationNumber is required",
+                        statusCode = -1
+                    };
+                }
+
+                
+                string BaseURL = ConfigurationManager.AppSettings["APIBaseUrl"].ToString();
+                using (var httpClient = new HttpClient())
+                {
+                    httpClient.BaseAddress = new Uri(BaseURL);
+                    httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                    var accessToken = AuthenticationHelper.GetAPIAccessToken();
+                    if (!string.IsNullOrEmpty(accessToken))
+                    {
+                        httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+                    }
+
+                    var request = new APIRequestModel { RequestObject = metaData };
+                    HttpContent requestContent = new StringContent(Newtonsoft.Json.JsonConvert.SerializeObject(request), Encoding.UTF8, "application/json");
+                    HttpResponseMessage response = await httpClient.PostAsync("Local/SaveReservationMetaData", requestContent);
+                    if (response != null && response.IsSuccessStatusCode)
+                    {
+                        string responsestr = await response.Content.ReadAsStringAsync();
+                        return Newtonsoft.Json.JsonConvert.DeserializeObject<APIResponseModel>(responsestr)
+                            ?? new APIResponseModel() { result = true, responseMessage = "Success", statusCode = 101 };
+                    }
+
+                    return new APIResponseModel()
+                    {
+                        result = false,
+                        responseMessage = response != null ? response.ReasonPhrase : "No response",
+                        statusCode = -1
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                Helpers.LogHelper.Instance.Debug("SaveReservationMetaData: " + ex.Message, "", "SaveReservationMetaData", "GuestPortal");
+                return new APIResponseModel()
+                {
+                    result = false,
+                    responseMessage = ex.Message,
+                    statusCode = -1
+                };
+            }
+        }
+
+        /// <summary>
+        /// Fetch precheckin wizard progress via Local API.
+        /// </summary>
+        [HttpPost]
+        [ActionName("FetchReservationMetaData")]
+        [Route("api/portalservice/FetchReservationMetaData")]
+        public async Task<APIResponseModel> FetchReservationMetaData([FromBody] ReservationMetaDataModel filter)
+        {
+            try
+            {
+                if (filter == null || string.IsNullOrWhiteSpace(filter.ReservationNumber))
+                {
+                    return new APIResponseModel()
+                    {
+                        result = false,
+                        responseMessage = "ReservationNumber is required",
+                        statusCode = -1
+                    };
+                }
+
+                
+                string BaseURL = ConfigurationManager.AppSettings["APIBaseUrl"].ToString();
+                using (var httpClient = new HttpClient())
+                {
+                    httpClient.BaseAddress = new Uri(BaseURL);
+                    httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                    var accessToken = AuthenticationHelper.GetAPIAccessToken();
+                    if (!string.IsNullOrEmpty(accessToken))
+                    {
+                        httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+                    }
+
+                    var request = new APIRequestModel { RequestObject = filter };
+                    HttpContent requestContent = new StringContent(Newtonsoft.Json.JsonConvert.SerializeObject(request), Encoding.UTF8, "application/json");
+                    HttpResponseMessage response = await httpClient.PostAsync("Local/FetchReservationMetaData", requestContent);
+                    if (response != null && response.IsSuccessStatusCode)
+                    {
+                        string responsestr = await response.Content.ReadAsStringAsync();
+                        return Newtonsoft.Json.JsonConvert.DeserializeObject<APIResponseModel>(responsestr)
+                            ?? new APIResponseModel() { result = false, responseMessage = "Empty response", statusCode = -1 };
+                    }
+
+                    return new APIResponseModel()
+                    {
+                        result = false,
+                        responseMessage = response != null ? response.ReasonPhrase : "No response",
+                        statusCode = -1
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                Helpers.LogHelper.Instance.Debug("FetchReservationMetaData: " + ex.Message, "", "FetchReservationMetaData", "GuestPortal");
+                return new APIResponseModel()
+                {
+                    result = false,
+                    responseMessage = ex.Message,
+                    statusCode = -1
+                };
+            }
+        }
+
     }
 }
