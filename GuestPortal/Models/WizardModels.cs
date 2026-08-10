@@ -42,6 +42,8 @@ namespace CheckinPortal.Models
         /// <summary>completed index</summary>
         public string CompletedTabIndex { get; set; }
         public string Allergies { get; set; }
+        /// <summary>JSON: Aqua Sports participants (name + signature base64, up to 4).</summary>
+        public string ExcursionParticipants { get; set; }
         public DateTime CreatedDate { get; set; }
         public DateTime? UpdatedDate { get; set; }
     }

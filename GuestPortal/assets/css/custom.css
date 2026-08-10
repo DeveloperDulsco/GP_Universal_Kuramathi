@@ -150,6 +150,7 @@ position: fixed;width: 100%;z-index:5;height: 110px;
 .plcy-wrapper label{font-size: 13px;color: #000000;font-family: "Montserrat", sans-serif;font-weight: 600;text-transform: uppercase;}
 .plcy-wrapper span{font-size: 13px;display: block;}
 .plcy-wrapper span span{display: inline;color: #000000;}
+.plcy-wrapper span.required{display: inline;color: #c00;}
 .plcy-wrapper .total label{font-size: 13px;}
 .plcy-wrapper .total p{font-size: 14px;}
 .plcy-wrapper .total span{font-size: 13px;color: #000000;}

@@ -1850,6 +1850,47 @@ namespace CheckinPortal.Helpers
             }
         }
 
+        public async Task<Models.OWS.OwsResponseModel> InsertGuestComment(string reservationNameID, Models.OWS.OwsRequestModel owsRequest, string groupName, string api_url)
+        {
+            try
+            {
+                new LogHelper().Debug("Inserting guest comment using web api", reservationNameID, "InsertGuestComment", groupName);
+                HttpClient httpClient = new HttpClient();
+                httpClient.DefaultRequestHeaders.Clear();
+                var accessToken = AuthenticationHelper.GetAPIAccessToken();
+                if (!string.IsNullOrEmpty(accessToken))
+                {
+                    httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+                }
+                string requestString = JsonConvert.SerializeObject(owsRequest, Formatting.None);
+                new LogHelper().Debug("web api url :- " + api_url + @"/ows/InsertGuestComment", reservationNameID, "InsertGuestComment", groupName);
+                new LogHelper().Debug("web api request :- " + requestString, reservationNameID, "InsertGuestComment", groupName);
+                var requestContent = new StringContent(requestString, Encoding.UTF8, "application/json");
+                HttpResponseMessage response = await httpClient.PostAsync(api_url + @"/ows/InsertGuestComment", requestContent);
+                if (response != null && response.IsSuccessStatusCode)
+                {
+                    string apiResponse = await response.Content.ReadAsStringAsync();
+                    new LogHelper().Debug("web API response :- " + apiResponse, reservationNameID, "InsertGuestComment", groupName);
+                    return JsonConvert.DeserializeObject<Models.OWS.OwsResponseModel>(apiResponse);
+                }
+                new LogHelper().Debug("Failed to insert guest comment : " + (response != null ? response.ReasonPhrase : "null"), reservationNameID, "InsertGuestComment", groupName);
+                return new Models.OWS.OwsResponseModel()
+                {
+                    result = false,
+                    responseMessage = response != null ? response.ReasonPhrase : "No response"
+                };
+            }
+            catch (Exception ex)
+            {
+                new LogHelper().Error(ex, reservationNameID, "InsertGuestComment", groupName);
+                return new Models.OWS.OwsResponseModel()
+                {
+                    result = false,
+                    responseMessage = "Generic Exception : " + ex.Message
+                };
+            }
+        }
+
         public async Task<Models.OWS.OwsResponseModel> UpdateGuestPassport(string reservationNameID, Models.OWS.OwsRequestModel owsRequest, string groupName, string api_url)
         {
             try

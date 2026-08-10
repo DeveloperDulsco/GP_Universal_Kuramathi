@@ -65,6 +65,7 @@
 
     .required {
         color: red;
+        display: inline !important;
     }
 </style>
 
@@ -445,94 +446,119 @@ new { @class = "text-danger" }
                                             </div>
                                         </div>
                                         @*<div class="form-group row">
-                                                <label class="col-7 col-lg-4 col-xl-4">Avg. Room Rate </label>
-                                                <div class="col-5 col-lg-8 col-xl-8">
-                                                    <span>SGD @Model.AverageRoomRate.ToString("0.00")</span>
-                                                </div>
-                                            </div>*@
+            <label class="col-7 col-lg-4 col-xl-4">Avg. Room Rate </label>
+            <div class="col-5 col-lg-8 col-xl-8">
+                <span>SGD @Model.AverageRoomRate.ToString("0.00")</span>
+            </div>
+        </div>*@
                                         @*<div class="form-group row">
-                                                <label class="col-7 col-lg-4 col-xl-4">Breakfast</label>
-                                                <div class="col-5 col-lg-8 col-xl-8">
-                                                    <span>@(Model.IsBreakFastAvailable ? "Included" : "Not Included")</span>
-                                                </div>
-                                            </div>*@
-                                        <hr>
-                                        @*<div class="form-group row total">
-                                                <label class="col-7 col-lg-4 col-xl-4">TOTAL CHARGES</label>
-                                                <div class="col-5 col-lg-8 col-xl-8">
-
-                                                    @{
-                                                        var totalcharge = "--";
-
-                                                        if (Model.TotalRoomRate > 0)
-                                                        {
-                                                            totalcharge = "SGD " + Model.TotalRoomRate.ToString("0.00");
-                                                        }
-                                                    }
-
-
-                                                    <span id="spanTotalCharges">@totalcharge <span> (Inclusive of 10% service charge and prevailing government taxes)</span></span>
-                                                </div>
-
-                                            </div>*@
+            <label class="col-7 col-lg-4 col-xl-4">Breakfast</label>
+            <div class="col-5 col-lg-8 col-xl-8">
+                <span>@(Model.IsBreakFastAvailable ? "Included" : "Not Included")</span>
+            </div>
+        </div>*@
+                                        @*<hr>
                                         <div class="form-group row total">
-                                            <label class="col-7 col-lg-4 col-xl-4">ADDITIONAL GUEST POLICY</label>
-                                            <div class="col-5 col-lg-8 col-xl-8">
-                                                <p>
-                                                    Additional guests (adults or children) not included in the original reservation are subject to applicable extra charges per room.
-                                                </p>
-                                            </div>
-                                        </div>
+                <label class="col-7 col-lg-4 col-xl-4">TOTAL CHARGES</label>
+                <div class="col-5 col-lg-8 col-xl-8">
+
+                    @{
+                        var totalcharge = "--";
+
+                        if (Model.TotalRoomRate > 0)
+                        {
+                            totalcharge = "SGD " + Model.TotalRoomRate.ToString("0.00");
+                        }
+                    }
+
+
+                    <span id="spanTotalCharges">@totalcharge <span> (Inclusive of 10% service charge and prevailing government taxes)</span></span>
+                </div>
+
+            </div>
+
+        <div class="form-group row total">
+            <label class="col-7 col-lg-4 col-xl-4">ADDITIONAL GUEST POLICY</label>
+            <div class="col-5 col-lg-8 col-xl-8">
+                <p>
+                    Additional guests (adults or children) not included in the original reservation are subject to applicable extra charges per room.
+                </p>
+            </div>
+        </div>*@
                                         @*<div class="form-group row total" style=" margin-top: 0px; line-height: 15px;">
-                                                <div class="col-12 col-lg-12 col-xl-12">
-                                                    <span><span style="margin-left: -5px;">Note: Suite upgrade charges will only be applied upon confirmation of availability.</span></span>
-                                                </div>
-                                            </div>*@
+            <div class="col-12 col-lg-12 col-xl-12">
+                <span><span style="margin-left: -5px;">Note: Suite upgrade charges will only be applied upon confirmation of availability.</span></span>
+            </div>
+        </div>*@
 
 
 
                                         @*<div class="form-check">
-                                                <input class="form-check-input" type="checkbox" id="receviceUpdate" name="checkbox1">
-                                                <label class="form-check-label" for="receviceUpdate" style="text-transform: none;font-weight: 500;">
-                                                    I would like to receive information and updates from Raffles Hotel Singapore.
-                                                </label>
-                                            </div>*@
-
-
-                                    </div>
-                                    <div class="col-xl-5 sign-here">
-                                        <!--<div class="form-check">
-                                            <input class="form-check-input" type="checkbox" id="IsTermsAndConditionAccepted" name="IsTermsAndConditionAccepted" value="True">
-                                            <label class="form-check-label" for="acceptTermsAndCondition" style="text-transform: none;">
-                                                I Agree to the-->
-                                        @*<a href="#" data-toggle="modal" data-target="#termsAndConditionModal">Terms and Conditions</a>*@
-                                        <!--<a href="https://www.balimandira.com/terms-conditions/" target="_blank">
-                                                    Terms and Conditions
-                                                </a>
-                                            </label>
-                                        </div>-->
-                                        <div class="form-check">
-
-                                            <input class="form-check-input" type="checkbox" id="IsAdditionalTermsAndConditionAccepted" name="IsAdditionalTermsAndConditionAccepted" value="True">
-
-                                            <label class="form-check-label">
-                                                I confirm that the information provided is accurate, and that I agree to the Property Policies and responsibility for any damages or outstanding charges during my stay.
-                                            </label>
-                                        </div>
+            <input class="form-check-input" type="checkbox" id="receviceUpdate" name="checkbox1">
+            <label class="form-check-label" for="receviceUpdate" style="text-transform: none;font-weight: 500;">
+                I would like to receive information and updates from Raffles Hotel Singapore.
+            </label>
+        </div>*@
                                         <div class="form-check">
                                             <input class="form-check-input" type="checkbox" id="promotionalConsent" name="CheckBox2" value="True">
                                             <label class="form-check-label" for="promotionalConsent" style="text-transform: none; font-weight: 500;">
                                                 I would like to receive Universal Kuramathi promotions and offers via email and WhatsApp. Enabling this means you may receive marketing messages about packages, events, and special offers. You can unsubscribe at any time.
                                             </label>
                                         </div>
+
+                                    </div>
+                                    <div class="col-xl-5 sign-here">
+                                        <!--<div class="form-check">
+        <input class="form-check-input" type="checkbox" id="IsTermsAndConditionAccepted" name="IsTermsAndConditionAccepted" value="True">
+        <label class="form-check-label" for="acceptTermsAndCondition" style="text-transform: none;">
+            I Agree to the-->
+                                        @*<a href="#" data-toggle="modal" data-target="#termsAndConditionModal">Terms and Conditions</a>*@
+                                        <!--<a href="https://www.balimandira.com/terms-conditions/" target="_blank">
+                Terms and Conditions
+            </a>
+        </label>
+    </div>-->
+
+                                       
+
+                                        <div class="form-group" style="margin-top: 18px;">
+                                            <label style="font-weight: 600; display:block; margin-bottom: 8px;">Allergen declaration <span class="required">*</span></label>
+                                            <div class="form-check form-check-inline">
+                                                <input class="form-check-input" type="radio" name="HasAllergies" id="allergenYes" value="true">
+                                                <label class="form-check-label" for="allergenYes" style="text-transform:none;font-weight:500;">Yes</label>
+                                            </div>
+                                            <div class="form-check form-check-inline">
+                                                <input class="form-check-input" type="radio" name="HasAllergies" id="allergenNo" value="false">
+                                                <label class="form-check-label" for="allergenNo" style="text-transform:none;font-weight:500;">No</label>
+                                            </div>
+                                            <input type="hidden" id="Allergies" name="Allergies" value="" />
+                                            <input type="hidden" id="OtherAllergies" name="OtherAllergies" value="" />
+                                            <div id="allergenSummary" style="display:none; margin-top:8px; font-size:13px; color:#444;"></div>
+                                        </div>
+
+                                        <div class="form-check" style="margin-top: 14px;">
+                                            <input class="form-check-input" type="checkbox" id="excursionDisclaimer" name="ExcursionAccepted" value="True">
+                                            <label class="form-check-label" for="excursionDisclaimer" style="text-transform: none; font-weight: 500;">
+                                                I have read and agree to the <a href="javascript:void(0);" id="openExcursionDisclaimer">Aqua Sports / Excursion Disclaimer</a> <span class="required">*</span>
+                                            </label>
+                                        </div>
+
                                         @*<div class="form-check">
-                                                <input class="form-check-input" type="checkbox" id="govtNote" name="checkbox2">
-                                                <label class="form-check-label" for="chkFine" style="text-transform: none;font-weight: 500;">
-                                                    I hereby acknowledge that smoking is not allowed in my suite or any area of the hotel that has not been designated as a smoking zone. If anyone in my party, or anyone I invite , smokes in my suite. I authorise the management to charge my credit card the amount of SGD $2000 before prevailing taxes as reimbursement for additional cleaning cost.
-                                                </label>
+            <input class="form-check-input" type="checkbox" id="govtNote" name="checkbox2">
+            <label class="form-check-label" for="chkFine" style="text-transform: none;font-weight: 500;">
+                I hereby acknowledge that smoking is not allowed in my suite or any area of the hotel that has not been designated as a smoking zone. If anyone in my party, or anyone I invite , smokes in my suite. I authorise the management to charge my credit card the amount of SGD $2000 before prevailing taxes as reimbursement for additional cleaning cost.
+            </label>
 
-                                            </div>*@
+        </div>*@
+                                        <div class="form-check">
 
+                                            <input class="form-check-input" type="checkbox" id="IsAdditionalTermsAndConditionAccepted" name="IsAdditionalTermsAndConditionAccepted" value="True">
+
+                                            <label class="form-check-label">
+                                                I confirm that the information provided is accurate, and that I agree to the <a href="#" data-toggle="modal" data-target="#termsAndConditionModal">terms and conditions</a>
+                                                
+                                            </label>
+                                        </div>
                                         <div class="sign" style="max-width:350px;width:auto">
                                             <div id="signature-pad" class="signature-pad">
                                                 <div class="signature-pad--body">
@@ -647,10 +673,10 @@ new { @class = "text-danger" }
                                 <h1>Document</h1>
                                 <div class="content">
                                     <p>Dear @Model.Profiles[0].Salutation @Model.Profiles[0].FirstName @Model.Profiles[0].MiddleName @Model.Profiles[0].LastName,</p>
-                                    <p>In this final step for identity verification, please upload a valid KTP (Indonesian national ID) or passport as required.</p>
-                                    <p id="documentUploadIntro">Please upload passport for all guests in the reservation.</p>
+                                    <p>In this final step for identity verification, please upload one valid document per guest (passport or national ID).</p>
+                                    <p id="documentUploadIntro">Only one valid document is required per guest. Document upload is mandatory for every guest in the reservation.</p>
                                     <div id="documentUploadSkipHelp" class="alert alert-warning" style="display:none;" role="alert">
-                                        If you experience any issues uploading your ID, please skip this step. Kindly present your ID at the front office.
+                                        If you experience any issues uploading your ID, you can skip. Kindly present your ID at the front office so staff can upload it manually.
                                     </div>
 
                                     <div class="row">
@@ -695,21 +721,16 @@ new { @class = "text-danger" }
                                                             PMSProfileID = Model.Profiles[i].ProfileID;
                                                         }
 
-                                                        bool isIndonesiaBooking = false;
-                                                        if (Model.Profiles != null && Model.Profiles.Count > 0 && !string.IsNullOrWhiteSpace(Model.Profiles[0].Nationality))
-                                                        {
-                                                            var bookingNationality = Model.Profiles[0].Nationality.Trim();
-                                                            isIndonesiaBooking = bookingNationality.Equals("ID", StringComparison.OrdinalIgnoreCase)
-                                                                || bookingNationality.Equals("IDN", StringComparison.OrdinalIgnoreCase);
-                                                        }
-
-                                                        bool isRequiredUpload = isIndonesiaBooking ? (i == 0) : true;
+                                                        bool isRequiredUpload = true;
 
                                                         <li class="">
                                                             <label id="guestname_@(i + 1)" data-default-name="@GuestName">@GuestName<br /><small class="text-muted">(@guestRoleLabel)</small></label>
                                                             <div class="pic"><img src="~/assets/images/avatar.png"></div>
-                                                            <a href="#" id="guestid_@(i + 1)" class="fileUpload" data-guestpmsprofileid="@PMSProfileID" data-guestprofileid="@GuestID" data-upload="incomplete" data-guestid="@(i + 1)" data-required="@(isRequiredUpload.ToString().ToLower())" data-guest-role="@guestRoleLabel">
-                                                                <i class="fas fa-cloud-upload-alt"></i> UPLOAD@(isRequiredUpload ? "" : " (Optional)")
+                                                            <a href="#" id="guestid_@(i + 1)" class="fileUpload" data-guestpmsprofileid="@PMSProfileID" data-guestprofileid="@GuestID" data-upload="incomplete" data-guestid="@(i + 1)" data-required="true" data-guest-role="@guestRoleLabel">
+                                                                <i class="fas fa-cloud-upload-alt"></i> UPLOAD
+                                                            </a>
+                                                            <a href="#" id="guestskip_@(i + 1)" class="guestDocumentSkip" data-guestid="@(i + 1)" style="display:none; margin-left:8px; color:#a67c00;">
+                                                                <i class="fas fa-forward"></i> Skip
                                                             </a>
                                                             @*<a href="#" id="scan_guestid_@(i + 1)" class="scanDocument" data-guestpmsprofileid="@PMSProfileID"  data-guestprofileid="@GuestID" data-scan="incomplete" data-guestid="@(i + 1)"><i class="fas fa-camera"></i> SCAN DOCUMENT</a>*@
                                                         </li>
@@ -726,7 +747,7 @@ new { @class = "text-danger" }
                                         <div class="btn-grp d-flex justify-content-between">
                                             @*<button class="btn_cancel" value='Back' style="display:@((ViewBag.PaymentProcessed && ViewBag.IsPaymentSuccess)  ? "none" : "block") ">Back</button>*@
                                             <button class="btn_next checkUpload">Next <img src="~/assets/images/arrow_icon.png"></button>
-                                            <button style="display:none" id="btnDocumentSkipAndProceed" class="btn_next skipAndProceedDocument">Skip &amp; Proceed<img src="~/assets/images/arrow_icon.png"></button>
+                                            <button style="display:none" id="btnDocumentSkipAndProceed" class="btn_next skipAndProceedDocument">Skip &amp; Save<img src="~/assets/images/arrow_icon.png"></button>
                                         </div>
                                     </div>
                                 </div>
@@ -945,6 +966,88 @@ new { @class = "text-danger" }
     </div>
 </div>
 
+<!-- Allergen disclaimer form (from RegCard.rdlc) -->
+<div class="modal fade cstm-modal" id="allergenFormModal" tabindex="-1" role="dialog" aria-labelledby="allergenFormModalLabel" data-backdrop="static" data-keyboard="false" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg privacy-model" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="allergenFormModalLabel">ALLERGEN DISCLAIMER FORM</h5>
+                <button type="button" class="close" id="allergenFormCloseBtn" aria-label="Close" title="Close without saving">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" style="max-height:70vh; overflow:auto;">
+                <p style="font-size:13px; line-height:1.45;">
+                    Universal Kuramathi makes every attempt to identify ingredients that may cause allergic reactions.
+                    The Resort cannot guarantee a total absence of allergens in dishes due to shared facilities and supplier handling.
+                </p>
+                <p style="font-weight:600; font-size:13px;">I am subject to one or more of the following allergens:</p>
+                <div class="row" id="allergenCheckboxList" style="font-size:13px;">
+                    @{
+                        var standardAllergens = new[] {
+                            "Peanuts", "Eggs", "Molluscs", "Sesame Seeds", "Celery / Celeriac", "Fish", "Mustard",
+                            "Soya", "Gluten", "Lupin", "Tree Nuts", "Sulphur Dioxide", "Crustaceans",
+                            "Products containing Lactose protein"
+                        };
+                    }
+                    @foreach (var allergen in standardAllergens)
+                    {
+                        var id = "alg_" + allergen.Replace(" ", "_").Replace("/", "_").Replace(".", "");
+                        <div class="col-md-6">
+                            <div class="form-check">
+                                <input class="form-check-input allergen-item" type="checkbox" id="@id" value="@allergen">
+                                <label class="form-check-label" for="@id" style="text-transform:none;font-weight:500;">@allergen</label>
+                            </div>
+                        </div>
+                    }
+                </div>
+                <div class="form-group" style="margin-top:12px;">
+                    <label for="allergenOtherNotes" style="font-weight:600;">Other / Notes</label>
+                    <textarea id="allergenOtherNotes" class="form-control" rows="3" maxlength="500" placeholder="Any other allergies or notes"></textarea>
+                </div>
+                <div class="mt-3 text-right">
+                    <button type="button" class="btnstyle blue" id="allergenFormSaveBtn">Save allergen details</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Aqua Sports / Excursion disclaimer (property PDF: Aqua Sports Disclaimer ENG) -->
+<div class="modal fade cstm-modal" id="excursionDisclaimerModal" tabindex="-1" role="dialog" aria-labelledby="excursionDisclaimerModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg privacy-model" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="excursionDisclaimerModalLabel">Legal Disclaimer for Participation in Water Sports Activities</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" style="font-size:13px; line-height:1.45; max-height:70vh; overflow-y:auto;">
+                <p style="font-weight:600;">Aqua Sports &amp; Fun — Niva Kuramathi Maldives</p>
+                <ol style="padding-left:18px; margin-bottom:12px;">
+                    <li>I take part in the water sports activities, excursions and fishing trips of “Aqua Sports &amp; Fun” without any obligation from Aqua Sports &amp; Fun or the resort Niva Kuramathi Maldives.</li>
+                    <li>I am fully aware there are risks involved in water sports activities, excursions and fishing trips and I fully accept personal responsibility for this risk.</li>
+                    <li>I declare that I am responsible for any damage to third parties and in addition accept full responsibility for damage and/or loss of any Aqua Sports &amp; Fun equipment.</li>
+                    <li>I declare that I am medically fit to participate in all activities of “Aqua Sports &amp; Fun”.</li>
+                    <li>I am able to swim and float independently without any flotation aid for at least 15 minutes.</li>
+                    <li>I agree to fully comply with rules and regulations of “Aqua Sports &amp; Fun” and the instructions of the “Aqua Sports &amp; Fun” instructors and their assistants. In case of non-compliance, I accept that I, the participant(s), shall be disqualified from the activity and “Aqua Sports &amp; Fun” will pay no compensation for claims for any activity.</li>
+                    <li>I understand that swimmers, snorkelers, and divers have priority; hence, I will avoid the areas for swimmers, snorkelling and diving for the safety reasons, unless participating in those activities.</li>
+                    <li>I have been informed of the “Aqua Sports &amp; Fun” cancellation fee policy and agree to pay the cancellation fee that may often amount to 50% of the cost of the activity, if I cancel before 18:00 hrs of the prior evening. If I cancel an activity once started, I understand that I will not be entitled to any refund.</li>
+                    <li>“Aqua Sports &amp; Fun” water sports centre cannot be held responsible for delays, cancellations or any damage(s) due to an act of God, force majeure or bad weather.</li>
+                    <li>People under the age of 18 years must obtain the signature of their parents or guardian and have their consent wherever and whenever required.</li>
+                    <li>For participants in parasailing, kitesurfing, jet surfing, and jet ski activities, I fully understand and accept that these are hazardous activities. I am voluntarily participating with full knowledge of the risks involved, and I hereby agree to accept and assume any and all risks of injury associated with these activities.</li>
+                    <li>For participants in excursions of Niva Kuramathi Maldives — I fully understand and accept “Aqua Sports &amp; Fun” Water Sports Centre terms and conditions of my participation in the excursion. I am fully aware that there may be pieces of metal and sharp objects in the islands or the lagoons, or plant and animal life in the islands, that may cause a risk of injury to persons and property, and agree to abide by the wishes and safety direction of “Aqua Sports &amp; Fun” crew, employees and/or instructors. I further agree to accept and assume any and all risks associated with the excursion, and agree to release from any legal liability “Aqua Sports &amp; Fun”, its owners, officers, directors, agents and employees, for any and all injuries, property loss, property damage, or loss of life caused by or resulting from any participation in the excursion and any of the activities associated with it.</li>
+                </ol>
+                <p style="margin-top:10px;">By selecting OK and ticking the disclaimer checkbox, I confirm I have read and agree to this form. My name, stay details and signature from pre-check-in will appear on the completed disclaimer attached to my registration card.</p>
+                <div class="mt-4 text-center">
+                    <button class="btnstyle blue" id="excursionDisclaimerOkBtn" data-dismiss="modal">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="modal fade cstm-modal" id="termsAndConditionModal" tabindex="-1" role="dialog" aria-labelledby="termsAndConditionModalLabel" aria-hidden="true">
     <div class="modal-dialog  modal-dialog-centered privacy-model" role="document">
         <div class="modal-content">
@@ -1127,7 +1230,7 @@ new { @class = "text-danger" }
             </div>
 
             <div id="documentUploadSkipHelpModal" class="alert alert-warning mx-3" style="display:none;" role="alert">
-                If you experience any issues uploading your ID, please skip this step. Kindly present your ID at the front office.
+                If you experience any issues uploading your ID, you can skip. Kindly present your ID at the front office so staff can upload it manually.
             </div>
             <div class="button-wrapper1">
                 <button class="btn_cancel " data-dismiss="modal" aria-label="Close" onclick="resetDocumentInfo(); clearFileUpload();">Cancel</button>
@@ -1735,9 +1838,7 @@ new { @class = "text-danger" }
         }
 
         function isUploadRequiredForGuest(guestId) {
-            if (isIndonesiaNationality()) {
-                return guestId === 1;
-            }
+            // One valid document is required for every guest.
             return true;
         }
 
@@ -1748,20 +1849,15 @@ new { @class = "text-danger" }
 
         function updateDocumentUploadRequirements() {
             $('.fileUpload').each(function () {
-                var guestId = parseInt($(this).data('guestid'), 10) || 0;
-                var isRequired = isUploadRequiredForGuest(guestId);
-                $(this).data('required', isRequired);
-                var uploadLabel = '<i class="fas fa-cloud-upload-alt"></i> UPLOAD';
-                $(this).html(isRequired ? uploadLabel : uploadLabel + ' (Optional)');
+                $(this).data('required', true);
+                if ($(this).data('upload') !== 'completed' && $(this).data('upload') !== 'skipped') {
+                    $(this).html('<i class="fas fa-cloud-upload-alt"></i> UPLOAD');
+                }
             });
 
             var $intro = $('#documentUploadIntro');
             if ($intro.length) {
-                if (isIndonesiaNationality()) {
-                    $intro.text('Document upload is required for the main guest only. Uploads for accompanying adults, children, and infants are optional.');
-                } else {
-                    $intro.text('Please upload document for all guests in the reservation.');
-                }
+                $intro.text('Only one valid document is required per guest (passport or national ID). Upload is mandatory for every guest.');
             }
 
             updateDocumentUploadGuidance();
@@ -1773,24 +1869,15 @@ new { @class = "text-danger" }
                 return;
             }
 
-            if (isIndonesiaNationality()) {
-                $guidance.html(
-                    '<li>Indonesian guests: upload KTP (national ID) or passport for the main guest.</li>' +
-                    '<li>Document upload for accompanying guests, children, and infants is optional.</li>'
-                );
-            } else {
-                $guidance.html(
-                    '<li>Please upload document for every guest in the reservation.</li>' +
-                    '<li>All guest documents must be uploaded before you can proceed.</li>'
-                );
-            }
+            $guidance.html(
+                '<li>Only one valid document is required per guest (passport or national ID).</li>' +
+                '<li>Document upload is mandatory for every guest before you can proceed.</li>' +
+                '<li>If an upload fails, use Skip in that upload box, or Skip &amp; Save on this page.</li>'
+            );
         }
 
         function getDocumentUploadValidationMessage() {
-            if (isIndonesiaNationality()) {
-                return 'Please upload KTP or passport for the main guest.';
-            }
-            return 'Please upload document for all guests.';
+            return 'Please upload one valid document for each guest, or use Skip / Skip & Save after a failed upload.';
         }
 
         var documentUploadFailCount = 0;
@@ -1815,16 +1902,37 @@ new { @class = "text-danger" }
         }
 
         function updateDocumentUploadSkipVisibility() {
-            if (isDocumentUploadComplete()) {
+            if (isDocumentUploadComplete() && !hasAnySkippedDocument()) {
                 clearDocumentUploadSkipOption();
             }
         }
 
-        function recordDocumentUploadFailure() {
+        function recordDocumentUploadFailure(guestID) {
             documentUploadFailCount++;
-            if (documentUploadFailCount >= 2) {
-                showDocumentUploadSkipOption();
+            // Show Skip after first failed upload attempt
+            showDocumentUploadSkipOption();
+            if (guestID) {
+                $('#guestskip_' + guestID).show();
             }
+        }
+
+        function hasAnySkippedDocument() {
+            var skipped = false;
+            $('.fileUpload').each(function () {
+                if ($(this).data('upload') === 'skipped') {
+                    skipped = true;
+                }
+            });
+            return skipped;
+        }
+
+        function markGuestDocumentSkipped(guestID) {
+            var $guest = $('#guestid_' + guestID);
+            $guest.data('upload', 'skipped');
+            $guest.html('<i class="fas fa-forward"></i> SKIPPED');
+            $guest.parent('li').removeClass('sucess').addClass('skipped');
+            $('#guestskip_' + guestID).hide();
+            showDocumentUploadSkipOption();
         }
 
         var pendingDocumentUploads = {};
@@ -1861,18 +1969,18 @@ new { @class = "text-danger" }
 
         function markGuestUploadFailed(guestID) {
             var $guest = $('#guestid_' + guestID);
-            var isRequired = isUploadMarkedRequired($guest);
-            var uploadLabel = '<i class="fas fa-cloud-upload-alt"></i> UPLOAD';
             $guest.data('upload', 'incomplete');
-            $guest.html(isRequired ? uploadLabel : uploadLabel + ' (Optional)');
+            $guest.html('<i class="fas fa-cloud-upload-alt"></i> UPLOAD');
             $guest.parent('li').removeClass('sucess');
+            $('#guestskip_' + guestID).show();
         }
 
         function markGuestUploadCompleted(guestID) {
             var $guest = $('#guestid_' + guestID);
-            $guest.parent('li').addClass('sucess');
+            $guest.parent('li').addClass('sucess').removeClass('skipped');
             $guest.data('upload', 'completed');
             $guest.html('<i class="fas fa-check-circle"></i> COMPLETE');
+            $('#guestskip_' + guestID).hide();
         }
 
         function proceedDocumentUpload($trigger) {
@@ -1905,6 +2013,7 @@ new { @class = "text-danger" }
                     return;
                 }
                 var uploadStatus = $(this).data('upload');
+                // completed or skipped (after failed attempt) satisfies the slot
                 if (uploadStatus === 'incomplete' || uploadStatus === 'uploading') {
                     isComplete = false;
                 }
@@ -2001,10 +2110,36 @@ new { @class = "text-danger" }
                     function SavePolicies(btn) {
 
                         const data = new FormData();
-                        //var terms = $('#IsTermsAndConditionAccepted').is(':checked')
                         var terms = $('#IsAdditionalTermsAndConditionAccepted').is(':checked')
+                        var hasAllergiesVal = $('input[name="HasAllergies"]:checked').val();
+                        var excursionOk = $('#excursionDisclaimer').is(':checked');
 
-                        //if (Addterms && terms) {
+                        if (!terms) {
+                            $('#customMessageModalMessage').html("Please accept terms and conditions.");
+                            $('#customMessageModal').modal('show');
+                            return false;
+                        }
+                        if (hasAllergiesVal === undefined) {
+                            $('#customMessageModalMessage').html("Please select Yes or No for the allergen declaration.");
+                            $('#customMessageModal').modal('show');
+                            return false;
+                        }
+                        if (hasAllergiesVal === 'true') {
+                            var allergens = ($('#Allergies').val() || '').trim();
+                            var otherNotes = ($('#OtherAllergies').val() || '').trim();
+                            if (!allergens && !otherNotes) {
+                                $('#customMessageModalMessage').html("Please complete the allergen form (select allergens and/or enter Other/Notes), then Save.");
+                                $('#customMessageModal').modal('show');
+                                $('#allergenFormModal').modal('show');
+                                return false;
+                            }
+                        }
+                        if (!excursionOk) {
+                            $('#customMessageModalMessage').html("Please accept the Aqua Sports / Excursion Disclaimer.");
+                            $('#customMessageModal').modal('show');
+                            return false;
+                        }
+
                         if (terms) {
                             data.append('ReservationNumber', '@Model.ReservationNumber')
                             data.append('ReservationNameID','@Model.ReservationNameID')
@@ -2012,7 +2147,12 @@ new { @class = "text-danger" }
                             data.append('ReservationID', $('#ReservationID').val());
                             data.append('CheckBox1', terms ? 'true' : 'false');
                             data.append('CheckBox2', $('#promotionalConsent').is(':checked') ? 'true' : 'false');
-                            //data.append('CheckBox3', govtNote);
+                            data.append('CheckBox3', excursionOk ? 'true' : 'false');
+                            data.append('HasAllergies', hasAllergiesVal);
+                            data.append('Allergies', $('#Allergies').val() || '');
+                            data.append('OtherAllergies', $('#OtherAllergies').val() || '');
+                            data.append('ExcursionAccepted', excursionOk ? 'true' : 'false');
+                            data.append('ProfileID', '@(Model.Profiles != null && Model.Profiles.Count > 0 ? Model.Profiles[0].ProfileID : 0)');
 
                             data.append('DepositAvailable', '@Model.IsDepositAvailable');
                             data.append('UploadComplete', '@Model.IsUploadComplete');
@@ -2037,17 +2177,62 @@ new { @class = "text-danger" }
                                 $('.loader-screen').fadeOut(1000);
                             });
                         }
-                        else {
-                            if (!terms) {
-                                $('#customMessageModalMessage').html("Please accept terms and conditions.");
-                                $('#customMessageModal').modal('show');
-                            }
-                            else {
-                                $('#customMessageModalMessage').html("Please accept additional terms and conditions.");
-                                $('#customMessageModal').modal('show');
-                            }
-                        }
                     }
+
+                    // Allergen Yes/No + form modal
+                    var allergenFormCommitted = false;
+                    $('input[name="HasAllergies"]').on('change', function () {
+                        var val = $(this).val();
+                        if (val === 'true') {
+                            allergenFormCommitted = false;
+                            $('#allergenFormModal').modal('show');
+                        } else {
+                            allergenFormCommitted = true;
+                            $('#Allergies').val('');
+                            $('#OtherAllergies').val('');
+                            $('.allergen-item').prop('checked', false);
+                            $('#allergenOtherNotes').val('');
+                            $('#allergenSummary').hide().text('');
+                            $('#allergenFormModal').modal('hide');
+                        }
+                    });
+
+                    $('#allergenFormCloseBtn').on('click', function () {
+                        // Close without saving — allow switching Yes/No freely
+                        $('#allergenFormModal').modal('hide');
+                        if (!allergenFormCommitted) {
+                            $('input[name="HasAllergies"]').prop('checked', false);
+                            $('#Allergies').val('');
+                            $('#OtherAllergies').val('');
+                            $('#allergenSummary').hide().text('');
+                        }
+                    });
+
+                    $('#allergenFormSaveBtn').on('click', function () {
+                        var selected = [];
+                        $('.allergen-item:checked').each(function () { selected.push($(this).val()); });
+                        var other = ($('#allergenOtherNotes').val() || '').trim();
+                        if (selected.length === 0 && !other) {
+                            $('#customMessageModalMessage').html("Select at least one allergen or enter Other/Notes.");
+                            $('#customMessageModal').modal('show');
+                            return;
+                        }
+                        $('#Allergies').val(selected.join(','));
+                        $('#OtherAllergies').val(other);
+                        allergenFormCommitted = true;
+                        var summary = selected.join(', ');
+                        if (other) { summary += (summary ? '; ' : '') + 'Other: ' + other; }
+                        $('#allergenSummary').show().text('Allergens: ' + summary);
+                        $('#allergenFormModal').modal('hide');
+                    });
+
+                    $('#openExcursionDisclaimer').on('click', function (e) {
+                        e.preventDefault();
+                        $('#excursionDisclaimerModal').modal('show');
+                    });
+                    $('#excursionDisclaimerOkBtn').on('click', function () {
+                        $('#excursionDisclaimer').prop('checked', true);
+                    });
 
                     $('.confirmDeclaration').on('click', function (e) {
                         e.preventDefault();
@@ -2237,6 +2422,19 @@ new { @class = "text-danger" }
               $('#customMessageModal').modal('show');
               return;
           }
+          if (typeof hasAnySkippedDocument === 'function' && hasAnySkippedDocument()) {
+              $.ajax({
+                  url: "@Url.Action("DocumentUploadSkipped", "Home")",
+                  method: "POST",
+                  data: {
+                      ReservationID: $("#ReservationID").val(),
+                      ReservationNameID: '@Model.ReservationNameID',
+                      ReservationNumber: '@Model.ReservationNumber'
+                  },
+                  type: "POST",
+                  dataType: "json"
+              });
+          }
           proceedDocumentUpload($btn);
       }
 
@@ -2280,12 +2478,21 @@ new { @class = "text-danger" }
                     $('.skipAndProceedDocument').on('click', function (e) {
                         e.preventDefault();
 
+                        // Mark any incomplete required guests as skipped
+                        $('.fileUpload').each(function () {
+                            var status = $(this).data('upload');
+                            if (status === 'incomplete' || status === 'uploading') {
+                                markGuestDocumentSkipped($(this).data('guestid'));
+                            }
+                        });
+
                         $.ajax({
-                            url: "@Url.Action("InsertEvent", "Home")",
+                            url: "@Url.Action("DocumentUploadSkipped", "Home")",
                             method: "POST",
                             data: {
-                                EventName: "DocumentUploadSkip",
-                                reservationid: $("#ReservationID").val()
+                                ReservationID: $("#ReservationID").val(),
+                                ReservationNameID: '@Model.ReservationNameID',
+                                ReservationNumber: '@Model.ReservationNumber'
                             },
                             type: "POST",
                             dataType: "json"
@@ -2296,10 +2503,29 @@ new { @class = "text-danger" }
 
                     $('.skipdocument').on('click', function (e) {
                         e.preventDefault();
+                        var guestID = $('#currentGuestIndex').val();
                         $('#DocumentUploadprimaryGuest').modal('hide');
                         resetDocumentInfo();
                         clearFileUpload();
+                        if (guestID) {
+                            markGuestDocumentSkipped(guestID);
+                        }
+                        $.ajax({
+                            url: "@Url.Action("InsertEvent", "Home")",
+                            method: "POST",
+                            data: {
+                                EventName: "DocumentUploadSkip",
+                                reservationid: $("#ReservationID").val()
+                            },
+                            type: "POST",
+                            dataType: "json"
+                        });
+                    });
 
+                    $(document).on('click', '.guestDocumentSkip', function (e) {
+                        e.preventDefault();
+                        var guestID = $(this).data('guestid');
+                        markGuestDocumentSkipped(guestID);
                         $.ajax({
                             url: "@Url.Action("InsertEvent", "Home")",
                             method: "POST",
@@ -2379,7 +2605,7 @@ new { @class = "text-danger" }
                             if (!documentInformation.documentType?.trim()) {
                                 $('#customMessageModalMessage').html('Please upload a valid document');
                                 $('#customMessageModal').modal('show');
-                                recordDocumentUploadFailure();
+                                recordDocumentUploadFailure($("#currentGuestIndex").val());
                                 return;
                             }
                             else {
@@ -2437,13 +2663,12 @@ new { @class = "text-danger" }
                                         markGuestUploadFailed(guestID);
                                         $('#customMessageModalMessage').html(response.message || 'Document upload failed. Please try again.');
                                         $('#customMessageModal').modal('show');
-                                        recordDocumentUploadFailure();
+                                        recordDocumentUploadFailure($("#currentGuestIndex").val());
                                         return;
                                     }
 
                                     uploadedDocs.push(docInfoSnapshot.documentNumber);
                                     markGuestUploadCompleted(guestID);
-                                    clearDocumentUploadSkipOption();
                                     updateDocumentUploadSkipVisibility();
                                 })
                                 .catch(function () {
@@ -2452,7 +2677,7 @@ new { @class = "text-danger" }
                                     markGuestUploadFailed(guestID);
                                     $('#customMessageModalMessage').html('Document upload failed. Please try again.');
                                     $('#customMessageModal').modal('show');
-                                    recordDocumentUploadFailure();
+                                    recordDocumentUploadFailure($("#currentGuestIndex").val());
                                 });
                         }
                         else {
@@ -2684,7 +2909,7 @@ new { @class = "text-danger" }
                                             $('.loader-screen').fadeOut(100);
 
                                             showAlert(alertId, "Document is expired.Please upload a valid one", "warning");
-                                            recordDocumentUploadFailure();
+                                            recordDocumentUploadFailure($("#currentGuestIndex").val());
 
                                             $(fileControl).val('');
                                             $(fileControl).siblings(".custom-file-label").removeClass("selected").html('Choose file');
@@ -2696,7 +2921,7 @@ new { @class = "text-danger" }
                                         $('.loader-screen').fadeOut(100);
 
                                         showAlert(alertId, "Please upload a valid document", "warning");
-                                        recordDocumentUploadFailure();
+                                        recordDocumentUploadFailure($("#currentGuestIndex").val());
 
                                         $(fileControl).val('');
                                         $(fileControl).siblings(".custom-file-label").removeClass("selected").html('Choose file');
@@ -2711,7 +2936,7 @@ new { @class = "text-danger" }
                                     //$(imgPreview).show();
                                     $('.loader-screen').fadeOut(100);
                                     showAlert(alertId, "Please upload a valid Document", "warning");
-                                    recordDocumentUploadFailure();
+                                    recordDocumentUploadFailure($("#currentGuestIndex").val());
 
                                     $(fileControl).val('');
                                     $(fileControl).siblings(".custom-file-label").removeClass("selected").html('Choose file');
@@ -2818,7 +3043,7 @@ new { @class = "text-danger" }
                                         //$(imgPreview).show();
                                         $('.loader-screen').fadeOut(100);
                                         showAlert(alertId, "Document is expired. Please upload a valid one", "warning");
-                                        recordDocumentUploadFailure();
+                                        recordDocumentUploadFailure($("#currentGuestIndex").val());
 
                                         $(fileControl).val('');
                                         $(fileControl).siblings(".custom-file-label").removeClass("selected").html('Choose file');
@@ -2830,7 +3055,7 @@ new { @class = "text-danger" }
                                     $('.loader-screen').fadeOut(100);
 
                                     showAlert(alertId, "Please upload a valid document", "warning");
-                                    recordDocumentUploadFailure();
+                                    recordDocumentUploadFailure($("#currentGuestIndex").val());
 
                                     $(fileControl).val('');
                                     $(fileControl).siblings(".custom-file-label").removeClass("selected").html('Choose file');
@@ -2845,7 +3070,7 @@ new { @class = "text-danger" }
                                 //$(imgPreview).show();
                                 $('.loader-screen').fadeOut(100);
                                 showAlert(alertId, "Please upload a valid document", "warning");
-                                recordDocumentUploadFailure();
+                                recordDocumentUploadFailure($("#currentGuestIndex").val());
 
                                 $(fileControl).val('');
                                 $(fileControl).siblings(".custom-file-label").removeClass("selected").html('Choose file');

@@ -26,6 +26,7 @@ namespace CheckinPortal.Models
         public string ReservationNameID { get; set; }
         public string Type { get; set; }
     }
+
     public class CloudReservationModel
     {
         public int ReservationDetailID { get; set; }
@@ -47,6 +48,7 @@ namespace CheckinPortal.Models
         public Nullable<bool> IsEcomchekinPaymentStaus { get; set; }
         public Nullable<bool> IsEcomchekOUtPaymentStaus { get; set; }
         public Nullable<bool> IsUploadComplete { get; set; }
+        public Nullable<bool> IsDocumentSkipped { get; set; }
         public bool? IsBreakFastAvailable { get; set; }
         public bool? IsMemberShipEnrolled { get; set; }
         public string FlightNo { get; set; }

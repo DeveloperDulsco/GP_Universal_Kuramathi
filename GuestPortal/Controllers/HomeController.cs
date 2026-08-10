@@ -1167,7 +1167,125 @@ namespace CheckinPortal.Controllers
                 new LogHelper().Log("Promotional consent saved to TbPolicyDetails", policiesModel?.ReservationNameID, ActionName, ActionGroup);
             }
 
-            return Json(new { result = true, promotionalConsentSaved = policyResponse != null && policyResponse.result });
+            // Allergen declaration -> tbReservationMetaData.Allergies (JSON) for RegCard CheckBox2/Allergies/OtherAllergies
+            bool hasAllergies = policiesModel.HasAllergies.HasValue && policiesModel.HasAllergies.Value;
+            string allergyJson = JsonConvert.SerializeObject(new
+            {
+                hasAllergies = hasAllergies,
+                allergens = hasAllergies ? (policiesModel.Allergies ?? "") : "",
+                other = hasAllergies ? (policiesModel.OtherAllergies ?? "") : ""
+            });
+            try
+            {
+                using (var httpClient = new System.Net.Http.HttpClient())
+                {
+                    string apiBase = ConfigurationManager.AppSettings["APIBaseUrl"].ToString();
+                    httpClient.BaseAddress = new Uri(apiBase);
+                    httpClient.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
+                    var accessToken = AuthenticationHelper.GetAPIAccessToken();
+                    if (!string.IsNullOrEmpty(accessToken))
+                    {
+                        httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+                    }
+                    var metaRequest = new Models.APIRequestModel
+                    {
+                        RequestObject = new
+                        {
+                            ReservationNumber = policiesModel.ReservationNumber,
+                            CompletedTabIndex = "1",
+                            Allergies = allergyJson
+                        }
+                    };
+                    var metaContent = new System.Net.Http.StringContent(JsonConvert.SerializeObject(metaRequest), Encoding.UTF8, "application/json");
+                    var metaHttp = await httpClient.PostAsync("Local/SaveReservationMetaData", metaContent);
+                    new LogHelper().Log(
+                        "Allergen meta save status=" + (metaHttp != null && metaHttp.IsSuccessStatusCode) + " payload=" + allergyJson,
+                        policiesModel?.ReservationNameID, ActionName, ActionGroup);
+                }
+            }
+            catch (Exception allergySaveEx)
+            {
+                new LogHelper().Error(allergySaveEx, policiesModel?.ReservationNameID, ActionName, ActionGroup);
+            }
+
+            // Opera guest profile comment for allergen declaration (especially No)
+            if (!string.IsNullOrWhiteSpace(policiesModel.ProfileID) && policiesModel.ProfileID != "0")
+            {
+                string commentText = hasAllergies
+                    ? ("ALLERGIES DECLARED: "
+                        + (string.IsNullOrWhiteSpace(policiesModel.Allergies) ? "" : policiesModel.Allergies)
+                        + (string.IsNullOrWhiteSpace(policiesModel.OtherAllergies) ? "" : ("; Other: " + policiesModel.OtherAllergies)))
+                    : "NO ALLERGIES DECLARED";
+                try
+                {
+                    var commentResponse = await new CloudHelper().InsertGuestComment(
+                        policiesModel.ReservationNameID,
+                        new Models.OWS.OwsRequestModel()
+                        {
+                            ChainCode = ConfigurationManager.AppSettings["ChainCode"].ToString(),
+                            DestinationEntityID = ConfigurationManager.AppSettings["DestinationEntityID"].ToString(),
+                            DestinationSystemType = ConfigurationManager.AppSettings["DestinationSystemType"].ToString(),
+                            HotelDomain = ConfigurationManager.AppSettings["HotelDomain"].ToString(),
+                            KioskID = ConfigurationManager.AppSettings["KioskID"].ToString(),
+                            LegNumber = "1",
+                            Language = ConfigurationManager.AppSettings["Language"].ToString(),
+                            Password = ConfigurationManager.AppSettings["Password"].ToString(),
+                            Username = ConfigurationManager.AppSettings["Username"].ToString(),
+                            SystemType = ConfigurationManager.AppSettings["SystemType"].ToString(),
+                            ProfileID = policiesModel.ProfileID,
+                            GuestCommentRequest = new Models.OWS.GuestComments()
+                            {
+                                Comment = commentText.Trim(),
+                                CommentType = "COMMENT",
+                                isInternal = true,
+                                isGuestViewable = false
+                            }
+                        },
+                        ActionGroup,
+                        ConfigurationManager.AppSettings["APIBaseUrl"].ToString());
+                    new LogHelper().Log(
+                        "Opera allergen comment result=" + (commentResponse != null && commentResponse.result) + " text=" + commentText,
+                        policiesModel?.ReservationNameID, ActionName, ActionGroup);
+                }
+                catch (Exception commentEx)
+                {
+                    new LogHelper().Error(commentEx, policiesModel?.ReservationNameID, ActionName, ActionGroup);
+                }
+            }
+            else
+            {
+                new LogHelper().Warn("Skipped Opera allergen comment — ProfileID missing", policiesModel?.ReservationNameID, ActionName, ActionGroup);
+            }
+
+            // Excursion disclaimer (mandatory) -> TbPolicyDetails ExcursionDisclaimer -> RegCard CheckBox3
+            bool excursionAccepted = policiesModel.ExcursionAccepted.HasValue && policiesModel.ExcursionAccepted.Value;
+            var excursionResponse = await new CloudHelper().UpsertPolicyDetails(
+                policiesModel.ReservationNameID,
+                new Models.APIRequestModel()
+                {
+                    RequestObject = new
+                    {
+                        ResID = policiesModel.ReservationID,
+                        PolicyValue = excursionAccepted,
+                        PolicyType = "ExcursionDisclaimer"
+                    }
+                },
+                ActionGroup,
+                ConfigurationManager.AppSettings["APIBaseUrl"].ToString());
+            if (excursionResponse == null || !excursionResponse.result)
+            {
+                new LogHelper().Warn(
+                    "Failed to save excursion disclaimer :- " + (excursionResponse != null ? excursionResponse.responseMessage : "null"),
+                    policiesModel?.ReservationNameID, ActionName, ActionGroup);
+            }
+
+            return Json(new
+            {
+                result = true,
+                promotionalConsentSaved = policyResponse != null && policyResponse.result,
+                allergenSaved = true,
+                excursionSaved = excursionResponse != null && excursionResponse.result
+            });
         }
 
         public async Task<ActionResult> savePackages(int ReservationID, string Packages)
@@ -1645,6 +1763,47 @@ namespace CheckinPortal.Controllers
         {
             reservationLogics.InsertEvent(reservationid, EventName);
             return Json(new { result = true });
+        }
+
+        /// <summary>
+        /// Persist document-upload skip so FO can report missing docs after precheckin completes.
+        /// Link expiry still occurs via CompletePreCheckin (IsPreCheckedInPMS).
+        /// FO report lives in MCI Backoffice: Reports → Document Skip Report.
+        /// </summary>
+        [HttpPost]
+        public async Task<ActionResult> DocumentUploadSkipped(int ReservationID, string ReservationNameID, string ReservationNumber)
+        {
+            string ActionName = "DocumentUploadSkipped", ActionGroup = "Pre-Checkin";
+            try
+            {
+                reservationLogics.InsertEvent(ReservationID, "DocumentUploadSkip");
+
+                var statusResponse = await new CloudHelper().UpdateReservationStatus(
+                    ReservationNameID,
+                    new Models.APIRequestModel()
+                    {
+                        RequestObject = new ReservationStatusRequestModel
+                        {
+                            ReservationID = ReservationNameID,
+                            ReservationNameID = ReservationNameID,
+                            Type = "documentSkipped"
+                        }
+                    },
+                    ActionGroup,
+                    ConfigurationManager.AppSettings["APIBaseUrl"].ToString());
+
+                new LogHelper().Log(
+                    "DocumentSkipped status result=" + (statusResponse != null && statusResponse.result)
+                    + " ReservationNumber=" + ReservationNumber,
+                    ReservationNameID, ActionName, ActionGroup);
+
+                return Json(new { result = statusResponse != null && statusResponse.result });
+            }
+            catch (Exception ex)
+            {
+                new LogHelper().Error(ex, ReservationNameID, ActionName, ActionGroup);
+                return Json(new { result = false, responseMessage = ex.Message });
+            }
         }
 
         //This is the function where adyen response will be send back

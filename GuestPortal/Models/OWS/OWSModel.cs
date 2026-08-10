@@ -40,6 +40,8 @@ namespace CheckinPortal.Models.OWS
         public FetchGuestRequest FetchGuestRequest { get; set; }
         public EncodeKeyRequest EncodeKeyRequest { get; set; }
         public string RequestIdentifier { get; set; }
+        public GuestComments GuestCommentRequest { get; set; }
+        public string ProfileID { get; set; }
     }
     public class FetchGuestRequest
     {

@@ -25,6 +25,19 @@ namespace CheckinPortal.Models
         public bool? CheckBox4 { get; set; }
         public string ReservationNameID { get; set; }
         public string ReservationNumber { get; set; }
+
+        /// <summary>Mandatory allergen Yes/No. True = has allergies.</summary>
+        public bool? HasAllergies { get; set; }
+        /// <summary>Comma-separated standard allergen names (RDLC Allergies).</summary>
+        public string Allergies { get; set; }
+        /// <summary>Other/Notes free text (RDLC OtherAllergies).</summary>
+        public string OtherAllergies { get; set; }
+        /// <summary>Mandatory excursion disclaimer acceptance.</summary>
+        public bool? ExcursionAccepted { get; set; }
+        /// <summary>JSON list of Aqua Sports participants (name + signatures).</summary>
+        public string ExcursionParticipants { get; set; }
+        /// <summary>Primary guest PMS profile id for Opera comment update.</summary>
+        public string ProfileID { get; set; }
     }
 
     public class UploadGuestDocumentModel
