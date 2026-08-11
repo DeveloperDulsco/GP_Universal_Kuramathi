@@ -409,7 +409,7 @@ body.modal-open {
 .left-menu{background: #222222;}
 .pd-0{padding: 0;}
 
-.room-bg{background: url("../images/room-bg.jpg") left center;background-size: cover ;}
+.room-bg{background: url("../images/room-bg.png") left center;background-size: cover ;}
 .bg-blk{background: #222222;}
 .left-menu .space{height:52px;}
 .menu img{}
@@ -541,7 +541,7 @@ body.modal-open {
 .layout-inro .continue:hover{text-decoration: none;background:#b7a370;color: #fff;}
 
 
-.layout-inro1{height: 100vh;padding-top: 112px;background:#e4e4e4 url("../images/intro-bg.jpg") no-repeat top center;
+.layout-inro1{height: 100vh;padding-top: 112px;background:#e4e4e4 url("../images/intro-bg.png") no-repeat top center;
   background-size: cover;
   padding-bottom:35px;
   display: flex;
@@ -614,7 +614,7 @@ box-shadow: -1px 13px 13px -10px rgba(0,0,0,0.35);
 .header-top{
   background: #fff;padding: 1.0em 1.2em;text-align: center;
 }
-.bg-hotel{background: url('../images/room-bg.jpg') no-repeat;background-size: cover;}
+.bg-hotel{background: url('../images/room-bg.png') no-repeat;background-size: cover;}
 .imge-thank{margin-bottom: 35px;}
 .thank{margin-top: 80px;padding:4em;border-radius: 30px;text-align: center;background: rgba(255, 255, 255, 0.95);}
 .thank p{font-size:20px;}

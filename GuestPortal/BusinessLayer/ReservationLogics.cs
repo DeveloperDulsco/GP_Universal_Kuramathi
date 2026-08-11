@@ -779,108 +779,101 @@ ActionGroup);
             return reservationfromopera;
         }
 
-        public bool PushDueInSearchedReservation(string ConfirmationNo)
+        public async Task<bool> PushDueInSearchedReservation(string ConfirmationNo)
         {
-            Task.Run(async () =>
-            {
             try
             {
                 string ActionGroup = "Pre-Checkin Push";
 
-            string _HotelDomain = AppSettingsManager.GetDecryptedSetting("HotelDomain");
-            string _KioskID = AppSettingsManager.GetDecryptedSetting("KioskID");
-            string _Username = AppSettingsManager.GetDecryptedSetting("Username");
-            string _Password = AppSettingsManager.GetDecryptedSetting("Password");
-            string _SystemType = AppSettingsManager.GetDecryptedSetting("SystemType");
-            string _Language = AppSettingsManager.GetDecryptedSetting("Language");
-            string _ChainCode = AppSettingsManager.GetDecryptedSetting("ChainCode");
-            string _DestinationEntityID = AppSettingsManager.GetDecryptedSetting("DestinationEntityID");
-            string _GarunteeTypeCode = AppSettingsManager.GetDecryptedSetting("GarunteeTypeCode");
-            string _preAuthUDF = AppSettingsManager.GetDecryptedSetting("preAuthUDF");
-            string _preAuthAmntUDF = AppSettingsManager.GetDecryptedSetting("preAuthAmntUDF");
-            string _ApiBaseUrl = AppSettingsManager.GetDecryptedSetting("APIBaseUrl");
+                string _HotelDomain = AppSettingsManager.GetDecryptedSetting("HotelDomain");
+                string _KioskID = AppSettingsManager.GetDecryptedSetting("KioskID");
+                string _Username = AppSettingsManager.GetDecryptedSetting("Username");
+                string _Password = AppSettingsManager.GetDecryptedSetting("Password");
+                string _SystemType = AppSettingsManager.GetDecryptedSetting("SystemType");
+                string _Language = AppSettingsManager.GetDecryptedSetting("Language");
+                string _ChainCode = AppSettingsManager.GetDecryptedSetting("ChainCode");
+                string _DestinationEntityID = AppSettingsManager.GetDecryptedSetting("DestinationEntityID");
+                string _GarunteeTypeCode = AppSettingsManager.GetDecryptedSetting("GarunteeTypeCode");
+                string _preAuthUDF = AppSettingsManager.GetDecryptedSetting("preAuthUDF");
+                string _preAuthAmntUDF = AppSettingsManager.GetDecryptedSetting("preAuthAmntUDF");
+                string _ApiBaseUrl = AppSettingsManager.GetDecryptedSetting("APIBaseUrl");
 
-            string _PreArrivalFromEmail = AppSettingsManager.GetDecryptedSetting("PreArrivalFromEmail");
-            string _PreArrivalEmailSubject = AppSettingsManager.GetDecryptedSetting("PreArrivalEmailSubject");
-            string _EmailDisplayName = AppSettingsManager.GetDecryptedSetting("EmailDisplayName");
+                string _PreArrivalFromEmail = AppSettingsManager.GetDecryptedSetting("PreArrivalFromEmail");
+                string _PreArrivalEmailSubject = AppSettingsManager.GetDecryptedSetting("PreArrivalEmailSubject");
+                string _EmailDisplayName = AppSettingsManager.GetDecryptedSetting("EmailDisplayName");
 
-            string _PreArrivalConfirmationEmail = AppSettingsManager.GetDecryptedSetting("PreArrivalConfirmationEmail");
-            string _PreArrivalConfirmationEmailSubject = AppSettingsManager.GetDecryptedSetting("PreArrivalConfirmationEmailSubject");
+                string _PreArrivalConfirmationEmail = AppSettingsManager.GetDecryptedSetting("PreArrivalConfirmationEmail");
+                string _PreArrivalConfirmationEmailSubject = AppSettingsManager.GetDecryptedSetting("PreArrivalConfirmationEmailSubject");
 
-            APIRequestModel _APIRequestModel = new APIRequestModel();
+                APIRequestModel _APIRequestModel = new APIRequestModel();
 
-            var sendPrecheckinRequest = new APIRequestModel()
-            {
-                RequestObject = new
+                var sendPrecheckinRequest = new APIRequestModel()
                 {
-                    ReservationNumber = ConfirmationNo,
-                    isForceFetch = true,
-                    ServiceParameters = new
+                    RequestObject = new
                     {
-                        isProxyEnableForCloudAPI = false,// true,
-                        CloudAPIProxyHost = "",// 
-                        CloudAPIProxyUN = "",// "CPH\\_rtpfps",
-                        CloudAPIProxyPswd = "",// "IT$upp0rt",
-                        CloudAPIURL = _ApiBaseUrl,
-                        isProxyEnableForLocalAPI = false,// false,
-                        LocalAPIProxyHost = "",// null,
-                        LocalAPIProxyUN = "",// null,
-                        LocalAPIProxyPswd = "",// null,
-                        LocalAPIURL = _ApiBaseUrl,
-                        isProxyEnableForEmailAPI = false,// false,
-                        EmailAPIProxyHost = "",// null,
-                        EmailAPIProxyUN = "",// null,
-                        EmailAPIProxyPswd = "",// null,
-                        EmailURL = _ApiBaseUrl,
+                        ReservationNumber = ConfirmationNo,
+                        isForceFetch = true,
+                        ServiceParameters = new
+                        {
+                            isProxyEnableForCloudAPI = false,// true,
+                            CloudAPIProxyHost = "",// 
+                            CloudAPIProxyUN = "",// "CPH\\_rtpfps",
+                            CloudAPIProxyPswd = "",// "IT$upp0rt",
+                            CloudAPIURL = _ApiBaseUrl,
+                            isProxyEnableForLocalAPI = false,// false,
+                            LocalAPIProxyHost = "",// null,
+                            LocalAPIProxyUN = "",// null,
+                            LocalAPIProxyPswd = "",// null,
+                            LocalAPIURL = _ApiBaseUrl,
+                            isProxyEnableForEmailAPI = false,// false,
+                            EmailAPIProxyHost = "",// null,
+                            EmailAPIProxyUN = "",// null,
+                            EmailAPIProxyPswd = "",// null,
+                            EmailURL = _ApiBaseUrl,
 
-                        PreArrivalConfirmationEmail = _PreArrivalConfirmationEmail,
-                        PreArrivalConfirmationEmailSubject = _PreArrivalConfirmationEmailSubject,
+                            PreArrivalConfirmationEmail = _PreArrivalConfirmationEmail,
+                            PreArrivalConfirmationEmailSubject = _PreArrivalConfirmationEmailSubject,
 
-                        PreArrivalFromEmail = _PreArrivalFromEmail,
-                        PreArrivalEmailSubject = _PreArrivalEmailSubject,
-                        EmailDisplayName = _EmailDisplayName,
+                            PreArrivalFromEmail = _PreArrivalFromEmail,
+                            PreArrivalEmailSubject = _PreArrivalEmailSubject,
+                            EmailDisplayName = _EmailDisplayName,
 
-                        ChainCode = _ChainCode,// "CHA",
-                        DestinationEntityID = _DestinationEntityID,// "TI",
-                        HotelDomain = _HotelDomain,// "RTP",
-                        KioskID = _KioskID,// "KIOSK",
-                        Language = _Language,// "EN",
-                        Legnumber = "1",// "1",
-                        Password = _Password,// "$$$KIOSK$$",
-                        SystemType = _SystemType,// "KIOSK",
-                        Username = _Username,//"KIOSK",
-                        ClientID = "BO",
-                        PreAuthUDF = _preAuthUDF,// "Appr_Code",
-                        PreAuthAmntUDF = _preAuthAmntUDF,// "Appr_Code"
-                        GarunteeTypeCode = _GarunteeTypeCode,
-                        IsETADefault = false,
-                        IsPaymentDisabled = false
-                    }
-                },
-            };
+                            ChainCode = _ChainCode,// "CHA",
+                            DestinationEntityID = _DestinationEntityID,// "TI",
+                            HotelDomain = _HotelDomain,// "RTP",
+                            KioskID = _KioskID,// "KIOSK",
+                            Language = _Language,// "EN",
+                            Legnumber = "1",// "1",
+                            Password = _Password,// "$$$KIOSK$$",
+                            SystemType = _SystemType,// "KIOSK",
+                            Username = _Username,//"KIOSK",
+                            ClientID = "MCI",
+                            PreAuthUDF = _preAuthUDF,// "Appr_Code",
+                            PreAuthAmntUDF = _preAuthAmntUDF,// "Appr_Code"
+                            GarunteeTypeCode = _GarunteeTypeCode,
+                            IsETADefault = false,
+                            IsPaymentDisabled = false
+                        }
+                    },
+                };
 
-            _APIRequestModel = sendPrecheckinRequest;
+                _APIRequestModel = sendPrecheckinRequest;
 
-            var localResponse = await new CloudHelper().PushSearchedReservation("", _APIRequestModel, ActionGroup, AppSettingsManager.GetDecryptedSetting("APIBaseUrl"));
-            if (!localResponse.result)
-            {
+                var localResponse = await new CloudHelper().PushSearchedReservation("", _APIRequestModel, ActionGroup, AppSettingsManager.GetDecryptedSetting("APIBaseUrl"));
+                if (!localResponse.result)
+                {
+                    new LogHelper().Log("Failed to pushing Searched Reservation with reason :- " + localResponse.responseMessage, SessionData.OperaReservation.ReservationNameID, "FetchPreCheckedInReservation", "pre checked-in fetch");
+                    new LogHelper().Warn("Failed to pushing Searched Reservation with reason :- " + localResponse.responseMessage, SessionData.OperaReservation.ReservationNameID, "", ActionGroup);
+                    return false;
+                }
 
-                new LogHelper().Log("Failed to pushing Searched Reservation with reason :- " + localResponse.responseMessage, SessionData.OperaReservation.ReservationNameID, "FetchPreCheckedInReservation", "pre checked-in fetch");
-                new LogHelper().Warn("Failed to pushing Searched Reservation with reason :- " + localResponse.responseMessage, SessionData.OperaReservation.ReservationNameID, "", ActionGroup);
-                return false;
-            }
-            else
-            {
                 new LogHelper().Log("Searched Reservation updated in Cloud DB successfully", "", "", ActionGroup);
                 return true;
             }
-                }
-                catch
-                {
-                    return false;
-                }
-            });
-            return false;
+            catch
+            {
+                return false;
+            }
         }
         public async Task<string> GetLastEvetIDByReservation(int ReservationID)
         {

@@ -1039,9 +1039,15 @@ new { @class = "text-danger" }
                     <li>For participants in parasailing, kitesurfing, jet surfing, and jet ski activities, I fully understand and accept that these are hazardous activities. I am voluntarily participating with full knowledge of the risks involved, and I hereby agree to accept and assume any and all risks of injury associated with these activities.</li>
                     <li>For participants in excursions of Niva Kuramathi Maldives — I fully understand and accept “Aqua Sports &amp; Fun” Water Sports Centre terms and conditions of my participation in the excursion. I am fully aware that there may be pieces of metal and sharp objects in the islands or the lagoons, or plant and animal life in the islands, that may cause a risk of injury to persons and property, and agree to abide by the wishes and safety direction of “Aqua Sports &amp; Fun” crew, employees and/or instructors. I further agree to accept and assume any and all risks associated with the excursion, and agree to release from any legal liability “Aqua Sports &amp; Fun”, its owners, officers, directors, agents and employees, for any and all injuries, property loss, property damage, or loss of life caused by or resulting from any participation in the excursion and any of the activities associated with it.</li>
                 </ol>
-                <p style="margin-top:10px;">By selecting OK and ticking the disclaimer checkbox, I confirm I have read and agree to this form. My name, stay details and signature from pre-check-in will appear on the completed disclaimer attached to my registration card.</p>
+                <p style="margin-top:10px;font-weight:600;">Participants (up to <span id="excursionPartMaxLabel">1</span>) — enter each name and signature</p>
+                <input type="hidden" id="ExcursionParticipants" name="ExcursionParticipants" value="" />
+                <div id="excursionParticipantsList"></div>
+                <div style="margin:10px 0;">
+                    <button type="button" class="btnstyle blue" id="addExcursionParticipantBtn" style="min-width:140px;padding:6px 12px;font-size:12px;">Add participant</button>
+                </div>
+                <p style="margin-top:8px;font-size:12px;color:#555;">By selecting OK and ticking the disclaimer checkbox, I confirm I have read and agree to this form. Participant names and signatures will appear on the registration card.</p>
                 <div class="mt-4 text-center">
-                    <button class="btnstyle blue" id="excursionDisclaimerOkBtn" data-dismiss="modal">OK</button>
+                    <button class="btnstyle blue" id="excursionDisclaimerOkBtn">OK</button>
                 </div>
             </div>
         </div>
@@ -1872,15 +1878,16 @@ new { @class = "text-danger" }
             $guidance.html(
                 '<li>Only one valid document is required per guest (passport or national ID).</li>' +
                 '<li>Document upload is mandatory for every guest before you can proceed.</li>' +
-                '<li>If an upload fails, use Skip in that upload box, or Skip &amp; Save on this page.</li>'
+                '<li>If an upload fails twice, use Skip in that upload box, or Skip &amp; Save on this page.</li>'
             );
         }
 
         function getDocumentUploadValidationMessage() {
-            return 'Please upload one valid document for each guest, or use Skip / Skip & Save after a failed upload.';
+            return 'Please upload one valid document for each guest, or use Skip / Skip & Save after 2 failed upload attempts.';
         }
 
         var documentUploadFailCount = 0;
+        var DOCUMENT_UPLOAD_SKIP_AFTER_FAILS = 2;
 
         function showDocumentUploadSkipOption() {
             $('#documentUploadSkipHelp').show();
@@ -1909,10 +1916,12 @@ new { @class = "text-danger" }
 
         function recordDocumentUploadFailure(guestID) {
             documentUploadFailCount++;
-            // Show Skip after first failed upload attempt
-            showDocumentUploadSkipOption();
-            if (guestID) {
-                $('#guestskip_' + guestID).show();
+            // Show Skip only after 2 failed upload attempts
+            if (documentUploadFailCount >= DOCUMENT_UPLOAD_SKIP_AFTER_FAILS) {
+                showDocumentUploadSkipOption();
+                if (guestID) {
+                    $('#guestskip_' + guestID).show();
+                }
             }
         }
 
@@ -2107,6 +2116,16 @@ new { @class = "text-danger" }
                 });
         }
 
+                    // Aqua Sports pax cap + signature commit state (declared before SavePolicies)
+                    var excursionPartPads = {};
+                    var excursionPartSigCache = {};
+                    var committedExcursionParticipants = null;
+                    var excursionPartCount = 0;
+                    var MAX_EXCURSION_PARTS = Math.max(1,
+                        (parseInt('@Model.AdultCount', 10) || 0)
+                        + (parseInt('@Model.ChildCount', 10) || 0)
+                        + (parseInt('@Model.InfantCount', 10) || 0));
+
                     function SavePolicies(btn) {
 
                         const data = new FormData();
@@ -2114,11 +2133,7 @@ new { @class = "text-danger" }
                         var hasAllergiesVal = $('input[name="HasAllergies"]:checked').val();
                         var excursionOk = $('#excursionDisclaimer').is(':checked');
 
-                        if (!terms) {
-                            $('#customMessageModalMessage').html("Please accept terms and conditions.");
-                            $('#customMessageModal').modal('show');
-                            return false;
-                        }
+                       
                         if (hasAllergiesVal === undefined) {
                             $('#customMessageModalMessage').html("Please select Yes or No for the allergen declaration.");
                             $('#customMessageModal').modal('show');
@@ -2134,11 +2149,44 @@ new { @class = "text-danger" }
                                 return false;
                             }
                         }
+                        if (!terms) {
+                            $('#customMessageModalMessage').html("Please accept terms and conditions.");
+                            $('#customMessageModal').modal('show');
+                            return false;
+                        }
                         if (!excursionOk) {
                             $('#customMessageModalMessage').html("Please accept the Aqua Sports / Excursion Disclaimer.");
                             $('#customMessageModal').modal('show');
                             return false;
                         }
+                        // Prefer committed modal-OK payload (with pad base64), else live pads + cache
+                        var excursionPartsPayload = (typeof resolveExcursionParticipantsPayload === 'function')
+                            ? resolveExcursionParticipantsPayload()
+                            : null;
+                        if (!excursionPartsPayload || !excursionPartsPayload.participants || excursionPartsPayload.participants.length < 1) {
+                            $('#customMessageModalMessage').html("Please add at least one Aqua Sports participant with name and signature (open the disclaimer).");
+                            $('#customMessageModal').modal('show');
+                            $('#excursionDisclaimerModal').modal('show');
+                            return false;
+                        }
+                        if (excursionPartsPayload.participants.length > MAX_EXCURSION_PARTS) {
+                            $('#customMessageModalMessage').html("Aqua Sports participants cannot exceed reservation pax (" + MAX_EXCURSION_PARTS + ").");
+                            $('#customMessageModal').modal('show');
+                            $('#excursionDisclaimerModal').modal('show');
+                            return false;
+                        }
+                        for (var epi = 0; epi < excursionPartsPayload.participants.length; epi++) {
+                            var ep = excursionPartsPayload.participants[epi];
+                            if (!ep.name || !ep.signature) {
+                                $('#customMessageModalMessage').html("Each participant needs a name and signature.");
+                                $('#customMessageModal').modal('show');
+                                $('#excursionDisclaimerModal').modal('show');
+                                return false;
+                            }
+                            delete ep.guardianSignature;
+                        }
+                        committedExcursionParticipants = JSON.parse(JSON.stringify(excursionPartsPayload));
+                        $('#ExcursionParticipants').val(JSON.stringify(committedExcursionParticipants));
 
                         if (terms) {
                             data.append('ReservationNumber', '@Model.ReservationNumber')
@@ -2166,6 +2214,8 @@ new { @class = "text-danger" }
                                 var dataURL = signaturePad.toDataURL();
                                 var strImage = dataURL.replace(/^data:image\/[a-z]+;base64,/, "");
                                 data.append('Base64Signature', strImage);
+                                // Each participant's own pad base64 (do not copy main pad)
+                                data.append('ExcursionParticipants', $('#ExcursionParticipants').val() || '');
                             }
 
                             $('.loader-screen').fadeIn(100);
@@ -2226,12 +2276,253 @@ new { @class = "text-danger" }
                         $('#allergenFormModal').modal('hide');
                     });
 
+                    // Aqua Sports participants — name + one signature pad each (no guardian pads in UI)
+                    // MAX_EXCURSION_PARTS / caches declared above SavePolicies
+                    $('#excursionPartMaxLabel').text(MAX_EXCURSION_PARTS);
+
+                    function stripDataUrl(dataUrl) {
+                        if (!dataUrl) return '';
+                        return String(dataUrl).replace(/^data:image\/[a-zA-Z+]+;base64,/, '');
+                    }
+
+                    function readPadSignature(idx) {
+                        var pad = excursionPartPads[idx];
+                        if (pad && !pad.isEmpty()) {
+                            try {
+                                var sig = stripDataUrl(pad.toDataURL('image/png'));
+                                if (sig) {
+                                    excursionPartSigCache[idx] = sig;
+                                    return sig;
+                                }
+                            } catch (e) { }
+                        }
+                        return excursionPartSigCache[idx] || '';
+                    }
+
+                    function resizeExcursionCanvas(canvas) {
+                        if (!canvas) return;
+                        var ratio = Math.max(window.devicePixelRatio || 1, 1);
+                        var rect = canvas.getBoundingClientRect();
+                        var w = Math.max(rect.width || canvas.clientWidth || 280, 200);
+                        var h = Math.max(rect.height || canvas.clientHeight || 90, 70);
+                        canvas.width = w * ratio;
+                        canvas.height = h * ratio;
+                        canvas.getContext('2d').scale(ratio, ratio);
+                    }
+
+                    function resizeAndPreservePad(idx) {
+                        var pad = excursionPartPads[idx];
+                        if (!pad || !pad.canvas) return;
+                        var data = null;
+                        if (!pad.isEmpty()) {
+                            try { data = pad.toDataURL(); } catch (e) { data = null; }
+                        }
+                        if (!data && excursionPartSigCache[idx]) {
+                            data = 'data:image/png;base64,' + excursionPartSigCache[idx];
+                        }
+                        var canvas = pad.canvas;
+                        resizeExcursionCanvas(canvas);
+                        excursionPartPads[idx] = new SignaturePad(canvas, {
+                            backgroundColor: 'rgb(255,255,255)',
+                            onEnd: function () { readPadSignature(idx); }
+                        });
+                        if (data) {
+                            try {
+                                excursionPartPads[idx].fromDataURL(data);
+                                excursionPartSigCache[idx] = stripDataUrl(data);
+                            } catch (e) { }
+                        }
+                    }
+
+                    function buildExcursionParticipantRow(idx) {
+                        return ''
+                            + '<div class="excursion-part-row" data-idx="' + idx + '" style="border:1px solid #ccc;border-radius:8px;padding:10px;margin-bottom:10px;background:#fafafa;">'
+                            + '  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">'
+                            + '    <strong style="text-transform:none;">Participant ' + (idx + 1) + '</strong>'
+                            + '    <button type="button" class="btnstyle remove-excursion-part" data-idx="' + idx + '" style="min-width:70px;padding:4px 8px;font-size:11px;background:#888;">Remove</button>'
+                            + '  </div>'
+                            + '  <label style="text-transform:none;font-weight:500;display:block;margin-bottom:4px;">Name</label>'
+                            + '  <input type="text" class="form-control excursion-part-name" data-idx="' + idx + '" maxlength="120" placeholder="Participant full name" style="margin-bottom:8px;" />'
+                            + '  <label style="text-transform:none;font-weight:500;display:block;">Signature</label>'
+                            + '  <div style="border:1px solid #bbb;border-radius:4px;background:#fff;height:90px;margin-bottom:4px;">'
+                            + '    <canvas class="excursion-part-sig" data-idx="' + idx + '" style="width:100%;height:90px;touch-action:none;"></canvas>'
+                            + '  </div>'
+                            + '  <button type="button" class="clear-excursion-sig" data-idx="' + idx + '" style="font-size:11px;">Clear signature</button>'
+                            + '</div>';
+                    }
+
+                    function initExcursionPad(idx) {
+                        var sigCanvas = document.querySelector('canvas.excursion-part-sig[data-idx="' + idx + '"]');
+                        if (!sigCanvas || typeof SignaturePad === 'undefined') return;
+                        resizeExcursionCanvas(sigCanvas);
+                        excursionPartPads[idx] = new SignaturePad(sigCanvas, {
+                            backgroundColor: 'rgb(255,255,255)',
+                            onEnd: function () { readPadSignature(idx); }
+                        });
+                    }
+
+                    function addExcursionParticipant() {
+                        if (excursionPartCount >= MAX_EXCURSION_PARTS) return;
+                        var idx = excursionPartCount;
+                        $('#excursionParticipantsList').append(buildExcursionParticipantRow(idx));
+                        initExcursionPad(idx);
+                        excursionPartCount++;
+                        $('#addExcursionParticipantBtn').toggle(excursionPartCount < MAX_EXCURSION_PARTS);
+                        $('.remove-excursion-part').toggle(excursionPartCount > 1);
+                    }
+
+                    function collectExcursionParticipants() {
+                        var list = [];
+                        $('#excursionParticipantsList .excursion-part-row').each(function () {
+                            var idx = parseInt($(this).attr('data-idx'), 10);
+                            var name = ($(this).find('.excursion-part-name').val() || '').trim();
+                            var sig = readPadSignature(idx);
+                            if (name || sig) {
+                                list.push({ name: name, signature: sig });
+                            }
+                        });
+                        return { participants: list };
+                    }
+
+                    function payloadHasCompleteSignatures(payload) {
+                        return !!(payload && payload.participants && payload.participants.length > 0
+                            && payload.participants.length <= MAX_EXCURSION_PARTS
+                            && payload.participants.every(function (p) { return p && p.name && p.signature; }));
+                    }
+
+                    function resolveExcursionParticipantsPayload() {
+                        var live = collectExcursionParticipants();
+                        if (payloadHasCompleteSignatures(live)) return live;
+                        if (payloadHasCompleteSignatures(committedExcursionParticipants)) {
+                            return JSON.parse(JSON.stringify(committedExcursionParticipants));
+                        }
+                        var hidden = ($('#ExcursionParticipants').val() || '').trim();
+                        if (hidden) {
+                            try {
+                                var parsed = JSON.parse(hidden);
+                                if (payloadHasCompleteSignatures(parsed)) return parsed;
+                            } catch (e) { }
+                        }
+                        return live;
+                    }
+
+                    function ensureExcursionParticipantsUi() {
+                        if ($('#excursionParticipantsList .excursion-part-row').length === 0) {
+                            excursionPartCount = 0;
+                            excursionPartPads = {};
+                            excursionPartSigCache = {};
+                            addExcursionParticipant();
+                        }
+                    }
+
+                    function applySigToPad(idx, signature) {
+                        if (!signature || !excursionPartPads[idx]) return;
+                        try {
+                            var raw = stripDataUrl(signature);
+                            if (raw) excursionPartSigCache[idx] = raw;
+                            var dataUrl = String(signature).indexOf('data:') === 0
+                                ? signature
+                                : ('data:image/png;base64,' + signature);
+                            excursionPartPads[idx].fromDataURL(dataUrl);
+                        } catch (e) { }
+                    }
+
+                    function rebuildExcursionParticipantsUi(savedParticipants) {
+                        $('#excursionParticipantsList').empty();
+                        excursionPartPads = {};
+                        excursionPartSigCache = {};
+                        excursionPartCount = 0;
+                        var saved = savedParticipants || [];
+                        if (saved.length === 0) {
+                            addExcursionParticipant();
+                            return;
+                        }
+                        for (var i = 0; i < saved.length && i < MAX_EXCURSION_PARTS; i++) {
+                            addExcursionParticipant();
+                            $('.excursion-part-name[data-idx="' + i + '"]').val(saved[i].name || '');
+                            applySigToPad(i, saved[i].signature);
+                        }
+                        $('#addExcursionParticipantBtn').toggle(excursionPartCount < MAX_EXCURSION_PARTS);
+                        $('.remove-excursion-part').toggle(excursionPartCount > 1);
+                    }
+
+                    $('#addExcursionParticipantBtn').on('click', function () {
+                        addExcursionParticipant();
+                    });
+
+                    $(document).on('click', '.remove-excursion-part', function () {
+                        if ($('#excursionParticipantsList .excursion-part-row').length <= 1) return;
+                        var idx = parseInt($(this).attr('data-idx'), 10);
+                        var saved = [];
+                        $('#excursionParticipantsList .excursion-part-row').each(function () {
+                            if (parseInt($(this).attr('data-idx'), 10) === idx) return;
+                            var rowIdx = parseInt($(this).attr('data-idx'), 10);
+                            var name = ($(this).find('.excursion-part-name').val() || '').trim();
+                            var sig = readPadSignature(rowIdx);
+                            if (name || sig) saved.push({ name: name, signature: sig });
+                        });
+                        rebuildExcursionParticipantsUi(saved.filter(function (p) { return p.name; }));
+                    });
+
+                    $(document).on('click', '.clear-excursion-sig', function () {
+                        var idx = parseInt($(this).attr('data-idx'), 10);
+                        if (excursionPartPads[idx]) excursionPartPads[idx].clear();
+                        delete excursionPartSigCache[idx];
+                    });
+
+                    function openExcursionModal() {
+                        ensureExcursionParticipantsUi();
+                        $('#excursionDisclaimerModal').modal('show');
+                    }
+
                     $('#openExcursionDisclaimer').on('click', function (e) {
                         e.preventDefault();
-                        $('#excursionDisclaimerModal').modal('show');
+                        openExcursionModal();
                     });
+
+                    $('#excursionDisclaimer').on('click', function (e) {
+                        if (!$(this).is(':checked')) return;
+                        e.preventDefault();
+                        $(this).prop('checked', false);
+                        openExcursionModal();
+                    });
+
+                    $('#excursionDisclaimerModal').on('shown.bs.modal', function () {
+                        Object.keys(excursionPartPads).forEach(function (k) {
+                            resizeAndPreservePad(k);
+                        });
+                    });
+
+                    // Snapshot pad strokes before modal hide can zero canvas layout
+                    $('#excursionDisclaimerModal').on('hide.bs.modal', function () {
+                        Object.keys(excursionPartPads).forEach(function (k) {
+                            readPadSignature(k);
+                        });
+                    });
+
                     $('#excursionDisclaimerOkBtn').on('click', function () {
+                        var payload = collectExcursionParticipants();
+                        if (!payload.participants.length) {
+                            $('#customMessageModalMessage').html("Add at least one participant with name and signature.");
+                            $('#customMessageModal').modal('show');
+                            return;
+                        }
+                        if (payload.participants.length > MAX_EXCURSION_PARTS) {
+                            $('#customMessageModalMessage').html("Participants cannot exceed reservation pax (" + MAX_EXCURSION_PARTS + ").");
+                            $('#customMessageModal').modal('show');
+                            return;
+                        }
+                        for (var i = 0; i < payload.participants.length; i++) {
+                            if (!payload.participants[i].name || !payload.participants[i].signature) {
+                                $('#customMessageModalMessage').html("Each participant needs a name and signature.");
+                                $('#customMessageModal').modal('show');
+                                return;
+                            }
+                        }
+                        committedExcursionParticipants = JSON.parse(JSON.stringify(payload));
+                        $('#ExcursionParticipants').val(JSON.stringify(payload));
                         $('#excursionDisclaimer').prop('checked', true);
+                        $('#excursionDisclaimerModal').modal('hide');
                     });
 
                     $('.confirmDeclaration').on('click', function (e) {

@@ -1168,13 +1168,52 @@ namespace CheckinPortal.Controllers
             }
 
             // Allergen declaration -> tbReservationMetaData.Allergies (JSON) for RegCard CheckBox2/Allergies/OtherAllergies
+            // Excursion participants JSON also stored on same meta row
             bool hasAllergies = policiesModel.HasAllergies.HasValue && policiesModel.HasAllergies.Value;
+            bool excursionAccepted = policiesModel.ExcursionAccepted.HasValue && policiesModel.ExcursionAccepted.Value;
             string allergyJson = JsonConvert.SerializeObject(new
             {
                 hasAllergies = hasAllergies,
                 allergens = hasAllergies ? (policiesModel.Allergies ?? "") : "",
                 other = hasAllergies ? (policiesModel.OtherAllergies ?? "") : ""
             });
+            // Persist Aqua Sports names + participant pad signatures (do not strip; NVarChar(MAX) on API)
+            string excursionParticipantsJson = "{\"participants\":[]}";
+            int excursionPartCount = 0;
+            int excursionSigCount = 0;
+            int excursionRawLen = policiesModel.ExcursionParticipants != null ? policiesModel.ExcursionParticipants.Length : 0;
+            if (excursionAccepted && !string.IsNullOrWhiteSpace(policiesModel.ExcursionParticipants))
+            {
+                try
+                {
+                    var raw = Newtonsoft.Json.Linq.JObject.Parse(policiesModel.ExcursionParticipants);
+                    var parts = raw["participants"] as Newtonsoft.Json.Linq.JArray;
+                    var cleaned = new Newtonsoft.Json.Linq.JArray();
+                    if (parts != null)
+                    {
+                        foreach (var p in parts)
+                        {
+                            string pname = (p.Value<string>("name") ?? "").Trim();
+                            if (string.IsNullOrEmpty(pname)) continue;
+                            // Keep participant pad base64 as posted — never blank intentionally
+                            string psig = (p.Value<string>("signature") ?? "").Trim();
+                            int b64 = psig.IndexOf("base64,", StringComparison.OrdinalIgnoreCase);
+                            if (b64 >= 0) psig = psig.Substring(b64 + 7);
+                            if (!string.IsNullOrEmpty(psig)) excursionSigCount++;
+                            cleaned.Add(new Newtonsoft.Json.Linq.JObject { ["name"] = pname, ["signature"] = psig });
+                        }
+                    }
+                    excursionPartCount = cleaned.Count;
+                    excursionParticipantsJson = new Newtonsoft.Json.Linq.JObject { ["participants"] = cleaned }.ToString(Newtonsoft.Json.Formatting.None);
+                }
+                catch (Exception parseEx)
+                {
+                    new LogHelper().Warn(
+                        "ExcursionParticipants parse failed rawLen=" + excursionRawLen + " err=" + parseEx.Message,
+                        policiesModel?.ReservationNameID, ActionName, ActionGroup);
+                    excursionParticipantsJson = "{\"participants\":[]}";
+                }
+            }
             try
             {
                 using (var httpClient = new System.Net.Http.HttpClient())
@@ -1193,13 +1232,20 @@ namespace CheckinPortal.Controllers
                         {
                             ReservationNumber = policiesModel.ReservationNumber,
                             CompletedTabIndex = "1",
-                            Allergies = allergyJson
+                            Allergies = allergyJson,
+                            ExcursionParticipants = excursionParticipantsJson
                         }
                     };
                     var metaContent = new System.Net.Http.StringContent(JsonConvert.SerializeObject(metaRequest), Encoding.UTF8, "application/json");
                     var metaHttp = await httpClient.PostAsync("Local/SaveReservationMetaData", metaContent);
+                    // Log lengths only — full JSON with base64 is too large and previously hid empty-sig bugs
                     new LogHelper().Log(
-                        "Allergen meta save status=" + (metaHttp != null && metaHttp.IsSuccessStatusCode) + " payload=" + allergyJson,
+                        "Policies meta save status=" + (metaHttp != null && metaHttp.IsSuccessStatusCode)
+                        + " allergies=" + allergyJson
+                        + " excursionPartCount=" + excursionPartCount
+                        + " excursionSigCount=" + excursionSigCount
+                        + " excursionRawLen=" + excursionRawLen
+                        + " excursionJsonLen=" + (excursionParticipantsJson != null ? excursionParticipantsJson.Length : 0),
                         policiesModel?.ReservationNameID, ActionName, ActionGroup);
                 }
             }
@@ -1208,17 +1254,31 @@ namespace CheckinPortal.Controllers
                 new LogHelper().Error(allergySaveEx, policiesModel?.ReservationNameID, ActionName, ActionGroup);
             }
 
-            // Opera guest profile comment for allergen declaration (especially No)
+            // Opera profile Name UDF for allergen declaration (not a guest comment)
             if (!string.IsNullOrWhiteSpace(policiesModel.ProfileID) && policiesModel.ProfileID != "0")
             {
-                string commentText = hasAllergies
-                    ? ("ALLERGIES DECLARED: "
-                        + (string.IsNullOrWhiteSpace(policiesModel.Allergies) ? "" : policiesModel.Allergies)
-                        + (string.IsNullOrWhiteSpace(policiesModel.OtherAllergies) ? "" : ("; Other: " + policiesModel.OtherAllergies)))
-                    : "NO ALLERGIES DECLARED";
+                List<string> allergyList = new List<string>();
+                string otherAllergies = "";
+                if (hasAllergies)
+                {
+                    if (!string.IsNullOrWhiteSpace(policiesModel.Allergies))
+                    {
+                        allergyList = policiesModel.Allergies
+                            .Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+                            .Select(a => a.Trim())
+                            .Where(a => !string.IsNullOrWhiteSpace(a))
+                            .ToList();
+                    }
+                    otherAllergies = policiesModel.OtherAllergies ?? "";
+                }
+                else
+                {
+                    otherAllergies = "NO ALLERGIES DECLARED";
+                }
+
                 try
                 {
-                    var commentResponse = await new CloudHelper().InsertGuestComment(
+                    var allergyUdfResponse = await new CloudHelper().UpdateProfileAllergy(
                         policiesModel.ReservationNameID,
                         new Models.OWS.OwsRequestModel()
                         {
@@ -1232,33 +1292,33 @@ namespace CheckinPortal.Controllers
                             Password = ConfigurationManager.AppSettings["Password"].ToString(),
                             Username = ConfigurationManager.AppSettings["Username"].ToString(),
                             SystemType = ConfigurationManager.AppSettings["SystemType"].ToString(),
-                            ProfileID = policiesModel.ProfileID,
-                            GuestCommentRequest = new Models.OWS.GuestComments()
+                            UpdateProfileAllergyRequest = new Models.OWS.UpdateProfileAllergyRequest()
                             {
-                                Comment = commentText.Trim(),
-                                CommentType = "COMMENT",
-                                isInternal = true,
-                                isGuestViewable = false
+                                NameID = policiesModel.ProfileID,
+                                Allergies = allergyList,
+                                OtherAllergies = otherAllergies
                             }
                         },
                         ActionGroup,
                         ConfigurationManager.AppSettings["APIBaseUrl"].ToString());
                     new LogHelper().Log(
-                        "Opera allergen comment result=" + (commentResponse != null && commentResponse.result) + " text=" + commentText,
+                        "Opera allergy UDF result=" + (allergyUdfResponse != null && allergyUdfResponse.result)
+                        + " msg=" + (allergyUdfResponse != null ? allergyUdfResponse.responseMessage : "null")
+                        + " allergens=" + string.Join(",", allergyList)
+                        + " other=" + otherAllergies,
                         policiesModel?.ReservationNameID, ActionName, ActionGroup);
                 }
-                catch (Exception commentEx)
+                catch (Exception allergyUdfEx)
                 {
-                    new LogHelper().Error(commentEx, policiesModel?.ReservationNameID, ActionName, ActionGroup);
+                    new LogHelper().Error(allergyUdfEx, policiesModel?.ReservationNameID, ActionName, ActionGroup);
                 }
             }
             else
             {
-                new LogHelper().Warn("Skipped Opera allergen comment — ProfileID missing", policiesModel?.ReservationNameID, ActionName, ActionGroup);
+                new LogHelper().Warn("Skipped Opera allergy UDF — ProfileID missing", policiesModel?.ReservationNameID, ActionName, ActionGroup);
             }
 
             // Excursion disclaimer (mandatory) -> TbPolicyDetails ExcursionDisclaimer -> RegCard CheckBox3
-            bool excursionAccepted = policiesModel.ExcursionAccepted.HasValue && policiesModel.ExcursionAccepted.Value;
             var excursionResponse = await new CloudHelper().UpsertPolicyDetails(
                 policiesModel.ReservationNameID,
                 new Models.APIRequestModel()
@@ -4592,10 +4652,32 @@ namespace CheckinPortal.Controllers
                     }
                     else
                     {
-                        reservationLogics.PushDueInSearchedReservation(response[0].ReservationNumber);
-                        reservationsDt = await new CloudHelper().FetchReservationDetailsByReferenceNumber(ConfirmationNo, new APIRequestModel { RequestObject = ConfirmationNo }, "", ConfigurationManager.AppSettings["APIBaseUrl"].ToString());
-                        reservations = JsonConvert.DeserializeObject<List<CloudReservationModel>>(reservationsDt.responseData.ToString());
+                        // Await push (was fire-and-forget), then poll until local/cloud DB has the row
+                        await reservationLogics.PushDueInSearchedReservation(response[0].ReservationNumber);
 
+                        const int maxFetchAttempts = 5;
+                        const int delayMs = 1500;
+                        reservations = null;
+                        for (int attempt = 1; attempt <= maxFetchAttempts; attempt++)
+                        {
+                            await Task.Delay(delayMs);
+                            reservationsDt = await new CloudHelper().FetchReservationDetailsByReferenceNumber(
+                                ConfirmationNo,
+                                new APIRequestModel { RequestObject = ConfirmationNo },
+                                "",
+                                ConfigurationManager.AppSettings["APIBaseUrl"].ToString());
+
+                            if (reservationsDt?.responseData != null)
+                            {
+                                reservations = JsonConvert.DeserializeObject<List<CloudReservationModel>>(
+                                    reservationsDt.responseData.ToString());
+                            }
+
+                            if (reservations != null && reservations.Count > 0)
+                            {
+                                break;
+                            }
+                        }
 
                         if (reservations != null && reservations.Count > 0)
                         {

@@ -42,6 +42,7 @@ namespace CheckinPortal.Models.OWS
         public string RequestIdentifier { get; set; }
         public GuestComments GuestCommentRequest { get; set; }
         public string ProfileID { get; set; }
+        public UpdateProfileAllergyRequest UpdateProfileAllergyRequest { get; set; }
     }
     public class FetchGuestRequest
     {
@@ -579,5 +580,13 @@ namespace CheckinPortal.Models.OWS
         public bool? IsEmailSend { get; set; }
 
 
+    }
+
+    public class UpdateProfileAllergyRequest
+    {
+        public string NameID { get; set; }
+        public List<string> Allergies { get; set; }
+        public string OtherAllergies { get; set; }
+        public string UdfFieldName { get; set; }
     }
 }
