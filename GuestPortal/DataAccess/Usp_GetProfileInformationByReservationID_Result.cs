@@ -35,6 +35,7 @@ namespace CheckinPortal.DataAccess
         public string DocumentNumber { get; set; }
         public string NationalityCode { get; set; }
         public string VisitPurposeCode { get; set; }
+        public bool IsDocumentSkipped { get; set; }
         
     }
 }
