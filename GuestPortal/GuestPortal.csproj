@@ -364,6 +364,7 @@
       <DependentUpon>CloudDBModel.tt</DependentUpon>
     </Compile>
     <Compile Include="Helpers\AppSettingsManager.cs" />
+    <Compile Include="Helpers\AuditProgressHelper.cs" />
     <Compile Include="Helpers\AuthenticationHelper.cs" />
     <Compile Include="Helpers\CloudHelper.cs" />
     <Compile Include="Helpers\CultureHelper.cs" />
@@ -377,6 +378,7 @@
     <Compile Include="Helpers\FileHelpers.cs" />
     <Compile Include="Helpers\HttpClientHelper.cs" />
     <Compile Include="Helpers\LogHelper.cs" />
+    <Compile Include="Helpers\LinkExpiryHelper.cs" />
     <Compile Include="Helpers\SessionDt.cs" />
     <Compile Include="Helpers\SQLHelper.cs" />
     <Compile Include="Models\AdaptorAPIModels\makePaymentModel.cs" />
@@ -617,7 +619,6 @@
     <Content Include="TsConfig\tsconfig.json" />
     <Content Include="Views\Home\PaybyLink.cshtml" />
     <Content Include="Views\Home\SearchReservation.cshtml" />
-    <Content Include="temp\343167.pdf" />
     <Content Include="Views\Shared\LayoutReservationNotFound.cshtml" />
   </ItemGroup>
   <ItemGroup>
@@ -625,6 +626,7 @@
     <Folder Include="assets\css\svg\" />
     <Folder Include="assets\vendors\" />
     <Folder Include="Helper\" />
+    <Folder Include="temp\" />
     <Folder Include="Views\Payment\" />
   </ItemGroup>
   <ItemGroup>

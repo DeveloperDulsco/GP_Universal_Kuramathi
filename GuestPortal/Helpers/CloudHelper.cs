@@ -2,6 +2,7 @@
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
@@ -1719,6 +1720,55 @@ namespace CheckinPortal.Helpers
                 };
             }
         }
+
+        public async Task<Models.APIResponseModel> FetchReservationTrackLocally(string reservationNameID, Models.APIRequestModel localRequest, string groupName, string api_url)
+        {
+            try
+            {
+                new LogHelper().Debug("Fetching reservation track from local DB using web api", reservationNameID, "FetchReservationTrackLocally", groupName);
+                HttpClient httpClient = new HttpClient();
+                httpClient.DefaultRequestHeaders.Clear();
+                var accessToken = AuthenticationHelper.GetAPIAccessToken();
+                if (!string.IsNullOrEmpty(accessToken))
+                {
+                    httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+                }
+                string requestString = JsonConvert.SerializeObject(localRequest, Formatting.None);
+                new LogHelper().Debug("web api url :- " + api_url + @"/local/FetchReservationTrackDetailStatus", reservationNameID, "FetchReservationTrackLocally", groupName);
+                new LogHelper().Debug("web api request :- " + requestString, reservationNameID, "FetchReservationTrackLocally", groupName);
+                var requestContent = new StringContent(requestString, Encoding.UTF8, "application/json");
+                HttpResponseMessage response = await httpClient.PostAsync(api_url + @"/local/FetchReservationTrackDetailStatus", requestContent);
+                if (response != null)
+                {
+                    if (response.IsSuccessStatusCode)
+                    {
+                        string apiResponse = await response.Content.ReadAsStringAsync();
+                        new LogHelper().Debug("web API response :- " + apiResponse, reservationNameID, "FetchReservationTrackLocally", groupName);
+                        return JsonConvert.DeserializeObject<Models.APIResponseModel>(apiResponse);
+                    }
+                    new LogHelper().Debug("Failed to fetch reservation track due to HTTP error : " + response.ReasonPhrase, reservationNameID, "FetchReservationTrackLocally", groupName);
+                    return new Models.APIResponseModel()
+                    {
+                        result = false,
+                        responseMessage = response.ReasonPhrase
+                    };
+                }
+                return new Models.APIResponseModel()
+                {
+                    result = false,
+                    responseMessage = "Local web API returned null"
+                };
+            }
+            catch (Exception ex)
+            {
+                new LogHelper().Error(ex, reservationNameID, "FetchReservationTrackLocally", groupName);
+                return new Models.APIResponseModel()
+                {
+                    result = false,
+                    responseMessage = "Generic Exception : " + ex.Message
+                };
+            }
+        }
         public async Task<Models.APIResponseModel> UpdateReservationStatus(string reservationNameID, Models.APIRequestModel localRequest, string groupName, string api_url)
         {
             try
@@ -1930,6 +1980,90 @@ namespace CheckinPortal.Helpers
                     responseMessage = "Generic Exception : " + ex.Message
                 };
             }
+        }
+
+        /// <summary>
+        /// Posts a reservation-level Opera TRACE via CloudAPI POST /ows/AddTrace
+        /// (OWS ReservationService.GuestRequests, RequestType=TRACES). Not a profile comment.
+        /// </summary>
+        public async Task<Models.OWS.OwsResponseModel> AddTrace(string reservationNameID, Models.OWS.OwsRequestModel owsRequest, string groupName, string api_url)
+        {
+            try
+            {
+                new LogHelper().Debug("Adding reservation trace using web api", reservationNameID, "AddTrace", groupName);
+                HttpClient httpClient = new HttpClient();
+                httpClient.DefaultRequestHeaders.Clear();
+                var accessToken = AuthenticationHelper.GetAPIAccessToken();
+                if (!string.IsNullOrEmpty(accessToken))
+                {
+                    httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+                }
+                string requestString = JsonConvert.SerializeObject(owsRequest, Formatting.None);
+                new LogHelper().Debug("web api url :- " + api_url + @"/ows/AddTrace", reservationNameID, "AddTrace", groupName);
+                new LogHelper().Debug("web api request :- " + requestString, reservationNameID, "AddTrace", groupName);
+                var requestContent = new StringContent(requestString, Encoding.UTF8, "application/json");
+                HttpResponseMessage response = await httpClient.PostAsync(api_url + @"/ows/AddTrace", requestContent);
+                if (response != null && response.IsSuccessStatusCode)
+                {
+                    string apiResponse = await response.Content.ReadAsStringAsync();
+                    new LogHelper().Debug("web API response :- " + apiResponse, reservationNameID, "AddTrace", groupName);
+                    return JsonConvert.DeserializeObject<Models.OWS.OwsResponseModel>(apiResponse);
+                }
+                new LogHelper().Debug("Failed to add reservation trace : " + (response != null ? response.ReasonPhrase : "null"), reservationNameID, "AddTrace", groupName);
+                return new Models.OWS.OwsResponseModel()
+                {
+                    result = false,
+                    responseMessage = response != null ? response.ReasonPhrase : "No response"
+                };
+            }
+            catch (Exception ex)
+            {
+                new LogHelper().Error(ex, reservationNameID, "AddTrace", groupName);
+                return new Models.OWS.OwsResponseModel()
+                {
+                    result = false,
+                    responseMessage = "Generic Exception : " + ex.Message
+                };
+            }
+        }
+
+        /// <summary>
+        /// Convenience: build OWS credentials + AddReservationTrace and post to CloudAPI.
+        /// Department/message defaults come from Web.config (TraceDepartment, optional message keys).
+        /// </summary>
+        public async Task<Models.OWS.OwsResponseModel> AddReservationCompletionTrace(
+            string reservationNameID,
+            string reservationNumber,
+            string traceMessage,
+            string groupName,
+            string api_url)
+        {
+            string department = ConfigurationManager.AppSettings["TraceDepartment"];
+            if (string.IsNullOrWhiteSpace(department))
+                department = "FO";
+
+            var owsRequest = new Models.OWS.OwsRequestModel()
+            {
+                ChainCode = ConfigurationManager.AppSettings["ChainCode"]?.ToString(),
+                DestinationEntityID = ConfigurationManager.AppSettings["DestinationEntityID"]?.ToString(),
+                DestinationSystemType = ConfigurationManager.AppSettings["DestinationSystemType"]?.ToString(),
+                HotelDomain = ConfigurationManager.AppSettings["HotelDomain"]?.ToString(),
+                KioskID = ConfigurationManager.AppSettings["KioskID"]?.ToString(),
+                LegNumber = "1",
+                Language = ConfigurationManager.AppSettings["Language"]?.ToString(),
+                Password = ConfigurationManager.AppSettings["Password"]?.ToString(),
+                Username = ConfigurationManager.AppSettings["Username"]?.ToString(),
+                SystemType = ConfigurationManager.AppSettings["SystemType"]?.ToString(),
+                AddReservationTrace = new Models.OWS.AddReservationTrace()
+                {
+                    // Same pattern as AddComment / CreateComment: confirmation # with INTERNAL UniqueID
+                    ReservationNumber = reservationNumber,
+                    Department = department,
+                    TraceMEssage = traceMessage
+                }
+            };
+
+            return await AddTrace(reservationNameID, owsRequest, groupName, api_url);
         }
 
         public async Task<Models.OWS.OwsResponseModel> UpdateGuestPassport(string reservationNameID, Models.OWS.OwsRequestModel owsRequest, string groupName, string api_url)
@@ -2955,6 +3089,55 @@ namespace CheckinPortal.Helpers
                 return false;
             }
         }
+
+        /// <summary>
+        /// Inserts FO progress row into TbAuditTrailUserDetails via /local/InsertAuditLog → Usp_InsertAuditTrailDetails.
+        /// </summary>
+        public async Task<bool> InsertAuditLog(string reservationNameID, Models.APIRequestModel localRequest, string groupName, string api_url)
+        {
+            try
+            {
+                new LogHelper().Debug("Insert AuditTrail using web api", reservationNameID, "InsertAuditLog", groupName);
+                HttpClient httpClient = new HttpClient();
+                if (httpClient == null)
+                {
+                    new LogHelper().Debug("Failed InsertAuditLog using web api due to proxy error", reservationNameID, "InsertAuditLog", groupName);
+                    return false;
+                }
+                httpClient.DefaultRequestHeaders.Clear();
+                var accessToken = AuthenticationHelper.GetAPIAccessToken();
+                if (!string.IsNullOrEmpty(accessToken))
+                {
+                    httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+                }
+                string requestString = JsonConvert.SerializeObject(localRequest, Formatting.None);
+                // LocalController → Usp_InsertAuditTrailDetails → TbAuditTrailUserDetails
+                new LogHelper().Debug("web api url :- " + api_url + @"/local/InsertAuditLog", reservationNameID, "InsertAuditLog", groupName);
+                new LogHelper().Debug("web api request :- " + requestString, reservationNameID, "InsertAuditLog", groupName);
+                var requestContent = new StringContent(requestString, Encoding.UTF8, "application/json");
+                HttpResponseMessage response = await httpClient.PostAsync(api_url + @"/local/InsertAuditLog", requestContent);
+                if (response != null)
+                {
+                    if (response.IsSuccessStatusCode)
+                    {
+                        string apiResponse = await response.Content.ReadAsStringAsync();
+                        new LogHelper().Debug("web API response :- " + apiResponse, reservationNameID, "InsertAuditLog", groupName);
+                        var result = JsonConvert.DeserializeObject<APIResponseModel>(apiResponse);
+                        return result != null && result.result;
+                    }
+                    new LogHelper().Debug("Failed InsertAuditLog using web api due to HTTP error : " + response.ReasonPhrase, reservationNameID, "InsertAuditLog", groupName);
+                    return false;
+                }
+                new LogHelper().Debug("Failed InsertAuditLog using web api due to null returned from the local web api", reservationNameID, "InsertAuditLog", groupName);
+                return false;
+            }
+            catch (Exception ex)
+            {
+                new LogHelper().Error(ex, reservationNameID, "InsertAuditLog", groupName);
+                return false;
+            }
+        }
+
         public async Task<bool> InsertReservationPackageDetails(string reservationNameID, Models.APIRequestModel localRequest, string groupName, string api_url)
         {
             try

@@ -43,6 +43,7 @@ namespace CheckinPortal.Models.OWS
         public GuestComments GuestCommentRequest { get; set; }
         public string ProfileID { get; set; }
         public UpdateProfileAllergyRequest UpdateProfileAllergyRequest { get; set; }
+        public AddReservationTrace AddReservationTrace { get; set; }
     }
     public class FetchGuestRequest
     {
@@ -588,5 +589,14 @@ namespace CheckinPortal.Models.OWS
         public List<string> Allergies { get; set; }
         public string OtherAllergies { get; set; }
         public string UdfFieldName { get; set; }
+    }
+
+    /// <summary>Reservation-level Opera TRACE (GuestRequests RequestType=TRACES). Not a profile comment.</summary>
+    public class AddReservationTrace
+    {
+        public string ReservationNumber { get; set; }
+        public string Department { get; set; }
+        /// <summary>Matches CloudAPI field spelling (TraceMEssage).</summary>
+        public string TraceMEssage { get; set; }
     }
 }

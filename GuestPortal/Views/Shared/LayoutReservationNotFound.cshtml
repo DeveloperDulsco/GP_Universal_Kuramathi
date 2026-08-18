@@ -1,38 +1,45 @@
 ﻿@{
     Layout = null;
+    string expiryMessage = ViewBag.ExpiryMessage as string;
+    if (string.IsNullOrWhiteSpace(expiryMessage))
+    {
+        expiryMessage = CheckinPortal.Helpers.LinkExpiryHelper.DefaultMessage;
+    }
+    var asm = typeof(CheckinPortal.MvcApplication).Assembly;
+    string appVersion = asm.GetName().Version != null ? asm.GetName().Version.ToString() : "1.0.0.0";
+    var infoAttrs = asm.GetCustomAttributes(typeof(System.Reflection.AssemblyInformationalVersionAttribute), false);
+    if (infoAttrs != null && infoAttrs.Length > 0)
+    {
+        var infoVer = ((System.Reflection.AssemblyInformationalVersionAttribute)infoAttrs[0]).InformationalVersion;
+        if (!string.IsNullOrWhiteSpace(infoVer))
+        {
+            appVersion = infoVer;
+        }
+    }
 }
 <!doctype html>
 <html lang="en">
 <head>
-    <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  
-    <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="~/assets/css/bootstrap.min.css">
-    <!--font-awsome -->
     <link href="~/assets/css/all.css" rel="stylesheet">
-    <!-- custom CSS -->
     <link rel="stylesheet" href="~/assets/css/custom.css">
-    <link rel="icon" type="image/png" href="~/assets/images/favicon.ico" sizes="16x16">
+    <link rel="icon" type="image/png" href="~/assets/images/logo.png?v=@appVersion" sizes="32x32">
+    <link rel="shortcut icon" type="image/png" href="~/assets/images/logo.png?v=@appVersion">
     <title>Link Expired</title>
 </head>
-<body class="bg-hotel">
+<body class="bg-hotel link-expiry-page">
 
     <div class="header-top">
-        <img src="~/assets/images/logo.png" />
-
+        <img src="~/assets/images/logo.png" alt="Niva Kuramathi Maldives" />
     </div>
     <div class="container thank">
-        <div class="imge-thank">
-
-            <img src="~/assets/images/thank.svg" />
-        </div>
-        <p>This link has either been consumed or has <span>expired.</span> If you haven't completed the process,<br> please contact hotel guest reservations for assistance.</p>
+        <p style="white-space: pre-line;">@expiryMessage</p>
     </div>
-
-    <!-- Optional JavaScript -->
-    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <footer class="search-reservation-footer link-expiry-footer">
+        Powered by Dots · © 2026. All rights reserved. Version @appVersion
+    </footer>
 
     <script src="~/assets/js/jquery-3.5.1.slim.min.js"></script>
     <script src="~/assets/js/bootstrap.bundle.js"></script>

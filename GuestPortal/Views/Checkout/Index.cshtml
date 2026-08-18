@@ -7,6 +7,8 @@
     {
         ActiveTransctions = (List<CheckinPortal.Models.PaymentHeader>)ViewBag.ActiveTransactions;
     }
+    // Agree only when folio balance is zero (payment disabled for this property — outstanding balance → contact FO)
+    var canAgreeToFolio = Math.Abs(Model.BalanecAmount) <= 0.0001m;
 }
 
 <script>
@@ -42,12 +44,12 @@
 <div class="offset-md-0 col-md-3 offset-lg-0 col-lg-3  offset-xl-1 col-xl-2 left-menu h100">
     <div class="space"></div>
     <div class="menu">
-        <div class="logo"> <img class="img-fluid" src="~/assets/images/logo.png"></div>
+        <div class="logo"> <img class="img-fluid" src="~/assets/images/logo_white.png" alt="Niva Kuramathi"></div>
         @{ int PageNo = 1;}
         <ul>
             <li class="active tabs"><a href="#guestDetails"><label>Tax Invoice</label><span class="count">@PageNo</span></a></li>
             @{ PageNo++;}
-            <li class="@(ViewBag.EcomStatus ? "paymentdone active" : "") tabs"><a href="#upgrade"><label>Payment</label><span class="count">@PageNo</span></a></li>
+            <li class="@(ViewBag.EcomStatus ? "paymentdone active" : "") tabs"><a href="#upgrade"><label>Thank You</label><span class="count">@PageNo</span></a></li>
         </ul>
     </div>
 </div>
@@ -69,11 +71,17 @@
                                 @*<iframe src="https://docs.google.com/viewer?url=@(HttpContext.Current.Request.Url.GetLeftPart(UriPartial.Authority))/temp/@(Model.ReservationNumber).pdf&embedded=true" style="width:100%; height:550px;" frameborder="0"></iframe>*@
 
                                 <div class="form-check text-center">
-                                    <input class="form-check-input" id="myCheck" value="sign" type="checkbox">
+                                    <input class="form-check-input" id="myCheck" value="sign" type="checkbox" @Html.Raw(canAgreeToFolio ? "" : "disabled=\"disabled\"")>
                                     <label class="form-check-label" for="gridCheck">
                                         I agree to the charges stated on the Tax Invoice.
                                     </label>
                                 </div>
+                                @if (!canAgreeToFolio)
+                                {
+                                    <p class="text-center mt-2" style="color:#a94442;">
+                                        Your folio has an outstanding balance. Please contact the front desk for assistance.
+                                    </p>
+                                }
                                 <div class="row">
                                     <div class="col-md-4 offset-md-4">
                                         <div class="sign" id="signbox" style="display:none">
@@ -98,7 +106,10 @@
                                     <div class="col-lg-6 col-xl-4 offset-xl-4 offset-lg-6">
                                         <div class="btn-grp d-flex justify-content-between">
                                             <button class="btn_cancel" onclick="ShowContactFrontDesk()" value='Back'>Cancel</button>
-                                            <button class="btn_next " onclick="AgreeAndMoveNext(this)">Agree</button>
+                                            @if (canAgreeToFolio)
+                                            {
+                                                <button class="btn_next " onclick="AgreeAndMoveNext(this)">Agree</button>
+                                            }
                                         </div>
                                     </div>
                                 </div>
@@ -340,6 +351,7 @@ e?igsh=MWswMWN2eXVpaGFqZA=="><i class="fab fa-instagram"></i></a>
             <div class="modal-body">
                 <div class="quest">
                     <h5>Please contact front desk for assistance.</h5>
+                    <p class="mb-0" style="font-size:14px;">Your folio balance is not zero. Online pre check-out cannot be completed until the balance is settled at the Front Desk.</p>
                     <br />
                 </div>
                 <br />
@@ -550,6 +562,13 @@ e?igsh=MWswMWN2eXVpaGFqZA=="><i class="fab fa-instagram"></i></a>
 
         function AgreeAndMoveNext(obj) {
 
+            // Non-zero folio balance (debit or credit): block Agree — guest must contact Front Desk
+            var balanceAmount = parseFloat(("@Model.BalanecAmount" || "0").toString().replace(',', '.')) || 0;
+            if (Math.abs(balanceAmount) > 0.0001) {
+                ShowContactFrontDesk();
+                return;
+            }
+
             if ($("#myCheck").is(':checked')) {
 
                 if (!signaturePad.isEmpty()) {
@@ -561,42 +580,40 @@ e?igsh=MWswMWN2eXVpaGFqZA=="><i class="fab fa-instagram"></i></a>
                     var strImage = dataURL.replace(/^data:image\/[a-z]+;base64,/, "");
                     data.append('Base64Signature', strImage);
 
-
                     fetch(BaseURL + '/Checkout/UpdateSignature', {
                         method: "POST",
                         body: data,
                     }).then(response => response = response.json()).then(response => {
-                        $('#paymentTab').hide();
-                        moveToNextTab(obj);
-                        var balanceAmount = "@Model.BalanecAmount";
-                        if (+balanceAmount > 0) {
-                            $('#paymentTab').show();
-                            if ("@(ActiveTransctions.Count > 0)" == "True") {
-                                $('#cardSelectionModal').modal('show');
-                            }
-                            $('.loader-screen').fadeOut(800);
-                        }
-                        else {
-                            //call server to update the checkout flag
-                            $('.loader-screen').fadeIn(100);
-                            var formdata = new FormData();
-                            formdata.append('ReservationID', $('#ReservationID').val());
+                        // Balance is zero — complete pre check-out (payment deferred to phase 2)
+                        $('.loader-screen').fadeIn(100);
+                        var formdata = new FormData();
+                        formdata.append('ReservationID', $('#ReservationID').val());
 
-                            fetch(BaseURL + '/Checkout/CompletePreCheckout', {
-                                method: "POST",
-                                body: formdata,
-                            }).then(response => response = response.json()).then(response => {
-                                setTimeout(function () {
-                                    var obj1 = $('#paymentNextButton');
-                                    moveToNextTab(obj1);
-                                    $('.loader-screen').fadeOut(500);
-                                }, 500);
-                            }).catch(error => {
-                                $('#customMessageModalMessage').html("Unable to process your checkout.")
+                        fetch(BaseURL + '/Checkout/CompletePreCheckout', {
+                            method: "POST",
+                            body: formdata,
+                        }).then(response => response = response.json()).then(response => {
+                            if (response && response.contactFrontDesk) {
+                                $('.loader-screen').fadeOut(500);
+                                ShowContactFrontDesk();
+                                return;
+                            }
+                            if (response && response.result === false) {
+                                $('#customMessageModalMessage').html(response.message || "Unable to process your checkout.");
                                 $('#customMessageModal').modal('show');
                                 $('.loader-screen').fadeOut(500);
-                            });
-                        }
+                                return;
+                            }
+                            setTimeout(function () {
+                                var obj1 = $('#paymentNextButton');
+                                moveToNextTab(obj1);
+                                $('.loader-screen').fadeOut(500);
+                            }, 500);
+                        }).catch(error => {
+                            $('#customMessageModalMessage').html("Unable to process your checkout.");
+                            $('#customMessageModal').modal('show');
+                            $('.loader-screen').fadeOut(500);
+                        });
                     });
 
                 }

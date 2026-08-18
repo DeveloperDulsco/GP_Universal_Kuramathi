@@ -100,9 +100,10 @@ namespace CheckinPortal.BusinessLayer
                 }
                 else
                 {
-                    
                     //var localResponse = Helpers.DataTableHelper.DataTableToList<Models.StateMaster>(stateTable);
-                    return stateTable;
+                    return stateTable
+                        .OrderBy(s => s.Statename ?? string.Empty, StringComparer.OrdinalIgnoreCase)
+                        .ToList();
                 }
             }
             catch

@@ -12,6 +12,12 @@
     string RoomUpsellPackages = ViewBag.RoomUpsellPackages;
     string SpecialPackages = ViewBag.SpecialPackages;
 
+    int resumeTabIndex = -1;
+    if (ViewBag.ResumeTabIndex != null)
+    {
+        int.TryParse(ViewBag.ResumeTabIndex.ToString(), out resumeTabIndex);
+    }
+    bool useResumeTab = ViewBag.PaymentProcessed != true && resumeTabIndex >= 0;
 }
 <script>
     @*window.BlinkIDLicenseKey = '@System.Configuration.ConfigurationManager.AppSettings["BlinkIDLicenseKey"]';*@
@@ -24,12 +30,24 @@
         ReservationNumber = "@Model.ReservationNumber"
         ReservationNameID = "@Model.ReservationNameID"
         var IsDepositAvailable = "@Model.IsDepositAvailable";
+        var IsPaymentDisabled = true; // Phase 1 — payment in phase 2; keep precheckin unblocked
+        @if (ViewBag.IsPaymentDisabled != null)
+        {
+            <text>IsPaymentDisabled = @(ViewBag.IsPaymentDisabled == true ? "true" : "false");</text>
+        }
+        else
+        {
+            <text>IsPaymentDisabled = @(string.Equals(System.Configuration.ConfigurationManager.AppSettings["IsPaymentDisabled"], "true", StringComparison.OrdinalIgnoreCase) ? "true" : "false");</text>
+        }
         var TotalRoomRate = "@Model.TotalRoomRate";
         var TotalSpecialCharges = 0;
         var selectedUpsellPackage = [];
         var selectedSpecialPackage = [];
     var isuploadcomplete = "@ViewBag.uploadcomplete";
      var language = "@(Request.Cookies.AllKeys.Contains("culture") ? @Request.Cookies["culture"].Value : "en")";
+        var ServerCompletedTabIndex = @(ViewBag.CompletedTabIndex != null ? ViewBag.CompletedTabIndex.ToString() : "-1");
+        var ServerResumeTabIndex = @resumeTabIndex;
+        var SkipPrecheckinSplash = @(ViewBag.SkipPrecheckinSplash == true ? "true" : "false");
 
         selectedUpsellPackage = "@RoomUpsellPackages".split(",")
         selectedSpecialPackage = "@SpecialPackages".split(",")
@@ -169,23 +187,23 @@
 <div class="offset-md-0 col-md-3 offset-lg-0 col-lg-3  offset-xl-1 col-xl-2 left-menu h100">
     <div class="space"></div>
     <div class="menu">
-        <div class="logo"> <img class="img-fluid" src="~/assets/images/logo.png"></div>
+        <div class="logo"> <img class="img-fluid" src="~/assets/images/logo_white.png" alt="Niva Kuramathi"></div>
         @{ int PageNo = 1;}
         <ul>
-            <li class="active @(ViewBag.PaymentProcessed ? "paymentdone active " : "") tabs"><a href="#guestDetails"><label>Guest Details</label><span class="count">@PageNo</span></a></li>
+            <li class="@(useResumeTab ? (resumeTabIndex >= 0 ? "active" : "") : "active") @(ViewBag.PaymentProcessed ? "paymentdone active " : "") tabs"><a href="#guestDetails"><label>Guest Details</label><span class="count">@PageNo</span></a></li>
             @*@{ PageNo++;}
                 <li class="@(ViewBag.PaymentProcessed ? "paymentdone active" : "") tabs"><a href="#upgrade"><label>Upgrade</label><span class="count">@PageNo</span></a></li>*@
             @{ PageNo++;}
-            <li class="@(ViewBag.PaymentProcessed ? "paymentdone active" : "") tabs"><a href="#policies"><label>Policies</label><span class="count">@PageNo</span></a></li>
+            <li class="@(useResumeTab && resumeTabIndex >= 1 ? "active" : "") @(ViewBag.PaymentProcessed ? "paymentdone active" : "") tabs"><a href="#policies"><label>Policies</label><span class="count">@PageNo</span></a></li>
             @*@{ PageNo++;}
                 @if (!Model.IsDepositAvailable)
                     {
                         <li class="@((ViewBag.PaymentProcessed && ViewBag.IsPaymentSuccess) ? "paymentdone active" : "") tabs"><a href="#payment"><label>Payment</label><span class="count">@PageNo</span></a></li>
                     }*@
             @{ PageNo++;}
-            <li class="@((ViewBag.PaymentProcessed && ViewBag.IsPaymentSuccess && ViewBag.uploadcomplete) ? "paymentdone active" : "") tabs"><a href="#document"><label>Document</label><span class="count">@PageNo</span></a></li>
+            <li class="@(useResumeTab && resumeTabIndex >= 2 ? "active" : "") @((ViewBag.PaymentProcessed && ViewBag.IsPaymentSuccess && ViewBag.uploadcomplete) ? "paymentdone active" : "") tabs"><a href="#document"><label>Document</label><span class="count">@PageNo</span></a></li>
             @{ PageNo++;}
-            <li class="@((ViewBag.IsPaymentSuccess && ViewBag.uploadcomplete) ? "paymentdone active" : "") tabs"><a href="#qrCode"><label>Thank You</label><span class="count">@PageNo</span></a></li>
+            <li class="@(useResumeTab && resumeTabIndex >= 3 ? "active" : "") @((ViewBag.IsPaymentSuccess && ViewBag.uploadcomplete) ? "paymentdone active" : "") tabs"><a href="#qrCode"><label>Thank You</label><span class="count">@PageNo</span></a></li>
 
         </ul>
     </div>
@@ -198,7 +216,7 @@
             <div class="content-wrapper cstm-form">
                 <div class="min-height">
                     <div class="tab-content">
-                        <div class="tab-pane  cstm-form @(ViewBag.PaymentProcessed ? "paymentdone" : "active") " id="guestDetails">
+                        <div class="tab-pane  cstm-form @(ViewBag.PaymentProcessed ? "paymentdone" : (useResumeTab ? (resumeTabIndex == 0 ? "active" : "") : "active")) " id="guestDetails">
                             <form id="frm_guestdetails" name="frm_guestdetails">
 
                                 @Html.HiddenFor(model => model.ReservationID)
@@ -240,7 +258,7 @@
                                     <ul>
                                         <li>
                                             <label>ROOM TYPE</label>
-                                            <span>@Model.RTCShortDescription</span>
+                                            <span>@Model.RoomType</span>
                                         </li>
                                         <li>
                                             <label>CHECK-IN DATE</label>
@@ -261,7 +279,7 @@
                                 <div class="form-row">
                                     <div class="form-group col-md-6 col-lg-4">
                                         <label>Email  Address<span class="required">*</span></label>
-                                        @Html.TextBoxFor(model => model.Profiles[0].Email, new { @class = "form-control", type = "email" })
+                                        @Html.TextBoxFor(model => model.Profiles[0].Email, new { @class = "form-control", type = "email", placeholder = "name@example.com" })
                                         @Html.ValidationMessageFor(model => model.Profiles[0].Email, "", new { @class = "text-danger" })
                                     </div>
                                     <div class="form-group col-md-6 col-lg-4">
@@ -273,6 +291,7 @@
                                                          @class = "form-control phone-number-input",
                                                          id = "phoneNumber",
                                                          type = "tel",
+                                                         placeholder = "Phone number",
                                                          @readonly = "readonly"
                                                      })
                                         </div>
@@ -285,7 +304,7 @@
                                     </div>
                                     <div class="form-group col-md-6 col-lg-4">
                                         <label>Address</label>
-                                        @Html.TextBoxFor(model => model.Profiles[0].AddressLine1, new { @class = "form-control" })
+                                        @Html.TextBoxFor(model => model.Profiles[0].AddressLine1, new { @class = "form-control", placeholder = "Street address" })
                                     </div>
 
                                     <div class="form-group col-md-6 col-lg-4">
@@ -313,12 +332,12 @@
                                     </div>
                                     <div class="form-group col-md-6 col-lg-4">
                                         <label>City</label>
-                                        @Html.TextBoxFor(model => model.Profiles[0].City, new { @class = "form-control" })
+                                        @Html.TextBoxFor(model => model.Profiles[0].City, new { @class = "form-control", placeholder = "City" })
                                     </div>
 
                                     <div class="form-group col-md-6 col-lg-4">
                                         <label>Postal Code</label>
-                                        @Html.TextBoxFor(model => model.Profiles[0].PostalCode, new { @class = "form-control", value = "1212" })
+                                        @Html.TextBoxFor(model => model.Profiles[0].PostalCode, new { @class = "form-control", placeholder = "Postal code", value = "1212" })
                                     </div>
                                     <div class="form-group col-md-6 col-lg-4">
                                         <label>Nationality<span class="required">*</span></label>
@@ -334,7 +353,7 @@
                                         @Html.ValidationMessageFor(model => model.Profiles[0].Nationality, "", new { @class = "text-danger" })
                                         <input type="hidden" id="selectedNationality" name="selectedNationality" />
                                     </div>
-                                    <div class="form-group col-md-6 col-lg-4">
+                                    @*<div class="form-group col-md-6 col-lg-4">
                                         <div class="label-head mb-3">Purpose of Visit</div>
                                         @{
                                             var selectedVisitPurpose = (ViewBag.VisitPurposeCode as string) ?? Model.VisitPurposeCode ?? "";
@@ -368,13 +387,13 @@
                                                 </label>
                                             </div>
                                         </div>
-                                    </div>
+                                    </div>*@
 
                                     <!-- <h2>FLIGHT INFORMATION</h2> -->
 
                                     <div class="form-group col-md-6 col-lg-4">
                                         <label>Flight Number</label>
-                                        @Html.TextBoxFor(model => model.FlightNo, new { @class = "form-control" })
+                                        @Html.TextBoxFor(model => model.FlightNo, new { @class = "form-control", placeholder = "FlightNo" })
                                     </div>
                                     <div class="form-group col-md-6 col-lg-4 time-cstm">
                                         <label>Expected Arrival Time at the Resort <span class="required">*</span></label>
@@ -402,7 +421,7 @@ new { @class = "text-danger" }
                                 </div>
                             </form>
                         </div>
-                        <div class="tab-pane  cstm-form @(ViewBag.PaymentProcessed ? "paymentdone" : "") " id="policies">
+                        <div class="tab-pane  cstm-form @(ViewBag.PaymentProcessed ? "paymentdone" : (useResumeTab && resumeTabIndex == 1 ? "active" : "")) " id="policies">
 
                             <h1>Policies</h1>
                             @*<h2 class="mb-none">Policies</h2>*@
@@ -418,7 +437,7 @@ new { @class = "text-danger" }
                                         <div class="form-group row">
                                             <label class="col-7 col-lg-4 col-xl-4">Room Type</label>
                                             <div class="col-5 col-lg-8 col-xl-8">
-                                                <span>@Model.RTCShortDescription</span>
+                                                <span>@Model.RoomType</span>
                                             </div>
                                         </div>
                                         <div class="form-group row">
@@ -539,7 +558,7 @@ new { @class = "text-danger" }
                                         <div class="form-check" style="margin-top: 14px;">
                                             <input class="form-check-input" type="checkbox" id="excursionDisclaimer" name="ExcursionAccepted" value="True">
                                             <label class="form-check-label" for="excursionDisclaimer" style="text-transform: none; font-weight: 500;">
-                                                I have read and agree to the <a href="javascript:void(0);" id="openExcursionDisclaimer">Aqua Sports / Excursion Disclaimer</a> <span class="required">*</span>
+                                                I have read and agree to the <a href="javascript:void(0);" id="openExcursionDisclaimer">Aqua Sports / Excursion Disclaimer</a><span class="required">*</span>
                                             </label>
                                         </div>
 
@@ -567,7 +586,7 @@ new { @class = "text-danger" }
                                                 <div class="signature-pad--footer">
                                                     <div class="signature-pad--actions">
                                                         <div class="buttons">
-                                                            <button type="button" class="button clear" data-action="clear">Clear</button>
+                                                            <button type="button" class="button clear" data-action="clear">CLEAR</button>
                                                         </div>
                                                         <div class="description">Sign above</div>
                                                     </div>
@@ -669,7 +688,7 @@ new { @class = "text-danger" }
                         }-->
                         @if (!Model.IsUploadComplete)
                         {
-                            <div class="tab-pane  cstm-form @((ViewBag.PaymentProcessed && ViewBag.IsPaymentSuccess && !ViewBag.uploadcomplete) ? "active" : "")  " id="document">
+                            <div class="tab-pane  cstm-form @((ViewBag.PaymentProcessed && ViewBag.IsPaymentSuccess && !ViewBag.uploadcomplete) || (useResumeTab && resumeTabIndex == 2) ? "active" : "")  " id="document">
                                 <h1>Document</h1>
                                 <div class="content">
                                     <p>Dear @Model.Profiles[0].Salutation @Model.Profiles[0].FirstName @Model.Profiles[0].MiddleName @Model.Profiles[0].LastName,</p>
@@ -709,6 +728,8 @@ new { @class = "text-danger" }
                                                         string GuestName = guestRoleLabel;
                                                         int GuestID = 0;
                                                         int PMSProfileID = 0;
+                                                        bool hasDocumentUploaded = false;
+                                                        bool isDocumentSkipped = false;
                                                         if (Model.Profiles != null && Model.Profiles.Count > i)
                                                         {
                                                             var profileName = $"{Model.Profiles[i].FirstName} {Model.Profiles[i].MiddleName} {Model.Profiles[i].LastName}".Trim();
@@ -719,18 +740,29 @@ new { @class = "text-danger" }
 
                                                             GuestID = Model.Profiles[i].ProfileDetailID;
                                                             PMSProfileID = Model.Profiles[i].ProfileID;
+                                                            hasDocumentUploaded = Model.Profiles[i].HasDocumentUploaded
+                                                                || Model.Profiles[i].DocumentImage1 == "0"
+                                                                || !string.IsNullOrWhiteSpace(Model.Profiles[i].DocumentNumber);
+                                                            isDocumentSkipped = Model.Profiles[i].IsDocumentSkipped && !hasDocumentUploaded;
                                                         }
 
                                                         bool isRequiredUpload = true;
+                                                        string uploadStatus = hasDocumentUploaded ? "completed" : (isDocumentSkipped ? "skipped" : "incomplete");
+                                                        string liClass = hasDocumentUploaded ? "sucess" : (isDocumentSkipped ? "skipped" : "");
+                                                        string uploadLabel = hasDocumentUploaded
+                                                            ? "<i class=\"fas fa-check-circle\"></i> COMPLETE"
+                                                            : (isDocumentSkipped
+                                                                ? "<i class=\"fas fa-forward\"></i> SKIPPED"
+                                                                : "<i class=\"fas fa-cloud-upload-alt\"></i> UPLOAD");
 
-                                                        <li class="">
+                                                        <li class="@liClass">
                                                             <label id="guestname_@(i + 1)" data-default-name="@GuestName">@GuestName<br /><small class="text-muted">(@guestRoleLabel)</small></label>
                                                             <div class="pic"><img src="~/assets/images/avatar.png"></div>
-                                                            <a href="#" id="guestid_@(i + 1)" class="fileUpload" data-guestpmsprofileid="@PMSProfileID" data-guestprofileid="@GuestID" data-upload="incomplete" data-guestid="@(i + 1)" data-required="true" data-guest-role="@guestRoleLabel">
-                                                                <i class="fas fa-cloud-upload-alt"></i> UPLOAD
+                                                            <a href="#" id="guestid_@(i + 1)" class="fileUpload" data-guestpmsprofileid="@PMSProfileID" data-guestprofileid="@GuestID" data-upload="@uploadStatus" data-guestid="@(i + 1)" data-required="true" data-guest-role="@guestRoleLabel">
+                                                                @Html.Raw(uploadLabel)
                                                             </a>
-                                                            <a href="#" id="guestskip_@(i + 1)" class="guestDocumentSkip" data-guestid="@(i + 1)" style="display:none; margin-left:8px; color:#a67c00;">
-                                                                <i class="fas fa-forward"></i> Skip
+                                                            <a href="#" id="guestskip_@(i + 1)" class="guestDocumentSkip btnstyle" data-guestid="@(i + 1)" style="display:none; margin-left:8px; text-transform:uppercase;">
+                                                                <i class="fas fa-forward"></i> SKIP
                                                             </a>
                                                             @*<a href="#" id="scan_guestid_@(i + 1)" class="scanDocument" data-guestpmsprofileid="@PMSProfileID"  data-guestprofileid="@GuestID" data-scan="incomplete" data-guestid="@(i + 1)"><i class="fas fa-camera"></i> SCAN DOCUMENT</a>*@
                                                         </li>
@@ -842,7 +874,7 @@ new { @class = "text-danger" }
                                 </form>
                             </div>*@
 
-                        <div class="tab-pane   cstm-form @((ViewBag.PaymentProcessed && ViewBag.IsPaymentSuccess && ViewBag.uploadcomplete) ? "active" : "")" id="qrCode">
+                        <div class="tab-pane   cstm-form @((ViewBag.PaymentProcessed && ViewBag.IsPaymentSuccess && ViewBag.uploadcomplete) || (useResumeTab && resumeTabIndex == 3) ? "active" : "")" id="qrCode">
                             <div class="content">
                                 <div class="qr">
                                     <div class="code">
@@ -872,18 +904,13 @@ new { @class = "text-danger" }
                                     </div>
                                 </div>
                                 <div class="row">
-                                    @*<div class="col-md-12 text-center ">
-                                            <a href="@Url.Action("CompletePreCheckin","Home",new { ReservationID = Model.ReservationID })" class="ok_btn mt-2"><img src="~/assets/images/tick_icon.png">OK</a>
-                                        </div>*@
-                                    <div class="col-md-12 text-center ">
-                                        <a href="javascript:void(0);" id="btncmpcheckin" class="ok_btn mt-2"><img src="~/assets/images/tick_icon.png">OK</a>
+                                    <div class="col-md-12 text-center thank-you-actions">
+                                        <a href="javascript:void(0);" id="btncmpcheckin" class="btnstyle blue thank-you-btn">OK</a>
                                         <a id="downloadQR"
                                            download="QRCode.jpg"
                                            href="data:image/jpeg;base64,@ViewBag.QRcode"
-                                           class="ok_btn mt-2">
-
-                                            <img src="~/assets/images/tick_icon.png">
-                                            Save QR Code
+                                           class="btnstyle blue thank-you-btn">
+                                            SAVE QR CODE
                                         </a>
                                     </div>
 
@@ -894,7 +921,7 @@ new { @class = "text-danger" }
                                         <label>T +65 6337 1886</label>
                                         <label>E <a href="mailto:singapore@raffles.com">singapore@raffles.com</a></label>
                                     </div>*@
-                                <div class="social-media">
+                                @*<div class="social-media">
                                     <p>Subscribe or follow us on Facebook, Instagram and TikTok for exclusive offers and updates.</p>
                                     <ul>
                                         <li><a target="_blank" href="https://balimandira.com"><i class="fas fa-globe"></i></a></li>
@@ -912,7 +939,7 @@ new { @class = "text-danger" }
                                             </a>
                                         </li>
                                     </ul>
-                                </div>
+                                </div>*@
                             </div>
 
                         </div>
@@ -978,16 +1005,22 @@ new { @class = "text-danger" }
             </div>
             <div class="modal-body" style="max-height:70vh; overflow:auto;">
                 <p style="font-size:13px; line-height:1.45;">
-                    Universal Kuramathi makes every attempt to identify ingredients that may cause allergic reactions.
-                    The Resort cannot guarantee a total absence of allergens in dishes due to shared facilities and supplier handling.
+                    Milaidhoo makes every attempt to identify ingredients that may cause allergic reactions to those with allergies such as,
+                    but not limited to food allergy, skin allergy, dust allergy, insect sting allergy, and mould allergy.
+                    Every effort is made by the Milaidhoo Resort to instruct the staff of all departments on the type and severity of guest
+                    allergies when they are communicated in advance by guests or travel agents/tour operators through the Reservations and/or Front office teams.
+                    However, although the kitchen teams have awareness of the risks of cross- contamination, the Resort does not have control over this
+                    as all products are provided by overseas suppliers, and hence with little or no control over them during transportation and
+                    handling of the products until it reaches the Milaidhoo Resort. As such, the Milaidhoo Resort cannot guarantee a total absence
+                    of these products in our dishes.
                 </p>
-                <p style="font-weight:600; font-size:13px;">I am subject to one or more of the following allergens:</p>
+                <p style="font-weight:600; font-size:13px;">I am subject to one or more of the following allergens or the allergy mentioned below:</p>
                 <div class="row" id="allergenCheckboxList" style="font-size:13px;">
                     @{
                         var standardAllergens = new[] {
                             "Peanuts", "Eggs", "Molluscs", "Sesame Seeds", "Celery / Celeriac", "Fish", "Mustard",
                             "Soya", "Gluten", "Lupin", "Tree Nuts", "Sulphur Dioxide", "Crustaceans",
-                            "Products containing Lactose protein"
+                            "Products containing Lactose protein","MGS Monosodium of Glutamate"
                         };
                     }
                     @foreach (var allergen in standardAllergens)
@@ -1002,9 +1035,22 @@ new { @class = "text-danger" }
                     }
                 </div>
                 <div class="form-group" style="margin-top:12px;">
-                    <label for="allergenOtherNotes" style="font-weight:600;">Other / Notes</label>
+                    <label for="allergenOtherNotes" style="font-weight:600;">Other allergies [please avoid mentioning any meal preferences]:</label>
                     <textarea id="allergenOtherNotes" class="form-control" rows="3" maxlength="500" placeholder="Any other allergies or notes"></textarea>
                 </div>
+                <p style="font-weight:600; font-size:13px; line-height:1.45; margin-top:14px; margin-bottom:8px;">
+                    Therefore, I freely and voluntarily agree to the following terms and conditions.
+                </p>
+                <ul style="font-size:13px; line-height:1.45; padding-left:18px; margin-bottom:12px;">
+                    <li>I have the full and final responsibility of choosing any food, beverage and/or service taking into consideration the health and safety of my well-being.</li>
+                    <li>I acknowledge and agree that the Milaidhoo Resort is unable to specially prepare any food, beverages and dishes catering only to my needs;</li>
+                    <li>I agree that the Milaidhoo Resort shall not be liable in case of any allergic reaction encountered as a result thereof.</li>
+                    <li>I knowingly assume all risks and responsibilities involved in consuming dishes served at the Resort which might include ingredients which are allergens to me;</li>
+                    <li>I forever release and discharge the Milaidhoo Resort, its owner, manager, staff, agents, and sub-contractors from any and all claims, demands, liabilities, rights, damages, expenses, any causes of action whatsoever nature and any losses whatsoever kind resulting from the food consumed at the Resort including but not limited to any bodily harm, injury, death, illness to me;</li>
+                    <li>I waive and relinquish my rights to sue or bring any claim against the Milaidhoo Resort its owner, manager, staff, agent, sub-contractor, any other guest or any third party (&quot;Indemnitees&quot;) on account of any causes of action or any loss arising from the food consumed at the Resort including any bodily harm, injury, death and illness to me;</li>
+                    <li>I further agree to indemnify and hold any or all of the Indemnitees harmless against any claims, demands, liabilities, rights, damages, or expenses arising as a result of any action taken by a third party in relation to any causes of action whatsoever or losses whatsoever kind resulting from the food consumed at the Milaidhoo Resort including but not limited to any bodily harm, injury, illness, death to me.</li>
+                    <li>These Terms and Conditions are governed by the laws of the Maldives and subject to the Courts of the Maldives.</li>
+                </ul>
                 <div class="mt-3 text-right">
                     <button type="button" class="btnstyle blue" id="allergenFormSaveBtn">Save allergen details</button>
                 </div>
@@ -1024,22 +1070,22 @@ new { @class = "text-danger" }
                 </button>
             </div>
             <div class="modal-body" style="font-size:13px; line-height:1.45; max-height:70vh; overflow-y:auto;">
-                <p style="font-weight:600;">Aqua Sports &amp; Fun — Niva Kuramathi Maldives</p>
+                <p style="font-weight:600;">Aqua Sports &amp; Fun - Niva Kuramathi Maldives</p>
                 <ol style="padding-left:18px; margin-bottom:12px;">
-                    <li>I take part in the water sports activities, excursions and fishing trips of “Aqua Sports &amp; Fun” without any obligation from Aqua Sports &amp; Fun or the resort Niva Kuramathi Maldives.</li>
+                    <li>I take part in the water sports activities, excursions and fishing trips of &quot;Aqua Sports &amp; Fun&quot; without any obligation from Aqua Sports &amp; Fun or the resort Niva Kuramathi Maldives.</li>
                     <li>I am fully aware there are risks involved in water sports activities, excursions and fishing trips and I fully accept personal responsibility for this risk.</li>
                     <li>I declare that I am responsible for any damage to third parties and in addition accept full responsibility for damage and/or loss of any Aqua Sports &amp; Fun equipment.</li>
-                    <li>I declare that I am medically fit to participate in all activities of “Aqua Sports &amp; Fun”.</li>
+                    <li>I declare that I am medically fit to participate in all activities of &quot;Aqua Sports &amp; Fun&quot;.</li>
                     <li>I am able to swim and float independently without any flotation aid for at least 15 minutes.</li>
-                    <li>I agree to fully comply with rules and regulations of “Aqua Sports &amp; Fun” and the instructions of the “Aqua Sports &amp; Fun” instructors and their assistants. In case of non-compliance, I accept that I, the participant(s), shall be disqualified from the activity and “Aqua Sports &amp; Fun” will pay no compensation for claims for any activity.</li>
+                    <li>I agree to fully comply with rules and regulations of &quot;Aqua Sports &amp; Fun&quot; and the instructions of the &quot;Aqua Sports &amp; Fun&quot; instructors and their assistants. In case of non-compliance, I accept that I, the participant(s), shall be disqualified from the activity and &quot;Aqua Sports &amp; Fun&quot; will pay no compensation for claims for any activity.</li>
                     <li>I understand that swimmers, snorkelers, and divers have priority; hence, I will avoid the areas for swimmers, snorkelling and diving for the safety reasons, unless participating in those activities.</li>
-                    <li>I have been informed of the “Aqua Sports &amp; Fun” cancellation fee policy and agree to pay the cancellation fee that may often amount to 50% of the cost of the activity, if I cancel before 18:00 hrs of the prior evening. If I cancel an activity once started, I understand that I will not be entitled to any refund.</li>
-                    <li>“Aqua Sports &amp; Fun” water sports centre cannot be held responsible for delays, cancellations or any damage(s) due to an act of God, force majeure or bad weather.</li>
+                    <li>I have been informed of the &quot;Aqua Sports &amp; Fun&quot; cancellation fee policy and agree to pay the cancellation fee that may often amount to 50% of the cost of the activity, if I cancel before 18:00 hrs of the prior evening. If I cancel an activity once started, I understand that I will not be entitled to any refund.</li>
+                    <li>&quot;Aqua Sports &amp; Fun&quot; water sports centre cannot be held responsible for delays, cancellations or any damage(s) due to an act of God, force majeure or bad weather.</li>
                     <li>People under the age of 18 years must obtain the signature of their parents or guardian and have their consent wherever and whenever required.</li>
                     <li>For participants in parasailing, kitesurfing, jet surfing, and jet ski activities, I fully understand and accept that these are hazardous activities. I am voluntarily participating with full knowledge of the risks involved, and I hereby agree to accept and assume any and all risks of injury associated with these activities.</li>
-                    <li>For participants in excursions of Niva Kuramathi Maldives — I fully understand and accept “Aqua Sports &amp; Fun” Water Sports Centre terms and conditions of my participation in the excursion. I am fully aware that there may be pieces of metal and sharp objects in the islands or the lagoons, or plant and animal life in the islands, that may cause a risk of injury to persons and property, and agree to abide by the wishes and safety direction of “Aqua Sports &amp; Fun” crew, employees and/or instructors. I further agree to accept and assume any and all risks associated with the excursion, and agree to release from any legal liability “Aqua Sports &amp; Fun”, its owners, officers, directors, agents and employees, for any and all injuries, property loss, property damage, or loss of life caused by or resulting from any participation in the excursion and any of the activities associated with it.</li>
+                    <li>For participants in excursions of Niva Kuramathi Maldives - I fully understand and accept &quot;Aqua Sports &amp; Fun&quot; Water Sports Centre terms and conditions of my participation in the excursion. I am fully aware that there may be pieces of metal and sharp objects in the islands or the lagoons, or plant and animal life in the islands, that may cause a risk of injury to persons and property, and agree to abide by the wishes and safety direction of &quot;Aqua Sports &amp; Fun&quot; crew, employees and/or instructors. I further agree to accept and assume any and all risks associated with the excursion, and agree to release from any legal liability &quot;Aqua Sports &amp; Fun&quot;, its owners, officers, directors, agents and employees, for any and all injuries, property loss, property damage, or loss of life caused by or resulting from any participation in the excursion and any of the activities associated with it.</li>
                 </ol>
-                <p style="margin-top:10px;font-weight:600;">Participants (up to <span id="excursionPartMaxLabel">1</span>) — enter each name and signature</p>
+                <p style="margin-top:10px;font-weight:600;">Participants (up to <span id="excursionPartMaxLabel">1</span>) - enter each name and signature</p>
                 <input type="hidden" id="ExcursionParticipants" name="ExcursionParticipants" value="" />
                 <div id="excursionParticipantsList"></div>
                 <div style="margin:10px 0;">
@@ -1419,8 +1465,26 @@ new { @class = "text-danger" }
 </div>-->
 @section Scripts{
     <script src="~/assets/js/multilang.js"></script>
-    <script src="~/assets/js/adyenFunctions.js"></script>
+    @* Phase 1: payment disabled — do not load Adyen (GetOrginKey) or the page can hang *@
+    @if (ViewBag.IsPaymentDisabled != true
+         && !string.Equals(System.Configuration.ConfigurationManager.AppSettings["IsPaymentDisabled"], "true", StringComparison.OrdinalIgnoreCase))
+    {
+        <script src="~/assets/js/adyenFunctions.js"></script>
+    }
     <script>
+        // Document upload uses httpPost; adyenFunctions.js is skipped when payment is disabled.
+        if (typeof httpPost !== 'function') {
+            window.httpPost = function (endpoint, data) {
+                return fetch(endpoint, {
+                    method: 'POST',
+                    body: JSON.stringify(data),
+                    headers: {
+                        Accept: 'application/json, text/plain, */*',
+                        'Content-Type': 'application/json'
+                    }
+                }).then(function (response) { return response.json(); });
+            };
+        }
         var upselAvailable="@(PackageList.Count > 0)"
     </script>
 
@@ -1822,16 +1886,7 @@ new { @class = "text-danger" }
 
 
         $('select.selectCountry').on('change', function () {
-
-            //syncPhoneCountryFromDropdown();
-
-            //// Clear old validation error after country change
-            //var validator = $('#frm_guestdetails').data('validator');
-            //if (validator) {
-            //    validator.element("#phoneNumber");
-            //}
-
-            //LoadStateByCountry(this.value);
+            LoadStateByCountry(this.value);
         });
 
         function getSelectedNationalityCode() {
@@ -1942,6 +1997,37 @@ new { @class = "text-danger" }
             $guest.parent('li').removeClass('sucess').addClass('skipped');
             $('#guestskip_' + guestID).hide();
             showDocumentUploadSkipOption();
+            persistGuestDocumentSkips(false);
+        }
+
+        function collectSkippedProfileDetailIds() {
+            var ids = [];
+            $('.fileUpload').each(function () {
+                if ($(this).data('upload') === 'skipped') {
+                    var pid = parseInt($(this).data('guestprofileid'), 10) || 0;
+                    if (pid > 0) {
+                        ids.push(pid);
+                    }
+                }
+            });
+            return ids;
+        }
+
+        function persistGuestDocumentSkips(finalize) {
+            var profileIds = collectSkippedProfileDetailIds();
+            return $.ajax({
+                url: "@Url.Action("DocumentUploadSkipped", "Home")",
+                method: "POST",
+                data: {
+                    ReservationID: $("#ReservationID").val(),
+                    ReservationNameID: '@Model.ReservationNameID',
+                    ReservationNumber: '@Model.ReservationNumber',
+                    ProfileDetailIDs: profileIds.join(','),
+                    FinalizeDocumentStep: finalize === true
+                },
+                type: "POST",
+                dataType: "json"
+            });
         }
 
         var pendingDocumentUploads = {};
@@ -2005,13 +2091,17 @@ new { @class = "text-danger" }
                         ReservationNameID: @Model.ReservationNameID,
                     },
                     success: function (data) {
+                        documentupload = true;
+                        $('.loader-screen').fadeOut(500);
+                        moveToNextTab($trigger);
                     },
                     error: function (data) {
+                        // Still advance so guest is not stuck; server may have partially completed.
+                        documentupload = true;
+                        $('.loader-screen').fadeOut(500);
+                        moveToNextTab($trigger);
                     }
                 });
-                documentupload = true;
-                $('.loader-screen').fadeOut(500);
-                moveToNextTab($trigger);
             });
         }
 
@@ -2149,11 +2239,7 @@ new { @class = "text-danger" }
                                 return false;
                             }
                         }
-                        if (!terms) {
-                            $('#customMessageModalMessage').html("Please accept terms and conditions.");
-                            $('#customMessageModal').modal('show');
-                            return false;
-                        }
+                       
                         if (!excursionOk) {
                             $('#customMessageModalMessage').html("Please accept the Aqua Sports / Excursion Disclaimer.");
                             $('#customMessageModal').modal('show');
@@ -2183,7 +2269,18 @@ new { @class = "text-danger" }
                                 $('#excursionDisclaimerModal').modal('show');
                                 return false;
                             }
+                            if (!isValidExcursionPartName(ep.name)) {
+                                $('#customMessageModalMessage').html("Participant names may only contain letters, spaces, hyphens, and apostrophes (max 80 characters).");
+                                $('#customMessageModal').modal('show');
+                                $('#excursionDisclaimerModal').modal('show');
+                                return false;
+                            }
                             delete ep.guardianSignature;
+                        }
+                        if (!terms) {
+                            $('#customMessageModalMessage').html("Please accept terms and conditions.");
+                            $('#customMessageModal').modal('show');
+                            return false;
                         }
                         committedExcursionParticipants = JSON.parse(JSON.stringify(excursionPartsPayload));
                         $('#ExcursionParticipants').val(JSON.stringify(committedExcursionParticipants));
@@ -2205,7 +2302,7 @@ new { @class = "text-danger" }
                             data.append('DepositAvailable', '@Model.IsDepositAvailable');
                             data.append('UploadComplete', '@Model.IsUploadComplete');
                             if (signaturePad.isEmpty()) {
-                                $('#customMessageModalMessage').html("Please provide a signature first.");
+                                $('#customMessageModalMessage').html("Please provide a signature.");
                                 $('#customMessageModal').modal('show');
 
 
@@ -2334,6 +2431,17 @@ new { @class = "text-danger" }
                         }
                     }
 
+                    function sanitizeExcursionPartName(raw) {
+                        return String(raw || '')
+                            .replace(/[^A-Za-z\s'\-]/g, '')
+                            .replace(/\s{2,}/g, ' ')
+                            .substring(0, 80);
+                    }
+
+                    function isValidExcursionPartName(name) {
+                        return /^[A-Za-z]+(?:[ '\-][A-Za-z]+)*$/.test(String(name || '').trim());
+                    }
+
                     function buildExcursionParticipantRow(idx) {
                         return ''
                             + '<div class="excursion-part-row" data-idx="' + idx + '" style="border:1px solid #ccc;border-radius:8px;padding:10px;margin-bottom:10px;background:#fafafa;">'
@@ -2342,12 +2450,14 @@ new { @class = "text-danger" }
                             + '    <button type="button" class="btnstyle remove-excursion-part" data-idx="' + idx + '" style="min-width:70px;padding:4px 8px;font-size:11px;background:#888;">Remove</button>'
                             + '  </div>'
                             + '  <label style="text-transform:none;font-weight:500;display:block;margin-bottom:4px;">Name</label>'
-                            + '  <input type="text" class="form-control excursion-part-name" data-idx="' + idx + '" maxlength="120" placeholder="Participant full name" style="margin-bottom:8px;" />'
+                            + '  <input type="text" class="form-control excursion-part-name" data-idx="' + idx + '" maxlength="80" autocomplete="off" placeholder="Participant full name" style="margin-bottom:8px;" />'
                             + '  <label style="text-transform:none;font-weight:500;display:block;">Signature</label>'
-                            + '  <div style="border:1px solid #bbb;border-radius:4px;background:#fff;height:90px;margin-bottom:4px;">'
-                            + '    <canvas class="excursion-part-sig" data-idx="' + idx + '" style="width:100%;height:90px;touch-action:none;"></canvas>'
+                            + '  <div class="excursion-sig-pad">'
+                            + '    <div class="excursion-sig-pad-body">'
+                            + '      <canvas class="excursion-part-sig" data-idx="' + idx + '"></canvas>'
+                            + '    </div>'
                             + '  </div>'
-                            + '  <button type="button" class="clear-excursion-sig" data-idx="' + idx + '" style="font-size:11px;">Clear signature</button>'
+                            + '  <button type="button" class="btnstyle blue clear-excursion-sig" data-idx="' + idx + '" style="min-width:90px;padding:6px 14px;font-size:12px;margin-top:8px;">CLEAR</button>'
                             + '</div>';
                     }
 
@@ -2375,7 +2485,8 @@ new { @class = "text-danger" }
                         var list = [];
                         $('#excursionParticipantsList .excursion-part-row').each(function () {
                             var idx = parseInt($(this).attr('data-idx'), 10);
-                            var name = ($(this).find('.excursion-part-name').val() || '').trim();
+                            var name = sanitizeExcursionPartName($(this).find('.excursion-part-name').val()).trim();
+                            $(this).find('.excursion-part-name').val(name);
                             var sig = readPadSignature(idx);
                             if (name || sig) {
                                 list.push({ name: name, signature: sig });
@@ -2439,7 +2550,7 @@ new { @class = "text-danger" }
                         }
                         for (var i = 0; i < saved.length && i < MAX_EXCURSION_PARTS; i++) {
                             addExcursionParticipant();
-                            $('.excursion-part-name[data-idx="' + i + '"]').val(saved[i].name || '');
+                            $('.excursion-part-name[data-idx="' + i + '"]').val(sanitizeExcursionPartName(saved[i].name || ''));
                             applySigToPad(i, saved[i].signature);
                         }
                         $('#addExcursionParticipantBtn').toggle(excursionPartCount < MAX_EXCURSION_PARTS);
@@ -2457,7 +2568,7 @@ new { @class = "text-danger" }
                         $('#excursionParticipantsList .excursion-part-row').each(function () {
                             if (parseInt($(this).attr('data-idx'), 10) === idx) return;
                             var rowIdx = parseInt($(this).attr('data-idx'), 10);
-                            var name = ($(this).find('.excursion-part-name').val() || '').trim();
+                            var name = sanitizeExcursionPartName($(this).find('.excursion-part-name').val()).trim();
                             var sig = readPadSignature(rowIdx);
                             if (name || sig) saved.push({ name: name, signature: sig });
                         });
@@ -2468,6 +2579,25 @@ new { @class = "text-danger" }
                         var idx = parseInt($(this).attr('data-idx'), 10);
                         if (excursionPartPads[idx]) excursionPartPads[idx].clear();
                         delete excursionPartSigCache[idx];
+                    });
+
+                    $(document).on('keypress', '.excursion-part-name', function (e) {
+                        var ch = String.fromCharCode(e.which || e.keyCode);
+                        if (!/[A-Za-z\s'\-]/.test(ch)) {
+                            e.preventDefault();
+                        }
+                    });
+
+                    $(document).on('input paste', '.excursion-part-name', function () {
+                        var $el = $(this);
+                        var cleaned = sanitizeExcursionPartName($el.val());
+                        if ($el.val() !== cleaned) {
+                            var start = this.selectionStart;
+                            $el.val(cleaned);
+                            if (typeof start === 'number') {
+                                this.setSelectionRange(Math.min(start, cleaned.length), Math.min(start, cleaned.length));
+                            }
+                        }
                     });
 
                     function openExcursionModal() {
@@ -2518,6 +2648,11 @@ new { @class = "text-danger" }
                                 $('#customMessageModal').modal('show');
                                 return;
                             }
+                            if (!isValidExcursionPartName(payload.participants[i].name)) {
+                                $('#customMessageModalMessage').html("Participant names may only contain letters, spaces, hyphens, and apostrophes (max 80 characters).");
+                                $('#customMessageModal').modal('show');
+                                return;
+                            }
                         }
                         committedExcursionParticipants = JSON.parse(JSON.stringify(payload));
                         $('#ExcursionParticipants').val(JSON.stringify(payload));
@@ -2549,6 +2684,17 @@ new { @class = "text-danger" }
                     });
 
                     function LoadStateByCountry(countryID) {
+                        var state = $('select.state');
+                        var previousState = state.val();
+
+                        if (!countryID) {
+                            $(state).find('option').remove().end();
+                            state.append("<option value=''>Select State</option>");
+                            state.val('');
+                            state.selectpicker('refresh');
+                            return;
+                        }
+
                         $.ajax({
                             url: BaseURL + "/api/PortalService/GetStateByCountryID/",
                             data: {
@@ -2557,13 +2703,22 @@ new { @class = "text-danger" }
                             type: "GET",
                             dataType: "json",
                             success: function (data) {
-                                var state = $('select.state');
                                 $(state).find('option').remove().end();
                                 state.append("<option value=''>Select State</option>");
-                                $(data).each(function (i, obj) {
+
+                                var sortedStates = (data || []).slice().sort(function (a, b) {
+                                    return (a.Statename || '').localeCompare(b.Statename || '', undefined, { sensitivity: 'base' });
+                                });
+
+                                $(sortedStates).each(function (i, obj) {
                                     $(state).append("<option value='" + obj.StateMasterID + "'>" + obj.Statename + "</option>");
                                 });
-                                state.val('');
+
+                                if (previousState && state.find("option[value='" + previousState + "']").length) {
+                                    state.val(previousState);
+                                } else {
+                                    state.val('');
+                                }
 
                                 state.selectpicker('refresh');
                             },
@@ -2599,7 +2754,55 @@ new { @class = "text-danger" }
                     $('.tick').each(function () {
                         // $(this).hide();
                     })
+    // Track only document numbers that were successfully saved via UploadDocument.
     var uploadedDocs = [];
+
+    function normalizeUploadedDocNumber(docNum) {
+        if (docNum == null || docNum === undefined) {
+            return '';
+        }
+        return String(docNum).trim();
+    }
+
+    function isDocumentNumberAlreadyUploaded(docNum) {
+        var normalized = normalizeUploadedDocNumber(docNum);
+        if (!normalized) {
+            return false;
+        }
+        return uploadedDocs.indexOf(normalized) !== -1;
+    }
+
+    function trackUploadedDocumentNumber(docNum) {
+        var normalized = normalizeUploadedDocNumber(docNum);
+        if (!normalized) {
+            return;
+        }
+        if (uploadedDocs.indexOf(normalized) === -1) {
+            uploadedDocs.push(normalized);
+        }
+    }
+
+    function untrackUploadedDocumentNumber(docNum) {
+        var normalized = normalizeUploadedDocNumber(docNum);
+        if (!normalized) {
+            return;
+        }
+        uploadedDocs = uploadedDocs.filter(function (d) {
+            return d !== normalized;
+        });
+    }
+
+    // Seed from guests that already have a saved document (resume / page reload).
+    @if (Model.Profiles != null)
+    {
+        foreach (var profile in Model.Profiles)
+        {
+            if (profile.HasDocumentUploaded && !string.IsNullOrWhiteSpace(profile.DocumentNumber))
+            {
+                <text>trackUploadedDocumentNumber(@Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(profile.DocumentNumber)));</text>
+            }
+        }
+    }
 
 
                    // showHideUpsellTerms();
@@ -2617,6 +2820,9 @@ new { @class = "text-danger" }
                         $('#currentguestprofileid').val(currentguestpmsprofileid);
                         $('#currentGuestIndex').val(currentGuestIndex);
 
+                        // Fresh modal session — do not carry OCR state from another guest / failed attempt.
+                        resetDocumentInfo();
+                        clearFileUpload();
 
                         $('.spanDocumentNotValidated').each(function (i, o) {
                             $(o).html('');
@@ -2657,41 +2863,61 @@ new { @class = "text-danger" }
                 }, 500);
             }, 60000);
         }
-        $('#btncmpcheckin').on('click', function (e) {
-    e.preventDefault();
-    $('.loader-screen').fadeIn(100);
-    var btn = $(this);
-    btn.prop("disabled", true);   // prevent double tap
-
-
-
-    $.ajax({
-        url: '/Home/CompletePreCheckin',
-        type: 'POST',
-        contentType: 'application/json; charset=utf-8',
-        data: JSON.stringify({
-            ReservationNumber: @Model.ReservationNumber,
-            ReservationNameId: @Model.ReservationNameID,
-            ReservationID:@Model.ReservationID,
-        }),
-        success: function (result) {
-
-            if (result.success) {
-                $('.loader-screen').fadeOut(1000);
-                window.location.href = result.redirectUrl;
-            }
-            else {
-                $('.loader-screen').fadeOut(1000);
-                btn.prop("disabled", false);
-            }
-        },
-        error: function () {
-
-            btn.prop("disabled", false);
+        function logThankYouClick(buttonName) {
+            $.ajax({
+                url: '@Url.Action("LogThankYouClick", "Home")',
+                type: 'POST',
+                data: {
+                    ButtonName: buttonName,
+                    ReservationNumber: '@Model.ReservationNumber',
+                    ReservationNameID: '@Model.ReservationNameID'
+                }
+            });
         }
-    });
 
-});
+        $('#btncmpcheckin').on('click', function (e) {
+            e.preventDefault();
+            var btn = $(this);
+            if (btn.data('busy')) {
+                return;
+            }
+            btn.data('busy', true);
+            logThankYouClick('OK');
+            $('.loader-screen').fadeIn(50);
+
+            $.ajax({
+                url: '/Home/CompletePreCheckin',
+                type: 'POST',
+                contentType: 'application/json; charset=utf-8',
+                data: JSON.stringify({
+                    ReservationNumber: @Model.ReservationNumber,
+                    ReservationNameId: @Model.ReservationNameID,
+                    ReservationID: @Model.ReservationID,
+                }),
+                success: function (result) {
+                    if (result && result.success && result.redirectUrl) {
+                        // replace so Back from property site does not return to Thank You / landing
+                        window.location.replace(result.redirectUrl);
+                        return;
+                    }
+                    $('.loader-screen').fadeOut(200);
+                    btn.data('busy', false);
+                },
+                error: function () {
+                    $('.loader-screen').fadeOut(200);
+                    btn.data('busy', false);
+                }
+            });
+        });
+
+        $('#downloadQR').on('click', function () {
+            logThankYouClick('SaveQRCode');
+        });
+
+        $('.social-media a').on('click', function () {
+            var href = $(this).attr('href') || '';
+            logThankYouClick('Social:' + href);
+        });
                     $('.btnUploadPrimaryDoc').on('click', function (e) {
 
                         uploadDocumentToCloud();
@@ -2714,17 +2940,7 @@ new { @class = "text-danger" }
               return;
           }
           if (typeof hasAnySkippedDocument === 'function' && hasAnySkippedDocument()) {
-              $.ajax({
-                  url: "@Url.Action("DocumentUploadSkipped", "Home")",
-                  method: "POST",
-                  data: {
-                      ReservationID: $("#ReservationID").val(),
-                      ReservationNameID: '@Model.ReservationNameID',
-                      ReservationNumber: '@Model.ReservationNumber'
-                  },
-                  type: "POST",
-                  dataType: "json"
-              });
+              persistGuestDocumentSkips(true);
           }
           proceedDocumentUpload($btn);
       }
@@ -2773,22 +2989,16 @@ new { @class = "text-danger" }
                         $('.fileUpload').each(function () {
                             var status = $(this).data('upload');
                             if (status === 'incomplete' || status === 'uploading') {
-                                markGuestDocumentSkipped($(this).data('guestid'));
+                                var gid = $(this).data('guestid');
+                                var $guest = $('#guestid_' + gid);
+                                $guest.data('upload', 'skipped');
+                                $guest.html('<i class="fas fa-forward"></i> SKIPPED');
+                                $guest.parent('li').removeClass('sucess').addClass('skipped');
+                                $('#guestskip_' + gid).hide();
                             }
                         });
 
-                        $.ajax({
-                            url: "@Url.Action("DocumentUploadSkipped", "Home")",
-                            method: "POST",
-                            data: {
-                                ReservationID: $("#ReservationID").val(),
-                                ReservationNameID: '@Model.ReservationNameID',
-                                ReservationNumber: '@Model.ReservationNumber'
-                            },
-                            type: "POST",
-                            dataType: "json"
-                        });
-
+                        persistGuestDocumentSkips(true);
                         proceedDocumentUpload($(this));
                     });
 
@@ -2913,7 +3123,7 @@ new { @class = "text-danger" }
                             }
 
                             var docInfoSnapshot = $.extend({}, documentInformation);
-                            if (uploadedDocs.includes(docInfoSnapshot.documentNumber)) {
+                            if (isDocumentNumberAlreadyUploaded(docInfoSnapshot.documentNumber)) {
                                 $('#customMessageModalMessage')
                                     .html('This document is already uploaded now for another guest.');
                                 $('#customMessageModal').modal('show');
@@ -2951,6 +3161,8 @@ new { @class = "text-danger" }
                                     updateDocumentProceedButtonsState();
 
                                     if (!response.result) {
+                                        // Never keep a number in uploadedDocs unless save succeeded.
+                                        untrackUploadedDocumentNumber(docInfoSnapshot.documentNumber);
                                         markGuestUploadFailed(guestID);
                                         $('#customMessageModalMessage').html(response.message || 'Document upload failed. Please try again.');
                                         $('#customMessageModal').modal('show');
@@ -2958,13 +3170,14 @@ new { @class = "text-danger" }
                                         return;
                                     }
 
-                                    uploadedDocs.push(docInfoSnapshot.documentNumber);
+                                    trackUploadedDocumentNumber(docInfoSnapshot.documentNumber);
                                     markGuestUploadCompleted(guestID);
                                     updateDocumentUploadSkipVisibility();
                                 })
                                 .catch(function () {
                                     delete pendingDocumentUploads[guestID];
                                     updateDocumentProceedButtonsState();
+                                    untrackUploadedDocumentNumber(docInfoSnapshot.documentNumber);
                                     markGuestUploadFailed(guestID);
                                     $('#customMessageModalMessage').html('Document upload failed. Please try again.');
                                     $('#customMessageModal').modal('show');
@@ -3139,7 +3352,7 @@ new { @class = "text-danger" }
                                         if (!response.responseData.IsExpired) {
                                             //console.log(response.responseData.documentNumber);
                                             //console.log(uploadedDocs);
-                                            if (uploadedDocs.includes(response.responseData.documentNumber)) {
+                                            if (isDocumentNumberAlreadyUploaded(response.responseData.documentNumber)) {
                                                 $('.loader-screen').fadeOut(100);
 
                                                 showAlert(alertId, "This document is already uploaded now for another guest.", "warning");
@@ -3148,6 +3361,9 @@ new { @class = "text-danger" }
                                                 $(fileControl).siblings(".custom-file-label").removeClass("selected").html('Choose file');
                                                 $(fileControl).parent('div').find('img').attr('src', '');
                                                 $(fileControl).parent('div').find('img').hide();
+                                                if (filecontrolID === "primaryDoc1") {
+                                                    resetDocumentInfo();
+                                                }
                                                 return;
                                             }
 
@@ -3287,7 +3503,7 @@ new { @class = "text-danger" }
                                    if (!response.responseData.IsExpired) {
                                         //console.log(response.responseData.documentNumber);
                                         //console.log(uploadedDocs);
-                                        if (uploadedDocs.includes(response.responseData.documentNumber)) {
+                                        if (isDocumentNumberAlreadyUploaded(response.responseData.documentNumber)) {
                                             $('.loader-screen').fadeOut(100);
 
                                             showAlert(alertId, "This document is already uploaded now for another guest.", "warning");
@@ -3296,6 +3512,9 @@ new { @class = "text-danger" }
                                             $(fileControl).siblings(".custom-file-label").removeClass("selected").html('Choose file');
                                             $(fileControl).parent('div').find('img').attr('src', '');
                                             $(fileControl).parent('div').find('img').hide();
+                                            if (filecontrolID === "primaryDoc1") {
+                                                resetDocumentInfo();
+                                            }
                                             return;
                                         }
                                         if (response.responseData && response.responseData.fullImage) {

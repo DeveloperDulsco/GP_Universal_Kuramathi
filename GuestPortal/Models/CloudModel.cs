@@ -25,6 +25,10 @@ namespace CheckinPortal.Models
         public string ReservationID { get; set; }
         public string ReservationNameID { get; set; }
         public string Type { get; set; }
+        /// <summary>CSV of ProfileDetailIDs to mark as document-skipped.</summary>
+        public string ProfileDetailIDs { get; set; }
+        /// <summary>When true, set IsUploadComplete if every profile is uploaded or skipped.</summary>
+        public bool FinalizeDocumentStep { get; set; }
     }
 
     public class CloudReservationModel
@@ -308,7 +312,8 @@ namespace CheckinPortal.Models
         CheckedoutSuccessfully,
         GuestFolioEmail,
         PrecheckinSMS,
-        PrecheckinCompleted
+        PrecheckinCompleted,
+        PrecheckoutCompleted
     }
     public class PaymentTypeMasterModel
     {
@@ -479,5 +484,20 @@ namespace CheckinPortal.Models
         public string ActionGroup { get; set; }
         public string ReservationNameID { get; set; }
 
+    }
+
+    /// <summary>
+    /// Payload for /local/InsertAuditLog or /audit/InsertAuditLog → Usp_InsertAuditTrailDetails → TbAuditTrailUserDetails.
+    /// ReservationNumber maps to TbAuditTrailUserDetails.ReservationID — FO progress stores ReservationDetailID there.
+    /// </summary>
+    public class PortalAuditLogModel
+    {
+        public string ApplicationName { get; set; }
+        public string ModuleName { get; set; }
+        public string ActionName { get; set; }
+        public string AuditMessage { get; set; }
+        public string UserName { get; set; }
+        public string ReservationNumber { get; set; }
+        public string DeviceIdentifier { get; set; }
     }
 }

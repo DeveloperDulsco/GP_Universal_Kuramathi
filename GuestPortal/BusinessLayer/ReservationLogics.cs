@@ -730,9 +730,16 @@ ActionGroup);
 
             return dataTable;
         }
+        /// <summary>
+        /// Fetch reservation from Opera without process filtering.
+        /// Callers must decide precheckin vs precheckout from reservation status.
+        /// Passing empty Process skips verifyReservationisAllowed (which would force DUEIN/RESERVED only).
+        /// </summary>
         public async Task<List<Models.OWS.OperaReservation>> FetchReservationDetailFromPMS(string ReservationNumber)
         {
-            string ActionGroup = "Pre-Checkin Fetch";
+            string ActionGroup = "Guest Search";
+            // Empty process = return reservation as-is (do not filter as precheckin-only)
+            string process = string.Empty;
 
             var reservationfromopera = await new CloudHelper().fetchReservationFromPMS(new Models.OWS.OwsRequestModel()
             {
@@ -752,7 +759,7 @@ ActionGroup);
 
                 }
 
-            }, AppSettingsManager.GetDecryptedSetting("APIBaseUrl"), "precheckin", ActionGroup);
+            }, AppSettingsManager.GetDecryptedSetting("APIBaseUrl"), process, ActionGroup);
 
             if (reservationfromopera == null || reservationfromopera.Count == 0)
             {
@@ -773,7 +780,7 @@ ActionGroup);
                         CRSNumber = ReservationNumber
                     }
 
-                }, AppSettingsManager.GetDecryptedSetting("APIBaseUrl"), "precheckin", ActionGroup);
+                }, AppSettingsManager.GetDecryptedSetting("APIBaseUrl"), process, ActionGroup);
             }
 
             return reservationfromopera;

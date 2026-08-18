@@ -175,9 +175,31 @@ function resolveResumeStep(rows) {
 }
 
 /**
+ * Apply server-resolved resume tab immediately (no meta AJAX / no splash).
+ * @param {number} resumeTabIndex - next incomplete step index
+ */
+function resumePrecheckinFromServer(resumeTabIndex) {
+    var step = getPrecheckinStepByIndex(resumeTabIndex);
+    if (!step) {
+        step = PRECHECKIN_STEPS[0];
+    }
+    activatePrecheckinStep(step);
+}
+
+/**
  * @param {boolean} handleEntry - when true, skip START splash if progress exists
  */
 function resumePrecheckinProgress(handleEntry) {
+    // Prefer server-side resume when Index already resolved CompletedTabIndex
+    if (typeof SkipPrecheckinSplash !== 'undefined' && SkipPrecheckinSplash
+        && typeof ServerResumeTabIndex !== 'undefined' && ServerResumeTabIndex >= 0) {
+        if (handleEntry) {
+            showPrecheckinWizard();
+        }
+        resumePrecheckinFromServer(ServerResumeTabIndex);
+        return;
+    }
+
     if (typeof ReservationNumber === 'undefined' || !ReservationNumber) {
         return;
     }

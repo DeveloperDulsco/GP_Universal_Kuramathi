@@ -1,140 +1,164 @@
-﻿
-@{
-    ViewBag.Title = "SearchReservation";
-}
-<title>QR Scan</title>
-<style type="text/css">
-
-    .search-container
+﻿@{
+    Layout = null;
+    ViewBag.Title = "Search Reservation";
+    var asm = typeof(CheckinPortal.MvcApplication).Assembly;
+    string appVersion = asm.GetName().Version != null ? asm.GetName().Version.ToString() : "1.0.0.0";
+    var infoAttrs = asm.GetCustomAttributes(typeof(System.Reflection.AssemblyInformationalVersionAttribute), false);
+    if (infoAttrs != null && infoAttrs.Length > 0)
     {
-        position: absolute;
-        top: 150px;
-        left: 50%;
-        /*top: 50%;*/
-        transform: translateX(-50%);
-        text-align: center;
-    }
-
-    .search-label
-    {
-        color: white;
-        font-weight: bold;
-        margin-right: 10px;
-    }
-
-    .search-container .search-input
-    {
-        padding: 10px 20px;
-        border: 1px solid #ccc;
-        margin-right: 10px;
-        width: 285px; /* Set desired width */
-    }
-
-    .search-container .search-button
-    {
-        text-align: center;
-        display: block;
-        padding: 10px 20px;
-        background-color: #f26122;
-        -webkit-box-shadow: -3px 9px 39px -3px rgba(0,0,0,0.75);
-        -moz-box-shadow: -3px 9px 39px -3px rgba(0,0,0,0.75);
-        box-shadow: -3px 9px 39px -3px rgba(0,0,0,0.75);
-        max-width: 130px;
-        color: #fff;
-        text-transform: uppercase;
-        /* margin-top: auto;*/
-        font-weight: 500;
-        font-size: 18px;
-    }
-
-        .search-container .search-button:hover
+        var infoVer = ((System.Reflection.AssemblyInformationalVersionAttribute)infoAttrs[0]).InformationalVersion;
+        if (!string.IsNullOrWhiteSpace(infoVer))
         {
-            text-decoration: none;
-            background: #da5219;
-            color: #fff;
+            appVersion = infoVer;
         }
-</style>
-
-
-<div class="container-fluid p-0" id="divSplash" style="">
-    <div class="header">
-        <img class="img-fluid" src="~/assets/images/logo.png">
-    </div>
-    <div class="layout-inro1">
-
-        <div class="search-container">
-            <div class="row">
-                @*<label for="confirmation-number" style="color: white; font-weight: bold;">Confirmation Number</label>*@
-                <div>
-                    <input type="text" class="search-input m-2" id="confirmation-number" placeholder="Enter confirmation number" />
+    }
+}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <link rel="icon" type="image/png" href="~/assets/images/logo.png" sizes="16x16">
+    <link rel="shortcut icon" type="image/png" href="~/assets/images/logo.png">
+    <link rel="stylesheet" href="~/assets/css/bootstrap.min.css">
+    <link href="~/assets/css/all.css" rel="stylesheet">
+    <link rel="stylesheet" href="~/assets/css/custom.css">
+    <title>Search Reservation</title>
+</head>
+<body class="search-reservation-page">
+    <div class="container-fluid p-0 search-reservation-wrap" id="divSplash">
+        <div class="header">
+            <img class="img-fluid" src="~/assets/images/logo.png" alt="Niva Kuramathi">
+        </div>
+        <div class="layout-inro1 search-reservation-bg">
+            <div class="search-container">
+                <div class="row justify-content-center">
+                    <div class="col-12 col-md-10 col-lg-8">
+                        <input type="text"
+                               class="search-input m-2"
+                               id="confirmation-number"
+                               name="ConfirmationNo"
+                               maxlength="40"
+                               autocomplete="off"
+                               spellcheck="false"
+                               placeholder="Enter confirmation, reservation, or OTA booking number" />
+                    </div>
+                    <div class="col-12">
+                        <a class="search-button m-2 align-middle" id="search-button" href="#" onclick="searchConfirmation(); return false;">SEARCH</a>
+                    </div>
                 </div>
                 <div>
-                    <a class="search-button m-2 align-middle" id="search-button" style="width:auto" onclick="searchConfirmation()" href="#">SEARCH</a>
+                    <span class="searchError" id="searchError" style="display:none;"></span>
                 </div>
             </div>
-            <div>
-                <span class="searchError" id="searchError" style="display:none; color:red;"></span>
+        </div>
+        <footer class="search-reservation-footer">
+            Powered by Dots · © 2026. All rights reserved. Version @appVersion
+        </footer>
+    </div>
+
+    <div class="loader-screen" style="display:none;z-index:99999">
+        <div class="loadingio-spinner-pulse-yd5dl03y9fi">
+            <div class="ldio-v55tnqe6ie">
+                <div></div><div></div><div></div>
             </div>
-
-        </div>
-
-    </div>
-</div>
-
-<div class="loader-screen" style="display:none;z-index:99999">
-    <div class="loadingio-spinner-pulse-yd5dl03y9fi">
-        <div class="ldio-v55tnqe6ie">
-            <div></div><div></div><div></div>
         </div>
     </div>
-</div>
 
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="~/assets/js/bootstrap.bundle.js"></script>
+    <script type="text/javascript">
+        (function () {
+            var MAX_LEN = 40;
+            var ALLOWED = /[^a-zA-Z0-9\-]/g;
+            var INVALID_MSG = "Please enter a valid confirmation, reservation, or OTA booking number.";
+            var EMPTY_MSG = "Please enter a confirmation, reservation, or OTA booking number.";
 
-<script type="text/javascript">
-
-    function searchConfirmation() {
-            var confirmationNumber = $("#confirmation-number").val();
-
-            if (confirmationNumber.trim() === "") {
-                //alert("Please enter a confirmation number.");
-                $(".searchError").text("Please enter a confirmation number.")
-                $(".searchError").show()
-                return;
+            function sanitizeValue(value) {
+                return (value || "").replace(ALLOWED, "").substring(0, MAX_LEN);
             }
 
-            // Show loader
-            $(".loader-screen").show();
+            function showError(message) {
+                $(".searchError").text(message).show();
+            }
 
-            // Submit the form using AJAX
-            $.ajax({
-                url: '@Url.Action("SearchReservation", "Home")', // Replace with your controller name
-                type: "POST",
-                data: { ConfirmationNo: confirmationNumber },
-                success: function (response) {
-                    if (response.result) {
-                        if (response.redirectUrl) {
-                            window.location.href = response.redirectUrl;
-                        } else {
-                            $(".loader-screen").hide();
-                            $(".searchError").text("Reservation not found.");
-                            $(".searchError").show();
-                        }
-                    }
-                    else {
-                        //alert("Reservation not found.");
-                        $(".loader-screen").hide();
-                        $(".searchError").text(response.errorMessage)
-                        $(".searchError").show()
-                    }
+            function hideLoader() {
+                $(".loader-screen").hide();
+            }
 
-                },
-                error: function () {
-                    // Hide loader
-                    $(".loader-screen").hide();
-                    $(".searchError").text("An error occurred while searching for the reservation.")
-                    $(".searchError").show()
+            // bfcache / Back restore: never leave the spinner stuck after QR → portal redirect
+            window.addEventListener("pageshow", function (e) {
+                if (e.persisted) {
+                    hideLoader();
                 }
             });
-         }
 
-</script>
+            $("#confirmation-number").on("input paste", function () {
+                var input = this;
+                setTimeout(function () {
+                    var cleaned = sanitizeValue(input.value);
+                    if (input.value !== cleaned) {
+                        input.value = cleaned;
+                    }
+                }, 0);
+            });
+
+            $("#confirmation-number").on("keypress", function (e) {
+                var key = e.which || e.keyCode;
+                if (key === 13) {
+                    e.preventDefault();
+                    searchConfirmation();
+                    return false;
+                }
+                var ch = String.fromCharCode(key);
+                if (!/[a-zA-Z0-9\-]/.test(ch)) {
+                    e.preventDefault();
+                    return false;
+                }
+            });
+
+            window.searchConfirmation = function () {
+                var confirmationNumber = sanitizeValue($("#confirmation-number").val()).trim();
+                $("#confirmation-number").val(confirmationNumber);
+
+                if (confirmationNumber === "") {
+                    showError(EMPTY_MSG);
+                    return;
+                }
+
+                if (confirmationNumber.length > MAX_LEN || !/^[a-zA-Z0-9\-]+$/.test(confirmationNumber)) {
+                    showError(INVALID_MSG);
+                    return;
+                }
+
+                $(".loader-screen").show();
+                $(".searchError").hide();
+
+                $.ajax({
+                    url: '@Url.Action("SearchReservation", "Home")',
+                    type: "POST",
+                    data: { ConfirmationNo: confirmationNumber },
+                    success: function (response) {
+                        if (response.result) {
+                            if (response.redirectUrl) {
+                                // replace so browser Back does not return to Search (avoids loader hang / re-POST loop)
+                                window.location.replace(response.redirectUrl);
+                            } else {
+                                hideLoader();
+                                showError("Reservation not found.");
+                            }
+                        } else {
+                            hideLoader();
+                            showError(response.errorMessage || "Reservation not found.");
+                        }
+                    },
+                    error: function () {
+                        hideLoader();
+                        showError("An error occurred while searching for the reservation.");
+                    }
+                });
+            };
+        })();
+    </script>
+</body>
+</html>

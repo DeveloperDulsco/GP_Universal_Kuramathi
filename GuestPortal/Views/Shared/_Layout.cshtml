@@ -56,7 +56,8 @@
 
 
     </script>
-    <link rel="icon" type="image/png" href="~/assets/images/favicon.ico" sizes="16x16">
+    <link rel="icon" type="image/png" href="~/assets/images/logo.png" sizes="32x32">
+    <link rel="shortcut icon" type="image/png" href="~/assets/images/logo.png">
     <title>GUEST DETAILS</title>
 </head>
 <body>
@@ -73,7 +74,7 @@
                     <span></span>
 
                 </div>
-                <a class="continue" style="width:auto" onclick="beginRegistration(true)" href="#">START</a>
+                <a class="continue" onclick="beginRegistration(true)" href="#">START</a>
             </div>
         </div>
     </div>
@@ -125,7 +126,7 @@
                         <br />
                         <br />
                         <div class="button-wrapper1">
-                            <button class="yes" data-dismiss="modal" data-toggle="modal">Continue</button>
+                            <button class="yes" data-dismiss="modal" data-toggle="modal">CONTINUE</button>
                         </div>
                     </div>
                 </div>
@@ -200,13 +201,36 @@
 
         var ReservationFound = "@ViewBag.ReservationFound";
         var PaymentProcessed = "@ViewBag.PaymentProcessed";
+        var SkipPrecheckinSplashLayout = "@ViewBag.SkipPrecheckinSplash" === "True";
+        var LayoutResumeTabIndex = parseInt("@(ViewBag.ResumeTabIndex != null ? ViewBag.ResumeTabIndex : -1)", 10);
+        if (isNaN(LayoutResumeTabIndex)) {
+            LayoutResumeTabIndex = -1;
+        }
 
         $('.loader-screen').fadeIn(100);
 
         function beginRegistration(fromUserStart) {
             $('#divSplash').fadeOut(200);
             $('#mainDiv').fadeIn(800);
+            guardPrecheckinHistory();
             // Do not seed tbReservationMetaData here — CompletedTabIndex is written on Next only.
+        }
+
+        // Keep browser Back from leaving mid-wizard / reloading Search (QR → Index)
+        // and from bouncing Landing ↔ Thank You after completion.
+        var gpHistoryGuarded = false;
+        function guardPrecheckinHistory() {
+            if (gpHistoryGuarded || !window.history || !history.pushState) {
+                return;
+            }
+            gpHistoryGuarded = true;
+            try {
+                history.replaceState({ gpPrecheckin: 1 }, '', window.location.href);
+                history.pushState({ gpPrecheckin: 1 }, '', window.location.href);
+                window.addEventListener('popstate', function () {
+                    history.pushState({ gpPrecheckin: 1 }, '', window.location.href);
+                });
+            } catch (e) { }
         }
 
         window.onload = (event) => {
@@ -225,20 +249,36 @@
                             $('#paymentStatusModal').modal('show');
                         }
 
+                        $('#divSplash').hide();
                         $('#mainDiv').fadeIn(800);
                         // Still restore wizard tab if progress exists (payment flow)
                         if (typeof resumePrecheckinProgress === 'function') {
                             resumePrecheckinProgress(false);
                         }
+                        guardPrecheckinHistory();
+                    }
+                    else if (SkipPrecheckinSplashLayout || (typeof SkipPrecheckinSplash !== 'undefined' && SkipPrecheckinSplash)) {
+                        // Server already resolved CompletedTabIndex — open wizard at saved step (no START flash).
+                        $('#divSplash').hide();
+                        $('#mainDiv').show();
+                        var resumeIdx = (typeof ServerResumeTabIndex !== 'undefined' && ServerResumeTabIndex >= 0)
+                            ? ServerResumeTabIndex
+                            : LayoutResumeTabIndex;
+                        if (typeof resumePrecheckinFromServer === 'function') {
+                            resumePrecheckinFromServer(resumeIdx);
+                        } else if (typeof activatePrecheckinStep === 'function' && typeof getPrecheckinStepByIndex === 'function') {
+                            activatePrecheckinStep(getPrecheckinStepByIndex(resumeIdx));
+                        }
+                        guardPrecheckinHistory();
                     }
                     else {
-                        // Always show START first so the page is never blank while resume loads.
-                        // If progress exists, resume will skip splash and open the last tab.
+                        // Fresh visit: show START. Client resume remains a fallback if meta fetch lagged server-side.
                         $('#mainDiv').hide();
                         $('#divSplash').fadeIn(800);
                         if (typeof resumePrecheckinProgress === 'function') {
                             resumePrecheckinProgress(true);
                         }
+                        guardPrecheckinHistory();
                     }
                 }
                 else {
@@ -268,7 +308,7 @@
                         <br />
                         <br />
                         <div class="button-wrapper1">
-                            <button class="btn_ok yes" data-dismiss="modal" data-toggle="modal">Continue</button>
+                            <button class="btn_ok yes" data-dismiss="modal" data-toggle="modal">CONTINUE</button>
                         </div>
                     </div>
                 </div>

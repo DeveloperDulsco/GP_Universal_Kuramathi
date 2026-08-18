@@ -54,7 +54,7 @@ namespace CheckinPortal.Controllers
             var test = Url.Encode(Helpers.EncryptionHelper.EncryptString("316914"));
             if (string.IsNullOrEmpty(id))
             {
-                return View("ReservationNotFound");
+                return ShowLinkExpiry(LinkExpiryHelper.MissingLink, "0", ActionName, ActionGroup);
             }
 
             string ConfirmationNo = Helpers.EncryptionHelper.DecryptString(id.ToString());
@@ -62,8 +62,7 @@ namespace CheckinPortal.Controllers
 
             if (string.IsNullOrEmpty(ConfirmationNo))
             {
-                Helpers.LogHelper.Instance.Log($"Unable to decrypt the confirmation no {id.ToString()}", "", ActionName, ActionGroup);
-                return View("ReservationNotFound");
+                return ShowLinkExpiry(LinkExpiryHelper.InvalidLink, id, ActionName, ActionGroup);
             }
 
             Helpers.FileHelpers.DeleteTempFiles();
@@ -79,7 +78,6 @@ namespace CheckinPortal.Controllers
             if (reservationsDt != null)
             {
                 reservations = JsonConvert.DeserializeObject<List<CloudReservationModel>>(reservationsDt.responseData.ToString()).FirstOrDefault();
-
             }
             if (reservations != null)
             {
@@ -88,6 +86,11 @@ namespace CheckinPortal.Controllers
                 bool isPreCheckoutComplete = false;
                 if (reservation != null)
                 {
+                    if (reservation.IsPrecheckOutPMS ?? false)
+                    {
+                        return ShowLinkExpiry(LinkExpiryHelper.AlreadyPreCheckedOut, ConfirmationNo, ActionName, ActionGroup);
+                    }
+
                     var reservationfromopera = await new CloudHelper().fetchReservationFromPMS1(new OWSRequestModel()
                     {
                         ChainCode = ConfigurationManager.AppSettings["ChainCode"].ToString(),
@@ -119,53 +122,58 @@ namespace CheckinPortal.Controllers
                             }
                             else
                             {
-                                return View("ReservationNotFound");
+                                return ShowLinkExpiry(LinkExpiryHelper.ReservationNotFound, ConfirmationNo, ActionName, ActionGroup);
                             }
                         }
                     }
                     else
                     {
-                        return View("ReservationNotFound");
+                        return ShowLinkExpiry(LinkExpiryHelper.ReservationNotFound, ConfirmationNo, ActionName, ActionGroup);
                     }
                 }
+                bool IsPaymentDisabled = false;
+                IsPaymentDisabled = (ConfigurationManager.AppSettings["IsPaymentDisabled"] != null && !string.IsNullOrEmpty(ConfigurationManager.AppSettings["IsPaymentDisabled"].ToString()) && bool.TryParse(ConfigurationManager.AppSettings["IsPaymentDisabled"].ToString(), out IsPaymentDisabled)) ? IsPaymentDisabled : false;
+
                 #region CheckFolio
                 #region Check Payment in Saavy
                 //Models.Local.LocalResponseModel localResponse = null;
                 new LogHelper().Log("Fetching payment details for reservation No. : " + SessionData.OperaReservation.ReservationNumber + " in Saavy Pay", SessionData.OperaReservation.ReservationNameID, "PushDueOutReservation", "Due-Out push");
-                APIResponseModel localResponse = await new CloudHelper().FetchPaymentDetails(SessionData.OperaReservation.ReservationNameID, new Models.APIRequestModel()
+                if (!IsPaymentDisabled)
                 {
-                    RequestObject = new Models.DueOut.FetchPaymentRequest()
+                    APIResponseModel localResponse = await new CloudHelper().FetchPaymentDetails(SessionData.OperaReservation.ReservationNameID, new Models.APIRequestModel()
                     {
-                        ReservationNameID = SessionData.OperaReservation.ReservationNameID,
-                        isActive = true
+                        RequestObject = new Models.DueOut.FetchPaymentRequest()
+                        {
+                            ReservationNameID = SessionData.OperaReservation.ReservationNameID,
+                            isActive = true
+                        }
+                    }, "Due-Out push", ConfigurationManager.AppSettings
+                        ["APIBaseUrl"].ToString());
+
+                    if (!localResponse.result || localResponse.responseData == null)
+                    {
+                        new LogHelper().Log("Failed to fetch payment details with reason :- " + localResponse.responseMessage, SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
+                        new LogHelper().Warn("Failed to fetch payment details with reason :- " + localResponse.responseMessage, SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
+
                     }
-                }, "Due-Out push", ConfigurationManager.AppSettings
-                    ["APIBaseUrl"].ToString());
+                    else
 
-                if (!localResponse.result || localResponse.responseData == null)
-                {
-                    new LogHelper().Log("Failed to fetch payment details with reason :- " + localResponse.responseMessage, SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
-                    new LogHelper().Warn("Failed to fetch payment details with reason :- " + localResponse.responseMessage, SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
-
+                    {
+                        new LogHelper().Debug("Converting API json to object", SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
+                        try
+                        {
+                            paymentHeaders = JsonConvert.DeserializeObject<List<Models.PaymentHeader>>(localResponse.responseData.ToString());
+                            new LogHelper().Log("Payment details fetched successfully", SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
+                        }
+                        catch (Exception ex)
+                        {
+                            new LogHelper().Error(ex, SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
+                            new LogHelper().Log("Failed to covert API response to object", SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
+                            new LogHelper().Warn("Failed to fetch payment details with reason :- " + ex.Message, SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
+                            new LogHelper().Debug("Failed to fetch payment details with reason :- " + ex.Message, SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
+                        }
+                    }
                 }
-                else
-
-                {
-                    new LogHelper().Debug("Converting API json to object", SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
-                    try
-                    {
-                        paymentHeaders = JsonConvert.DeserializeObject<List<Models.PaymentHeader>>(localResponse.responseData.ToString());
-                        new LogHelper().Log("Payment details fetched successfully", SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
-                    }
-                    catch (Exception ex)
-                    {
-                        new LogHelper().Error(ex, SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
-                        new LogHelper().Log("Failed to covert API response to object", SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
-                        new LogHelper().Warn("Failed to fetch payment details with reason :- " + ex.Message, SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
-                        new LogHelper().Debug("Failed to fetch payment details with reason :- " + ex.Message, SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
-                    }
-                }
-
                 #endregion
 
                 #region FetchFolioItemsByWindow
@@ -193,7 +201,7 @@ namespace CheckinPortal.Controllers
                 {
                     new LogHelper().Log("Failed to fetch folio by window with reason :- " + owsResponse1.responseMessage, SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
                     new LogHelper().Warn("Failed to fetch folio by window with reason :- " + owsResponse1.responseMessage, SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
-                    return View("ReservationNotFound");
+                    return ShowLinkExpiry(LinkExpiryHelper.NotEligible, ConfirmationNo, ActionName, ActionGroup);
                 }
                 else
                 {
@@ -223,15 +231,13 @@ namespace CheckinPortal.Controllers
                 #endregion
                 bool isOPIEnabled = false;
                 isOPIEnabled = (ConfigurationManager.AppSettings["OPIEnabled"] != null && !string.IsNullOrEmpty(ConfigurationManager.AppSettings["OPIEnabled"].ToString()) && bool.TryParse(ConfigurationManager.AppSettings["OPIEnabled"].ToString(), out isOPIEnabled)) ? isOPIEnabled : false;
-                bool IsPaymentDisabled = false;
-                IsPaymentDisabled = (ConfigurationManager.AppSettings["IsPaymentDisabled"] != null && !string.IsNullOrEmpty(ConfigurationManager.AppSettings["IsPaymentDisabled"].ToString()) && bool.TryParse(ConfigurationManager.AppSettings["IsPaymentDisabled"].ToString(), out IsPaymentDisabled)) ? IsPaymentDisabled : false;
                 if (isOPIEnabled || IsPaymentDisabled)
                 {
-                    if ((paymentHeaders == null || paymentHeaders.Count == 0) && guestFolio.BalanceAmount > 0)
-                    {
-                        new LogHelper().Log("Not able to process reservation No. : " + SessionData.OperaReservation.ReservationNumber + " because there is no payment details in the saavy pay as well as current balance is greater than 0", SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
-                        return View("ReservationNotFound");
-                    }
+                    //if ((paymentHeaders == null || paymentHeaders.Count == 0) )
+                    //{
+                    //    new LogHelper().Log("Not able to process reservation No. : " + SessionData.OperaReservation.ReservationNumber + " because there is no payment details in the saavy pay as well as current balance is greater than 0", SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
+                    //    return View("ReservationNotFound");
+                    //}
                 }
 
                 #region FetchFolioAsBase64
@@ -267,7 +273,7 @@ namespace CheckinPortal.Controllers
                 {
                     new LogHelper().Log("Failed to fetch folio with reason :- " + owsResponse1.responseMessage, SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
                     new LogHelper().Warn("Failed to fetch folio with reason :- " + owsResponse1.responseMessage, SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
-                    return View("ReservationNotFound");
+                    return ShowLinkExpiry(LinkExpiryHelper.NotEligible, ConfirmationNo, ActionName, ActionGroup);
                 }
                 else
                 {
@@ -350,20 +356,26 @@ namespace CheckinPortal.Controllers
                     }
 
                     Helpers.LogHelper.Instance.Log($"Reservation {ConfirmationNo} opening precheckout link", "", ActionName, ActionGroup);
+                    AuditProgressHelper.Log(
+                        AuditProgressHelper.ModulePreCheckout,
+                        AuditProgressHelper.Actions.LinkOpened,
+                        reservation.ReservationDetailID,
+                        SessionData.OperaReservation?.ReservationNameID);
                     ViewBag.PreauthAmount = preAuthAmount;
                     ViewBag.ActiveTransactions = activeTransactions != null && activeTransactions.Count() > 0 ? activeTransactions.ToList() : new List<PaymentHeader>();
                     return View(checkoutReservation);
                 }
                 else
                 {
-                    Helpers.LogHelper.Instance.Log($"Reservation {ConfirmationNo} not valid for checkout", "", ActionName, ActionGroup);
-                    return View("ReservationNotFound");
+                    string expiryReason = isPreCheckoutComplete
+                        ? LinkExpiryHelper.AlreadyPreCheckedOut
+                        : LinkExpiryHelper.NotEligible;
+                    return ShowLinkExpiry(expiryReason, ConfirmationNo, ActionName, ActionGroup);
                 }
             }
             else
             {
-                Helpers.LogHelper.Instance.Log($"Unable to find the reservation no {ConfirmationNo}", "", ActionName, ActionGroup);
-                return View("ReservationNotFound");
+                return ShowLinkExpiry(LinkExpiryHelper.ReservationNotFound, ConfirmationNo, ActionName, ActionGroup);
             }
 
         }
@@ -409,7 +421,7 @@ namespace CheckinPortal.Controllers
             string ActionName = "IndexPayment", ActionGroup = "Pre-CheckOut";
             if (string.IsNullOrEmpty(id))
             {
-                return View("ReservationNotFound");
+                return ShowLinkExpiry(LinkExpiryHelper.MissingLink, "0", ActionName, ActionGroup);
             }
             List<Models.PaymentHeader> paymentHeaders = null;
 
@@ -418,7 +430,7 @@ namespace CheckinPortal.Controllers
 
             if (string.IsNullOrEmpty(ConfirmationNo))
             {
-                return View("ReservationNotFound");
+                return ShowLinkExpiry(LinkExpiryHelper.InvalidLink, id, ActionName, ActionGroup);
             }
             Models.OWS.FolioModel guestFolio = null;
             Helpers.FileHelpers.DeleteTempFiles();
@@ -515,7 +527,7 @@ namespace CheckinPortal.Controllers
                         {
                             new LogHelper().Log("Failed to fetch folio by window with reason :- " + owsResponse1.responseMessage, SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
                             new LogHelper().Warn("Failed to fetch folio by window with reason :- " + owsResponse1.responseMessage, SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
-                            return View("ReservationNotFound");
+                            return ShowLinkExpiry(LinkExpiryHelper.NotEligible, ConfirmationNo, ActionName, ActionGroup);
                         }
                         else
                         {
@@ -641,12 +653,12 @@ namespace CheckinPortal.Controllers
                     else
                     {
                         Helpers.LogHelper.Instance.Log($"Reservation {ConfirmationNo} not valid for checkout or foilo not found", "", "IndexPayment", "Pre-Checkout");
-                        return View("ReservationNotFound");
+                        return ShowLinkExpiry(LinkExpiryHelper.NotEligible, ConfirmationNo, "IndexPayment", "Pre-Checkout");
                     }
                 }
                 else
                 {
-                    return View("ReservationNotFound");
+                    return ShowLinkExpiry(LinkExpiryHelper.ReservationNotFound, ConfirmationNo, "IndexPayment", "Pre-Checkout");
                 }
 
 
@@ -655,7 +667,7 @@ namespace CheckinPortal.Controllers
             else
             {
                 Helpers.LogHelper.Instance.Log($"Unable to find the reservation no {ConfirmationNo}", "", "IndexPayment", "Pre-Checkout");
-                return View("ReservationNotFound");
+                return ShowLinkExpiry(LinkExpiryHelper.ReservationNotFound, ConfirmationNo, "IndexPayment", "Pre-Checkout");
             }
 
         }
@@ -664,14 +676,14 @@ namespace CheckinPortal.Controllers
 
             if (string.IsNullOrEmpty(id))
             {
-                return View("ReservationNotFound");
+                return ShowLinkExpiry(LinkExpiryHelper.MissingLink, "0", "IndexPaymentold", "Pre-Checkout");
             }
 
             string ConfirmationNo = id;
 
             if (string.IsNullOrEmpty(ConfirmationNo))
             {
-                return View("ReservationNotFound");
+                return ShowLinkExpiry(LinkExpiryHelper.InvalidLink, id, "IndexPaymentold", "Pre-Checkout");
             }
 
             Helpers.FileHelpers.DeleteTempFiles();
@@ -783,16 +795,17 @@ namespace CheckinPortal.Controllers
                     else
                     {
                         Helpers.LogHelper.Instance.Log($"Reservation {ConfirmationNo} not valid for checkout or foilo not found", "", "IndexPayment", "Pre-Checkout");
-                        return View("ReservationNotFound");
+                        return ShowLinkExpiry(LinkExpiryHelper.NotEligible, ConfirmationNo, "IndexPaymentold", "Pre-Checkout");
                     }
                 }
                 else
                 {
                     Helpers.LogHelper.Instance.Log($"Unable to find the reservation no {ConfirmationNo}", "", "IndexPayment", "Pre-Checkout");
-                    return View("ReservationNotFound");
+                    return ShowLinkExpiry(LinkExpiryHelper.ReservationNotFound, ConfirmationNo, "IndexPaymentold", "Pre-Checkout");
                 }
 
             }
+
 
      
         public async Task<ActionResult> CompletePreCheckout(int ReservationID)
@@ -810,8 +823,51 @@ namespace CheckinPortal.Controllers
             var SystemType = ConfigurationManager.AppSettings["SystemType"].ToString();
             #endregion
 
-            #region Pushing Reservation Track
             string ActionName = "CompletePreCheckout", ActionGroup = "Pre-Checkout";
+
+            // Non-zero balance (above or below zero): do not complete online pre check-out
+            if (SessionData.FolioModel != null && SessionData.FolioModel.BalanceAmount != 0)
+            {
+                new LogHelper().Log(
+                    "Blocked CompletePreCheckout — folio balance is not zero: " + SessionData.FolioModel.BalanceAmount,
+                    SessionData.OperaReservation?.ReservationNameID, ActionName, ActionGroup);
+                return Json(new
+                {
+                    result = false,
+                    contactFrontDesk = true,
+                    message = "Please contact front desk for assistance. Your folio balance is not zero."
+                });
+            }
+
+            // Idempotent: skip Opera trace if pre-checkout already completed (link OK / double-submit)
+            bool alreadyPrecheckoutCompleted = false;
+            string precheckoutTraceSessionKey = "PreCheckoutTracePosted_" + (SessionData.OperaReservation?.ReservationNameID ?? "");
+            try
+            {
+                if (!string.IsNullOrEmpty(precheckoutTraceSessionKey) && Session[precheckoutTraceSessionKey] as bool? == true)
+                {
+                    alreadyPrecheckoutCompleted = true;
+                }
+                else
+                {
+                    var existingResDt = await new CloudHelper().FetchReservationDetailsByReferenceNumber(
+                        SessionData.OperaReservation.ReservationNumber,
+                        new APIRequestModel { RequestObject = SessionData.OperaReservation.ReservationNumber },
+                        ActionGroup,
+                        ConfigurationManager.AppSettings["APIBaseUrl"].ToString());
+                    if (existingResDt?.responseData != null)
+                    {
+                        var existingCloudRes = JsonConvert.DeserializeObject<List<CloudReservationModel>>(existingResDt.responseData.ToString()).FirstOrDefault();
+                        alreadyPrecheckoutCompleted = existingCloudRes != null && (existingCloudRes.IsPrecheckOutPMS ?? false);
+                    }
+                }
+            }
+            catch (Exception existingEx)
+            {
+                new LogHelper().Error(existingEx, SessionData.OperaReservation?.ReservationNameID, ActionName, ActionGroup);
+            }
+
+            #region Pushing Reservation Track
             new LogHelper().Log("Pushing reservation track in local DB ", SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
             #region Updating record status in Local DB
             new LogHelper().Log("Updating the reservation status in Local DB", SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
@@ -828,16 +884,65 @@ namespace CheckinPortal.Controllers
                 new LogHelper().Log("Updating the reservation status in Local DB with email send flag failed with reason :- " + localResponse.responseMessage, SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
             }
             else
+            {
                 new LogHelper().Log("Updating the reservation status in Local DB ", SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
+                if (!alreadyPrecheckoutCompleted)
+                {
+                    AuditProgressHelper.Log(
+                        AuditProgressHelper.ModulePreCheckout,
+                        AuditProgressHelper.Actions.PrecheckoutCompleted,
+                        ReservationID,
+                        SessionData.OperaReservation?.ReservationNameID);
+                }
+            }
             #endregion
+
+            #region Opera reservation TRACE (main page — not profile)
+            if (!alreadyPrecheckoutCompleted)
+            {
+                // Mark early so a parallel Agree/OK click does not post a second trace
+                if (!string.IsNullOrEmpty(precheckoutTraceSessionKey))
+                    Session[precheckoutTraceSessionKey] = true;
+
+                try
+                {
+                    string precheckoutTraceText = ConfigurationManager.AppSettings["PreCheckoutCompletedTraceMessage"];
+                    if (string.IsNullOrWhiteSpace(precheckoutTraceText))
+                        precheckoutTraceText = "pre-check-out completed";
+
+                    var traceResponse = await new CloudHelper().AddReservationCompletionTrace(
+                        SessionData.OperaReservation.ReservationNameID,
+                        SessionData.OperaReservation.ReservationNumber,
+                        precheckoutTraceText,
+                        ActionGroup,
+                        ConfigurationManager.AppSettings["APIBaseUrl"].ToString());
+
+                    if (traceResponse != null && traceResponse.result)
+                        new LogHelper().Log("Opera reservation trace posted: " + precheckoutTraceText, SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
+                    else
+                        new LogHelper().Log(
+                            "Failed to post Opera reservation trace with reason :- " + (traceResponse != null ? traceResponse.responseMessage : "null"),
+                            SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
+                }
+                catch (Exception traceEx)
+                {
+                    new LogHelper().Error(traceEx, SessionData.OperaReservation?.ReservationNameID, ActionName, ActionGroup);
+                }
+            }
+            else
+            {
+                new LogHelper().Log("Pre check-out already completed — skipping Opera reservation trace", SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
+            }
+            #endregion
+
             localResponse = await new CloudHelper().PushReservationTrackLocally(SessionData.OperaReservation.ReservationNameID, new Models.APIRequestModel()
             {
                 RequestObject = new Models.ReservationTrackStatus()
                 {
                     ReservationNameID = SessionData.OperaReservation.ReservationNameID,
-                    ProcessType = Models.ReservationProcessType.PreCheckedOutFetched.ToString(),
+                    ProcessType = Models.ReservationProcessType.PrecheckoutCompleted.ToString(),
                     ReservationNumber = SessionData.OperaReservation.ReservationNumber,
-                    ProcessStatus = "",
+                    ProcessStatus = "Precheckout",
                     EmailSent = false
                 }
             }, "pre checked-in fetch", ConfigurationManager.AppSettings["APIBaseUrl"].ToString());
@@ -871,7 +976,7 @@ namespace CheckinPortal.Controllers
                             ReservationNameID = SessionData.OperaReservation.ReservationNameID,
                             ProcessType = Models.ReservationProcessType.CheckoutFailled.ToString(),
                             ReservationNumber = SessionData.OperaReservation.ReservationNumber,
-                            ProcessStatus = "",
+                            ProcessStatus = "Checkout",
                             EmailSent = false
                         }
                     }, "pre checked-out fetch", ConfigurationManager.AppSettings["APIBaseUrl"].ToString());
@@ -903,7 +1008,7 @@ namespace CheckinPortal.Controllers
                                 ReservationNameID = SessionData.OperaReservation.ReservationNameID,
                                 ProcessType = Models.ReservationProcessType.CheckoutFailled.ToString(),
                                 ReservationNumber = SessionData.OperaReservation.ReservationNumber,
-                                ProcessStatus = "",
+                                ProcessStatus = "Checkout",
                                 EmailSent = false
                             }
                         }, "pre checked-out fetch", ConfigurationManager.AppSettings["APIBaseUrl"].ToString());
@@ -955,7 +1060,7 @@ namespace CheckinPortal.Controllers
                                         ReservationNameID = SessionData.OperaReservation.ReservationNameID,
                                         ProcessType = Models.ReservationProcessType.CheckoutFailled.ToString(),
                                         ReservationNumber = SessionData.OperaReservation.ReservationNumber,
-                                        ProcessStatus = "",
+                                        ProcessStatus = "Checkout",
                                         EmailSent = false
                                     }
                                 }, "pre checked-out fetch", ConfigurationManager.AppSettings["APIBaseUrl"].ToString());
@@ -987,7 +1092,7 @@ namespace CheckinPortal.Controllers
                                         ReservationNameID = SessionData.OperaReservation.ReservationNameID,
                                         ProcessType = Models.ReservationProcessType.CheckedoutSuccessfully.ToString(),
                                         ReservationNumber = SessionData.OperaReservation.ReservationNumber,
-                                        ProcessStatus = "",
+                                        ProcessStatus = "Checkout",
                                         EmailSent = false
                                     }
                                 }, "pre checked-out fetch", ConfigurationManager.AppSettings["APIBaseUrl"].ToString());
@@ -1042,7 +1147,7 @@ namespace CheckinPortal.Controllers
                                                         ReservationNameID = SessionData.OperaReservation.ReservationNameID,
                                                         ProcessType = Models.ReservationProcessType.CheckoutFailled.ToString(),
                                                         ReservationNumber = SessionData.OperaReservation.ReservationNumber,
-                                                        ProcessStatus = "",
+                                                        ProcessStatus = "Checkout",
                                                         EmailSent = false
                                                     }
                                                 }, "pre checked-out fetch", ConfigurationManager.AppSettings["APIBaseUrl"].ToString());
@@ -1074,7 +1179,7 @@ namespace CheckinPortal.Controllers
                                                         ReservationNameID = SessionData.OperaReservation.ReservationNameID,
                                                         ProcessType = Models.ReservationProcessType.CheckedoutSuccessfully.ToString(),
                                                         ReservationNumber = SessionData.OperaReservation.ReservationNumber,
-                                                        ProcessStatus = "",
+                                                        ProcessStatus = "Checkout",
                                                         EmailSent = false
                                                     }
                                                 }, "pre checked-out fetch", ConfigurationManager.AppSettings["APIBaseUrl"].ToString());
@@ -1105,7 +1210,7 @@ namespace CheckinPortal.Controllers
                                                     ReservationNameID = SessionData.OperaReservation.ReservationNameID,
                                                     ProcessType = Models.ReservationProcessType.CheckoutFailled.ToString(),
                                                     ReservationNumber = SessionData.OperaReservation.ReservationNumber,
-                                                    ProcessStatus = "",
+                                                    ProcessStatus = "Checkout",
                                                     EmailSent = false
                                                 }
                                             }, "pre checked-out fetch", ConfigurationManager.AppSettings["APIBaseUrl"].ToString());
@@ -1139,7 +1244,7 @@ namespace CheckinPortal.Controllers
                                     ReservationNameID = SessionData.OperaReservation.ReservationNameID,
                                     ProcessType = Models.ReservationProcessType.CheckoutFailled.ToString(),
                                     ReservationNumber = SessionData.OperaReservation.ReservationNumber,
-                                    ProcessStatus = "",
+                                    ProcessStatus = "Checkout",
                                     EmailSent = false
                                 }
                             }, "pre checked-out fetch", ConfigurationManager.AppSettings["APIBaseUrl"].ToString());
@@ -1172,7 +1277,7 @@ namespace CheckinPortal.Controllers
                         ReservationNameID = SessionData.OperaReservation.ReservationNameID,
                         ProcessType = Models.ReservationProcessType.CheckoutFailled.ToString(),
                         ReservationNumber = SessionData.OperaReservation.ReservationNumber,
-                        ProcessStatus = "",
+                        ProcessStatus = "Checkout",
                         EmailSent = false
                     }
                 }, "pre checked-out fetch", ConfigurationManager.AppSettings["APIBaseUrl"].ToString());
@@ -1239,7 +1344,7 @@ namespace CheckinPortal.Controllers
                     ReservationNameID = SessionData.OperaReservation.ReservationNameID,
                     ProcessType = Models.ReservationProcessType.PreCheckedOutFetched.ToString(),
                     ReservationNumber = SessionData.OperaReservation.ReservationNumber,
-                    ProcessStatus = "",
+                    ProcessStatus = "Checkout",
                     EmailSent = false
                 }
             }, "pre checked-out fetch", ConfigurationManager.AppSettings["APIBaseUrl"].ToString());
@@ -1272,6 +1377,11 @@ namespace CheckinPortal.Controllers
             string folioAsBase64 = "";
             //push events to DB
             reservationLogics.InsertEvent(policiesModel.ReservationID, "Folio Sign");
+            AuditProgressHelper.Log(
+                AuditProgressHelper.ModulePreCheckout,
+                AuditProgressHelper.Actions.FolioAgreed,
+                policiesModel.ReservationID,
+                SessionData.OperaReservation?.ReservationNameID ?? policiesModel.ReservationNameID);
 
             Helpers.LogHelper.Instance.Log($"Updating folio signature", "", ActionName, ActionGroup);
             #region FetchFolioAsBase64
@@ -1308,7 +1418,7 @@ namespace CheckinPortal.Controllers
             {
                 new LogHelper().Log("Failed to fetch folio with reason :- " + owsResponse1.responseMessage, SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
                 new LogHelper().Warn("Failed to fetch folio with reason :- " + owsResponse1.responseMessage, SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
-                return View("ReservationNotFound");
+                return ShowLinkExpiry(LinkExpiryHelper.NotEligible, SessionData.OperaReservation?.ReservationNameID ?? "0", ActionName, ActionGroup);
             }
             else
             {
@@ -1346,6 +1456,16 @@ namespace CheckinPortal.Controllers
                     else
                     {
                         new LogHelper().Log("Signature updated successfully", "", ActionName, ActionGroup);
+                        AuditProgressHelper.Log(
+                            AuditProgressHelper.ModulePreCheckout,
+                            AuditProgressHelper.Actions.SignatureCompleted,
+                            policiesModel.ReservationID,
+                            SessionData.OperaReservation?.ReservationNameID);
+                        AuditProgressHelper.Log(
+                            AuditProgressHelper.ModulePreCheckout,
+                            AuditProgressHelper.Actions.FolioSigned,
+                            policiesModel.ReservationID,
+                            SessionData.OperaReservation?.ReservationNameID);
                     }
                 }
                 catch (Exception exc)
@@ -1888,7 +2008,7 @@ namespace CheckinPortal.Controllers
                                     ReservationNameID = SessionData.OperaReservation.ReservationNameID,
                                     ProcessType = Models.ReservationProcessType.PreCheckedOutFetched.ToString(),
                                     ReservationNumber = SessionData.OperaReservation.ReservationNumber,
-                                    ProcessStatus = "",
+                                    ProcessStatus = "Checkout",
                                     EmailSent = false
                                 }
                             }, "pre checked-in fetch", ConfigurationManager.AppSettings
@@ -2432,7 +2552,7 @@ namespace CheckinPortal.Controllers
                     ReservationNameID = SessionData.OperaReservation.ReservationNameID,
                     ProcessType = Models.ReservationProcessType.PreCheckedOutFetched.ToString(),
                     ReservationNumber = SessionData.OperaReservation.ReservationNumber,
-                    ProcessStatus = "",
+                    ProcessStatus = "Checkout",
                     EmailSent = false
                 }
             }, "pre checked-in fetch", ConfigurationManager.AppSettings
@@ -2755,7 +2875,7 @@ namespace CheckinPortal.Controllers
                                 ReservationNameID = SessionData.OperaReservation.ReservationNameID,
                                 ProcessType = Models.ReservationProcessType.PreCheckedOutFetched.ToString(),
                                 ReservationNumber = SessionData.OperaReservation.ReservationNumber,
-                                ProcessStatus = "",
+                                ProcessStatus = "Checkout",
                                 EmailSent = false
                             }
                         }, "pre checked-in fetch", ConfigurationManager.AppSettings
@@ -3017,7 +3137,7 @@ namespace CheckinPortal.Controllers
                                         ReservationNameID = SessionData.OperaReservation.ReservationNameID,
                                         ProcessType = Models.ReservationProcessType.PreCheckedOutFetched.ToString(),
                                         ReservationNumber = SessionData.OperaReservation.ReservationNumber,
-                                        ProcessStatus = "",
+                                        ProcessStatus = "Checkout",
                                         EmailSent = false
                                     }
                                 }, "pre checked-in fetch", ConfigurationManager.AppSettings
@@ -3062,6 +3182,22 @@ namespace CheckinPortal.Controllers
 
             }
 
+        }
+
+        /// <summary>
+        /// Shows the Link Expiry page with a reason-specific guest message and server log entry.
+        /// </summary>
+        private ActionResult ShowLinkExpiry(string reason, string reference, string actionName, string actionGroup)
+        {
+            string message = LinkExpiryHelper.GetGuestMessage(reason);
+            Helpers.LogHelper.Instance.Warn(
+                $"Link expiry page shown. Reason={reason}. Message={message.Replace("\n", " ")}",
+                string.IsNullOrEmpty(reference) ? "0" : reference,
+                actionName ?? "Index",
+                actionGroup ?? "Pre-Checkout");
+            ViewBag.ExpiryReason = reason;
+            ViewBag.ExpiryMessage = message;
+            return View("ReservationNotFound");
         }
 
     }

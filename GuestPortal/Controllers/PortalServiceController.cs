@@ -36,7 +36,11 @@ namespace CheckinPortal.Controllers
             if (states == null)
                 return Ok(new List<Models.StateMaster>());
 
-            return Ok(states);
+            var sortedStates = states
+                .OrderBy(s => s.Statename ?? string.Empty, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            return Ok(sortedStates);
         }
         [HttpPost]
         [ActionName("GetPaymentmethods")]

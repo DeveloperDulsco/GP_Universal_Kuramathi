@@ -9,7 +9,13 @@ const httpPost = (endpoint, data) => fetch(`${endpoint}`, {
 }).then(response => response.json());
 
 const getOrginkey = (domainName) => httpPost(BaseURL + '/api/portalservice/orginkey?domainName=' + domainName).then(response => {
-    var keys = JSON.parse(response);
+    if (!response) {
+        throw new Error('Empty origin key response');
+    }
+    var keys = (typeof response === 'string') ? JSON.parse(response) : response;
+    if (!keys || !keys.originKeys) {
+        throw new Error('Invalid origin key response');
+    }
     return keys.originKeys[Object.keys(keys.originKeys)[0]];
 });
 
@@ -61,6 +67,10 @@ var dropin;
 var transactionID = moment().format('MMDDhhmmss');
 var transactionType = "Sale";
 
+// Phase 1 / IsPaymentDisabled: never call GetOrginKey — keeps precheckin usable without Adyen
+if (typeof IsPaymentDisabled !== 'undefined' && IsPaymentDisabled) {
+    console.warn('Payment disabled — skipping Adyen origin key / drop-in init');
+} else {
 getOrginkey(BaseURL).then(orginKey => {
     getPaymentMethods().then(paymentMethodsResponse => {
 
@@ -257,8 +267,15 @@ getOrginkey(BaseURL).then(orginKey => {
             dropin = checkout.create('dropin').mount('#dropin-container');
         }
 
+    }).catch(function (err) {
+        console.error('Adyen paymentMethods init failed', err);
+        if (typeof $ !== 'undefined') { $('.loader-screen').fadeOut(100); }
     });
+}).catch(function (err) {
+    console.error('Adyen origin key init failed', err);
+    if (typeof $ !== 'undefined') { $('.loader-screen').fadeOut(100); }
 });
+} // end payment-enabled Adyen init
 
 
 function proceedWithPayment() {

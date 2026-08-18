@@ -142,6 +142,10 @@ namespace CheckinPortal.Models
         public string DateOfBirth { get; set; }
         [Required(ErrorMessage = "Select Nationality")]
         public string Nationality { get; set; }
+        /// <summary>True when this guest's document upload was skipped (persisted).</summary>
+        public bool IsDocumentSkipped { get; set; }
+        /// <summary>True when a document image/number already exists for this guest.</summary>
+        public bool HasDocumentUploaded { get; set; }
 
     }
 
