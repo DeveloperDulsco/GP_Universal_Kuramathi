@@ -9,6 +9,8 @@
     }
     // Agree only when folio balance is zero (payment disabled for this property — outstanding balance → contact FO)
     var canAgreeToFolio = Math.Abs(Model.BalanecAmount) <= 0.0001m;
+    var isPaymentDisabled = ViewBag.IsPaymentDisabled == true
+        || string.Equals(System.Configuration.ConfigurationManager.AppSettings["IsPaymentDisabled"], "true", StringComparison.OrdinalIgnoreCase);
 }
 
 <script>
@@ -16,6 +18,7 @@
     ReservationNameID = "@Model.ReservationNameID"
     var Amount = "@Model.BalanecAmount"
        var language = "@(Request.Cookies.AllKeys.Contains("culture") ? @Request.Cookies["culture"].Value : "en")";
+    var IsPaymentDisabled = @(isPaymentDisabled ? "true" : "false");
 
 </script>
 
@@ -117,7 +120,7 @@
                         }
 
 
-                        @if (ViewBag.EcomStatus == null || !ViewBag.EcomStatus)
+                        @if (!isPaymentDisabled && (ViewBag.EcomStatus == null || !ViewBag.EcomStatus))
                         {
                             <div class="tab-pane cstm-form" id="payment">
                                 <div id="paymentTab">
@@ -390,7 +393,28 @@ e?igsh=MWswMWN2eXVpaGFqZA=="><i class="fab fa-instagram"></i></a>
 
     <script src="~/assets/js/multilang.js"></script>
 
-    <script src="~/assets/js/adyenFunctionsCheckout.js"></script>
+    @* Payment disabled — do not load Adyen (GetOrginKey) or the page can error / hang *@
+    @if (!isPaymentDisabled)
+    {
+        <script src="~/assets/js/adyenFunctionsCheckout.js"></script>
+    }
+    else
+    {
+        <script>
+            if (typeof httpPost !== 'function') {
+                window.httpPost = function (endpoint, data) {
+                    return fetch(endpoint, {
+                        method: 'POST',
+                        body: JSON.stringify(data),
+                        headers: {
+                            Accept: 'application/json, text/plain, */*',
+                            'Content-Type': 'application/json'
+                        }
+                    }).then(function (response) { return response.json(); });
+                };
+            }
+        </script>
+    }
     <script src="~/assets/js/signature_pad.umd.js"></script>
     <script src="~/assets/js/wizard.js"></script>
 
@@ -605,8 +629,13 @@ e?igsh=MWswMWN2eXVpaGFqZA=="><i class="fab fa-instagram"></i></a>
                                 return;
                             }
                             setTimeout(function () {
-                                var obj1 = $('#paymentNextButton');
-                                moveToNextTab(obj1);
+                                // Payment disabled: folio → thank you. Otherwise skip past payment pane via paymentNextButton.
+                                if (typeof IsPaymentDisabled !== 'undefined' && IsPaymentDisabled) {
+                                    moveToNextTab(obj);
+                                } else {
+                                    var obj1 = $('#paymentNextButton');
+                                    moveToNextTab(obj1.length ? obj1 : obj);
+                                }
                                 $('.loader-screen').fadeOut(500);
                             }, 500);
                         }).catch(error => {

@@ -133,13 +133,14 @@ namespace CheckinPortal.Controllers
                 }
                 bool IsPaymentDisabled = false;
                 IsPaymentDisabled = (ConfigurationManager.AppSettings["IsPaymentDisabled"] != null && !string.IsNullOrEmpty(ConfigurationManager.AppSettings["IsPaymentDisabled"].ToString()) && bool.TryParse(ConfigurationManager.AppSettings["IsPaymentDisabled"].ToString(), out IsPaymentDisabled)) ? IsPaymentDisabled : false;
+                ViewBag.IsPaymentDisabled = IsPaymentDisabled;
 
                 #region CheckFolio
                 #region Check Payment in Saavy
                 //Models.Local.LocalResponseModel localResponse = null;
-                new LogHelper().Log("Fetching payment details for reservation No. : " + SessionData.OperaReservation.ReservationNumber + " in Saavy Pay", SessionData.OperaReservation.ReservationNameID, "PushDueOutReservation", "Due-Out push");
                 if (!IsPaymentDisabled)
                 {
+                    new LogHelper().Log("Fetching payment details for reservation No. : " + SessionData.OperaReservation.ReservationNumber + " in Saavy Pay", SessionData.OperaReservation.ReservationNameID, "PushDueOutReservation", "Due-Out push");
                     APIResponseModel localResponse = await new CloudHelper().FetchPaymentDetails(SessionData.OperaReservation.ReservationNameID, new Models.APIRequestModel()
                     {
                         RequestObject = new Models.DueOut.FetchPaymentRequest()
@@ -594,38 +595,45 @@ namespace CheckinPortal.Controllers
 
                         #region Check Payment in Saavy
                         //Models.Local.LocalResponseModel localResponse = null;
-                        new LogHelper().Log("Fetching payment details for reservation No. : " + SessionData.OperaReservation.ReservationNumber + " in Saavy Pay", SessionData.OperaReservation.ReservationNameID, "PushDueOutReservation", "Due-Out push");
-                        APIResponseModel localResponse = await new CloudHelper().FetchPaymentDetails(SessionData.OperaReservation.ReservationNameID, new Models.APIRequestModel()
+                        bool IsPaymentDisabled = false;
+                        IsPaymentDisabled = (ConfigurationManager.AppSettings["IsPaymentDisabled"] != null && !string.IsNullOrEmpty(ConfigurationManager.AppSettings["IsPaymentDisabled"].ToString()) && bool.TryParse(ConfigurationManager.AppSettings["IsPaymentDisabled"].ToString(), out IsPaymentDisabled)) ? IsPaymentDisabled : false;
+                        ViewBag.IsPaymentDisabled = IsPaymentDisabled;
+
+                        if (!IsPaymentDisabled)
                         {
-                            RequestObject = new Models.DueOut.FetchPaymentRequest()
+                            new LogHelper().Log("Fetching payment details for reservation No. : " + SessionData.OperaReservation.ReservationNumber + " in Saavy Pay", SessionData.OperaReservation.ReservationNameID, "PushDueOutReservation", "Due-Out push");
+                            APIResponseModel localResponse = await new CloudHelper().FetchPaymentDetails(SessionData.OperaReservation.ReservationNameID, new Models.APIRequestModel()
                             {
-                                ReservationNameID = SessionData.OperaReservation.ReservationNameID,
-                                isActive = true
+                                RequestObject = new Models.DueOut.FetchPaymentRequest()
+                                {
+                                    ReservationNameID = SessionData.OperaReservation.ReservationNameID,
+                                    isActive = true
+                                }
+                            }, "Due-Out push", ConfigurationManager.AppSettings
+                                ["APIBaseUrl"].ToString());
+
+                            if (!localResponse.result || localResponse.responseData == null)
+                            {
+                                new LogHelper().Log("Failed to fetch payment details with reason :- " + localResponse.responseMessage, SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
+                                new LogHelper().Warn("Failed to fetch payment details with reason :- " + localResponse.responseMessage, SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
+
                             }
-                        }, "Due-Out push", ConfigurationManager.AppSettings
-                            ["APIBaseUrl"].ToString());
+                            else
 
-                        if (!localResponse.result || localResponse.responseData == null)
-                        {
-                            new LogHelper().Log("Failed to fetch payment details with reason :- " + localResponse.responseMessage, SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
-                            new LogHelper().Warn("Failed to fetch payment details with reason :- " + localResponse.responseMessage, SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
-
-                        }
-                        else
-
-                        {
-                            new LogHelper().Debug("Converting API json to object", SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
-                            try
                             {
-                                paymentHeaders = JsonConvert.DeserializeObject<List<Models.PaymentHeader>>(localResponse.responseData.ToString());
-                                new LogHelper().Log("Payment details fetched successfully", SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
-                            }
-                            catch (Exception ex)
-                            {
-                                new LogHelper().Error(ex, SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
-                                new LogHelper().Log("Failed to covert API response to object", SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
-                                new LogHelper().Warn("Failed to fetch payment details with reason :- " + ex.Message, SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
-                                new LogHelper().Debug("Failed to fetch payment details with reason :- " + ex.Message, SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
+                                new LogHelper().Debug("Converting API json to object", SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
+                                try
+                                {
+                                    paymentHeaders = JsonConvert.DeserializeObject<List<Models.PaymentHeader>>(localResponse.responseData.ToString());
+                                    new LogHelper().Log("Payment details fetched successfully", SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
+                                }
+                                catch (Exception ex)
+                                {
+                                    new LogHelper().Error(ex, SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
+                                    new LogHelper().Log("Failed to covert API response to object", SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
+                                    new LogHelper().Warn("Failed to fetch payment details with reason :- " + ex.Message, SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
+                                    new LogHelper().Debug("Failed to fetch payment details with reason :- " + ex.Message, SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
+                                }
                             }
                         }
 
