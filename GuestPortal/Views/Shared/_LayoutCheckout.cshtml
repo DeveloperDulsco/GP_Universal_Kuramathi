@@ -14,8 +14,12 @@
               href="https://checkoutshopper-live.adyen.com/checkoutshopper/sdk/3.8.1/adyen.css"
               integrity="sha384-y1lKqffK5z+ENzddmGIfP3bcMRobxkjDt/9lyPAvV9H3JXbJYxCSD6L8TdyRMCGM"
               crossorigin="anonymous">*@
-    @if (ViewBag.IsPaymentDisabled != true
-         && !string.Equals(System.Configuration.ConfigurationManager.AppSettings["IsPaymentDisabled"], "true", StringComparison.OrdinalIgnoreCase))
+    @{
+        // Set early so Adyen SDK / JS never run before the skip flag exists (order-safe with AppSettings)
+        var layoutPaymentDisabled = ViewBag.IsPaymentDisabled == true
+            || string.Equals(System.Configuration.ConfigurationManager.AppSettings["IsPaymentDisabled"], "true", StringComparison.OrdinalIgnoreCase);
+    }
+    @if (!layoutPaymentDisabled)
     {
     <link rel="stylesheet" href="https://checkoutshopper-test.adyen.com/checkoutshopper/sdk/3.8.1/adyen.css"
           integrity="sha384-y1lKqffK5z+ENzddmGIfP3bcMRobxkjDt/9lyPAvV9H3JXbJYxCSD6L8TdyRMCGM"
@@ -49,6 +53,8 @@
         var IsPaymentSuccess = "@ViewBag.IsPaymentSuccess";
         var PaymentFailureMessage = "@ViewBag.PaymentFailureMessage";
         var EcomStatus = "@ViewBag.EcomStatus";
+        // Must be in layout <head> before any Adyen script — Index may redefine later
+        var IsPaymentDisabled = @(layoutPaymentDisabled ? "true" : "false");
 
     </script>
     <link rel="icon" type="image/png" href="~/assets/images/logo.png" sizes="32x32">

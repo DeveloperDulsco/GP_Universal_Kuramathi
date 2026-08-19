@@ -164,6 +164,14 @@ namespace CheckinPortal.Controllers
                         {
                             return ShowLinkExpiry(LinkExpiryHelper.CheckedOut, confirmationNo, ActionName, ActionGroup);
                         }
+                        if (IsCancelledStatus(reservationStatus))
+                        {
+                            return ShowLinkExpiry(LinkExpiryHelper.Cancelled, confirmationNo, ActionName, ActionGroup);
+                        }
+                        if (IsNoShowStatus(reservationStatus))
+                        {
+                            return ShowLinkExpiry(LinkExpiryHelper.NoShow, confirmationNo, ActionName, ActionGroup);
+                        }
                         if (!IsPreCheckinStatus(reservationStatus))
                         {
                             return ShowLinkExpiry(LinkExpiryHelper.InvalidStatus, confirmationNo, ActionName, ActionGroup);
@@ -445,11 +453,10 @@ namespace CheckinPortal.Controllers
                                     Nationality = profile.Nationality,
                                     DocumentImage1 = profile.DocumentImage1 != null ? "0" : "1",
                                     DocumentNumber = profile.DocumentNumber,
-                                    HasDocumentUploaded = (profile.DocumentImage1 != null && profile.DocumentImage1.Length > 0)
-                                        || !string.IsNullOrEmpty(profile.DocumentNumber),
+                                    // Only image-backed uploads count as uploaded (DocumentNumber alone can come from PMS).
+                                    HasDocumentUploaded = (profile.DocumentImage1 != null && profile.DocumentImage1.Length > 0),
                                     IsDocumentSkipped = profile.IsDocumentSkipped
-                                        && !((profile.DocumentImage1 != null && profile.DocumentImage1.Length > 0)
-                                            || !string.IsNullOrEmpty(profile.DocumentNumber))
+                                        && !(profile.DocumentImage1 != null && profile.DocumentImage1.Length > 0)
                                 });
                             }
                             else
@@ -472,11 +479,10 @@ namespace CheckinPortal.Controllers
                                     Nationality = profile.Nationality,
                                     DocumentImage1 = profile.DocumentImage1 != null ? "0" : "1",
                                     DocumentNumber = profile.DocumentNumber,
-                                    HasDocumentUploaded = (profile.DocumentImage1 != null && profile.DocumentImage1.Length > 0)
-                                        || !string.IsNullOrEmpty(profile.DocumentNumber),
+                                    // Only image-backed uploads count as uploaded (DocumentNumber alone can come from PMS).
+                                    HasDocumentUploaded = (profile.DocumentImage1 != null && profile.DocumentImage1.Length > 0),
                                     IsDocumentSkipped = profile.IsDocumentSkipped
-                                        && !((profile.DocumentImage1 != null && profile.DocumentImage1.Length > 0)
-                                            || !string.IsNullOrEmpty(profile.DocumentNumber))
+                                        && !(profile.DocumentImage1 != null && profile.DocumentImage1.Length > 0)
                                 });
                             }
                         }
@@ -5357,6 +5363,34 @@ namespace CheckinPortal.Controllers
                     return Json(new { result = false, redirectUrl = string.Empty, errorMessage = alreadyCheckoutMsg });
                 }
 
+                if (IsCancelledStatus(status))
+                {
+                    string cancelledMsg = "This reservation has been cancelled.";
+                    Helpers.LogHelper.Instance.Warn(
+                        $"Search reservation failed. Reason={cancelledMsg}. Status={status}. Res#={reservationNumber}",
+                        reservationNumber, ActionName, ActionGroup);
+                    return Json(new
+                    {
+                        result = false,
+                        redirectUrl = string.Empty,
+                        errorMessage = cancelledMsg
+                    });
+                }
+
+                if (IsNoShowStatus(status))
+                {
+                    string noShowMsg = "This reservation was recorded as a no-show.";
+                    Helpers.LogHelper.Instance.Warn(
+                        $"Search reservation failed. Reason={noShowMsg}. Status={status}. Res#={reservationNumber}",
+                        reservationNumber, ActionName, ActionGroup);
+                    return Json(new
+                    {
+                        result = false,
+                        redirectUrl = string.Empty,
+                        errorMessage = noShowMsg
+                    });
+                }
+
                 if (IsCheckedOutStatus(status))
                 {
                     string checkedOutMsg = "This reservation has already been checked out.";
@@ -5744,12 +5778,22 @@ namespace CheckinPortal.Controllers
         private static bool IsPreCheckoutStatus(string status)
         {
             // DUEOUT = MCO day; INHOUSE = in-house guest may use pre check-out when property allows
-            return status == "DUEOUT" || status == "INHOUSE" || status == "CHECKED IN" || status == "CHECKEDIN";
+            return status == "DUEOUT";// || status == "INHOUSE" || status == "CHECKED IN" || status == "CHECKEDIN";
         }
 
         private static bool IsCheckedOutStatus(string status)
         {
-            return status == "CHECKEDOUT" || status == "CHECKED OUT" || status == "NOSHOW" || status == "CANCELLED" || status == "CANCELED";
+            return status == "CHECKEDOUT" || status == "CHECKED OUT";
+        }
+
+        private static bool IsCancelledStatus(string status)
+        {
+            return status == "CANCELLED" || status == "CANCELED";
+        }
+
+        private static bool IsNoShowStatus(string status)
+        {
+            return status == "NOSHOW" || status == "NO SHOW";
         }
 
         [HttpPost]

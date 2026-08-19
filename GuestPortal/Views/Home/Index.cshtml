@@ -740,9 +740,9 @@ new { @class = "text-danger" }
 
                                                             GuestID = Model.Profiles[i].ProfileDetailID;
                                                             PMSProfileID = Model.Profiles[i].ProfileID;
+                                                            // COMPLETE only when an image was actually saved (not DocumentNumber-only from PMS).
                                                             hasDocumentUploaded = Model.Profiles[i].HasDocumentUploaded
-                                                                || Model.Profiles[i].DocumentImage1 == "0"
-                                                                || !string.IsNullOrWhiteSpace(Model.Profiles[i].DocumentNumber);
+                                                                || Model.Profiles[i].DocumentImage1 == "0";
                                                             isDocumentSkipped = Model.Profiles[i].IsDocumentSkipped && !hasDocumentUploaded;
                                                         }
 
@@ -1285,7 +1285,7 @@ new { @class = "text-danger" }
                 If you experience any issues uploading your ID, you can skip. Kindly present your ID at the front office so staff can upload it manually.
             </div>
             <div class="button-wrapper1">
-                <button class="btn_cancel " data-dismiss="modal" aria-label="Close" onclick="resetDocumentInfo(); clearFileUpload(); logDocumentAction('DocumentUploadCancelled');">CANCEL</button>
+                <button class="btn_cancel " data-dismiss="modal" aria-label="Close" type="button" onclick="cancelDocumentUploadAttempt();">CANCEL</button>
                 <button class="btn_ok btnUploadPrimaryDoc" data-guestid="1">OK</button>
                 <button style="display:none" id="btnDocumentSkipModal" class="btn_ok skipdocument" type="button">SKIP</button>
             </div>
@@ -2756,6 +2756,10 @@ new { @class = "text-danger" }
                     })
     // Track only document numbers that were successfully saved via UploadDocument.
     var uploadedDocs = [];
+    // Doc number from the current modal OCR attempt (not yet saved). Cleared on Cancel.
+    var pendingModalDocNumber = '';
+    // Bumped on Cancel / new modal open so late OCR responses are ignored.
+    var documentUploadOcrGeneration = 0;
     var DOCUMENT_MAX_BYTES = 2 * 1024 * 1024; // 2MB — aligned with UI copy
     var DOCUMENT_ACCEPT_MSG = 'Only passport (any country) or Maldives national ID is accepted. Please upload a valid document.';
 
@@ -3067,7 +3071,13 @@ new { @class = "text-danger" }
         if (!normalized) {
             return false;
         }
-        return uploadedDocs.indexOf(normalized) !== -1;
+        var normalizedLower = normalized.toLowerCase();
+        for (var i = 0; i < uploadedDocs.length; i++) {
+            if (String(uploadedDocs[i]).toLowerCase() === normalizedLower) {
+                return true;
+            }
+        }
+        return false;
     }
 
     function trackUploadedDocumentNumber(docNum) {
@@ -3075,7 +3085,7 @@ new { @class = "text-danger" }
         if (!normalized) {
             return;
         }
-        if (uploadedDocs.indexOf(normalized) === -1) {
+        if (!isDocumentNumberAlreadyUploaded(normalized)) {
             uploadedDocs.push(normalized);
         }
     }
@@ -3085,17 +3095,43 @@ new { @class = "text-danger" }
         if (!normalized) {
             return;
         }
+        var normalizedLower = normalized.toLowerCase();
         uploadedDocs = uploadedDocs.filter(function (d) {
-            return d !== normalized;
+            return String(d).toLowerCase() !== normalizedLower;
         });
     }
 
-    // Seed from guests that already have a saved document (resume / page reload).
+    function setPendingModalDocNumber(docNum) {
+        pendingModalDocNumber = normalizeUploadedDocNumber(docNum);
+    }
+
+    function clearPendingModalDocNumber() {
+        pendingModalDocNumber = '';
+    }
+
+    // Drop provisional OCR / modal file state without touching saved uploadedDocs.
+    function clearDocumentUploadModalState() {
+        documentUploadOcrGeneration++;
+        clearPendingModalDocNumber();
+        try { resetDocumentInfo(); } catch (e) { }
+        try { clearFileUpload(); } catch (e) { }
+        try { hideDocumentLoader(); } catch (e) { }
+    }
+
+    // Cancel / close without save: drop provisional OCR state only.
+    // Never remove numbers already confirmed via UploadDocument / page seed.
+    function cancelDocumentUploadAttempt() {
+        clearDocumentUploadModalState();
+        logDocumentAction('DocumentUploadCancelled');
+    }
+
+    // Seed from guests that already have a saved document image (resume / page reload).
     @if (Model.Profiles != null)
     {
         foreach (var profile in Model.Profiles)
         {
-            if (profile.HasDocumentUploaded && !string.IsNullOrWhiteSpace(profile.DocumentNumber))
+            if (profile.HasDocumentUploaded && !string.IsNullOrWhiteSpace(profile.DocumentNumber)
+                && string.Equals(profile.DocumentImage1, "0", StringComparison.Ordinal))
             {
                 <text>trackUploadedDocumentNumber(@Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(profile.DocumentNumber)));</text>
             }
@@ -3119,6 +3155,8 @@ new { @class = "text-danger" }
                         $('#currentGuestIndex').val(currentGuestIndex);
 
                         // Fresh modal session — do not carry OCR state from another guest / failed attempt.
+                        documentUploadOcrGeneration++;
+                        clearPendingModalDocNumber();
                         resetDocumentInfo();
                         clearFileUpload();
 
@@ -3306,8 +3344,7 @@ new { @class = "text-danger" }
                         e.preventDefault();
                         var guestID = $('#currentGuestIndex').val();
                         $('#DocumentUploadprimaryGuest').modal('hide');
-                        resetDocumentInfo();
-                        clearFileUpload();
+                        clearDocumentUploadModalState();
                         if (guestID) {
                             markGuestDocumentSkipped(guestID);
                         }
@@ -3505,6 +3542,7 @@ new { @class = "text-danger" }
                             updateDocumentProceedButtonsState();
 
                             $('#DocumentUploadprimaryGuest').modal('hide');
+                            clearPendingModalDocNumber();
                             resetDocumentInfo();
                             clearFileUpload();
 
@@ -3527,6 +3565,7 @@ new { @class = "text-danger" }
                                     }
 
                                     trackUploadedDocumentNumber(docInfoSnapshot.documentNumber);
+                                    clearPendingModalDocNumber();
                                     markGuestUploadCompleted(guestID);
                                     updateDocumentUploadSkipVisibility();
                                     hydratePrimaryGuestDetailsFromUpload(response);
@@ -3667,6 +3706,7 @@ new { @class = "text-danger" }
             {
                 $('.loader-screen').fadeIn(100);
                 logDocumentAction('DocumentUploadAttempt');
+                var ocrGeneration = documentUploadOcrGeneration;
                     compress.compress(files, {
                         size: 2,
                         quality: 0.75,
@@ -3674,12 +3714,18 @@ new { @class = "text-danger" }
                         maxHeight: 1920,
                         resize: true
                     }).then((images) => {
+                        if (ocrGeneration !== documentUploadOcrGeneration) {
+                            return;
+                        }
                         const imgout = images[0]
                         var imageBase64 = imgout.data;
                         validateDocumentDirect({
                             imageBase64: imageBase64,
                             extension: ".jpg"
                         }).then(response => {
+                            if (ocrGeneration !== documentUploadOcrGeneration) {
+                                return;
+                            }
                             console.log(response);
                             if (response.Result) {
                                 assignDocumentInfo(response);
@@ -3715,8 +3761,13 @@ new { @class = "text-danger" }
                                             $(fileControl).parent('div').find('img').hide();
                                             if (filecontrolID === "primaryDoc1") {
                                                 resetDocumentInfo();
+                                                clearPendingModalDocNumber();
                                             }
                                             return;
+                                        }
+                                        // Remember OCR number for this modal attempt only — do NOT mark as uploaded until DB save.
+                                        if (filecontrolID === "primaryDoc1") {
+                                            setPendingModalDocNumber(response.responseData.documentNumber);
                                         }
                                         if (response.responseData && response.responseData.fullImage) {
                                             $(imgPreview).attr('src', "data:image/jpg;base64," + response.responseData.fullImage);

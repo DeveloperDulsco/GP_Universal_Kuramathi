@@ -798,6 +798,10 @@ namespace CheckinPortal.Controllers
                         ViewBag.PreauthAmount = preAuthAmount;
                         ViewBag.ActiveTransactions = activeTransactions;
 
+                        bool IsPaymentDisabledOld = false;
+                        IsPaymentDisabledOld = (ConfigurationManager.AppSettings["IsPaymentDisabled"] != null && !string.IsNullOrEmpty(ConfigurationManager.AppSettings["IsPaymentDisabled"].ToString()) && bool.TryParse(ConfigurationManager.AppSettings["IsPaymentDisabled"].ToString(), out IsPaymentDisabledOld)) ? IsPaymentDisabledOld : false;
+                        ViewBag.IsPaymentDisabled = IsPaymentDisabledOld;
+
                         return View("Index", checkoutReservation);
                     }
                     else
@@ -967,48 +971,23 @@ namespace CheckinPortal.Controllers
             #endregion
 
             #region Checkout Reservation
+            bool isAutoCheckOutEnabled = bool.TryParse(
+    ConfigurationManager.AppSettings["isAutoCheckOutEnabled"],
+    out bool result
+) && result;
+            new LogHelper().Debug("isAutoCheckOutEnabled : " + isAutoCheckOutEnabled, SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
 
-            new LogHelper().Debug("Processing reservation No. : " + SessionData.OperaReservation.ReservationNumber + " to do check out", SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
-            if (SessionData.FolioModel != null)
+            if (isAutoCheckOutEnabled)
             {
-                new LogHelper().Debug("verifying guest balance : " + SessionData.FolioModel.BalanceAmount, SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
-                if (SessionData.FolioModel.BalanceAmount > 0)
+                new LogHelper().Debug("Processing reservation No. : " + SessionData.OperaReservation.ReservationNumber + " to do check out", SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
+                if (SessionData.FolioModel != null)
                 {
-                    #region Pushing Reservation Track
-
-                    new LogHelper().Debug("Pushing reservation track in local DB ", SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
-                    localResponse = await new CloudHelper().PushReservationTrackLocally(SessionData.OperaReservation.ReservationNameID, new Models.APIRequestModel()
-                    {
-                        RequestObject = new Models.ReservationTrackStatus()
-                        {
-                            ReservationNameID = SessionData.OperaReservation.ReservationNameID,
-                            ProcessType = Models.ReservationProcessType.CheckoutFailled.ToString(),
-                            ReservationNumber = SessionData.OperaReservation.ReservationNumber,
-                            ProcessStatus = "Checkout",
-                            EmailSent = false
-                        }
-                    }, "pre checked-out fetch", ConfigurationManager.AppSettings["APIBaseUrl"].ToString());
-                    if (localResponse.result)
-                    {
-                        new LogHelper().Log("Reservation track in local DB updated successfully ", SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
-                    }
-                    else
-                    {
-                        new LogHelper().Log("Failed to update reservation track in local DB with reason :- " + localResponse.responseMessage, SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
-                    }
-                    #endregion
-                    new LogHelper().Log("Failed to process check out, where the guest balance is greater than 0", SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
-                }
-                else
-                {
-                    new LogHelper().Log("verifying reservation balance : " + SessionData.FolioModel.ReservationBalance + " and isallowed to check out flag", SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
-
-                    if (SessionData.FolioModel.ReservationBalance > 0)
+                    new LogHelper().Debug("verifying guest balance : " + SessionData.FolioModel.BalanceAmount, SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
+                    if (SessionData.FolioModel.BalanceAmount > 0)
                     {
                         #region Pushing Reservation Track
 
-                        new LogHelper().Log("Pushing reservation track in local DB ", SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
-
+                        new LogHelper().Debug("Pushing reservation track in local DB ", SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
                         localResponse = await new CloudHelper().PushReservationTrackLocally(SessionData.OperaReservation.ReservationNameID, new Models.APIRequestModel()
                         {
                             RequestObject = new Models.ReservationTrackStatus()
@@ -1028,121 +1007,216 @@ namespace CheckinPortal.Controllers
                         {
                             new LogHelper().Log("Failed to update reservation track in local DB with reason :- " + localResponse.responseMessage, SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
                         }
-
                         #endregion
-
-                        new LogHelper().Log("Failed to process check out, where the reservation balance is greater than 0", SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
+                        new LogHelper().Log("Failed to process check out, where the guest balance is greater than 0", SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
                     }
                     else
                     {
-                        if (SessionData.FolioModel.IsAllowedForCheckOut == true)
+                        new LogHelper().Log("verifying reservation balance : " + SessionData.FolioModel.ReservationBalance + " and isallowed to check out flag", SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
+
+                        if (SessionData.FolioModel.ReservationBalance > 0)
                         {
-                            Models.OWS.OwsResponseModel owsresponse1 = await new CloudHelper().CheckoutReservation(SessionData.OperaReservation.ReservationNameID, new Models.OWS.OwsRequestModel()
+                            #region Pushing Reservation Track
+
+                            new LogHelper().Log("Pushing reservation track in local DB ", SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
+
+                            localResponse = await new CloudHelper().PushReservationTrackLocally(SessionData.OperaReservation.ReservationNameID, new Models.APIRequestModel()
                             {
-                                ChainCode = ChainCode,
-                                DestinationEntityID = DestinationEntityID,
-                                HotelDomain = HotelDomain,
-                                KioskID = KioskID,
-                                Language = Language,
-                                LegNumber = LegNumber,
-                                Password = Password,
-                                SystemType = SystemType,
-                                Username = Username,
-                                SendFolio = true,
-                                OperaReservation = new Models.OWS.OperaReservation()
+                                RequestObject = new Models.ReservationTrackStatus()
                                 {
-                                    ReservationNameID = SessionData.OperaReservation.ReservationNameID
+                                    ReservationNameID = SessionData.OperaReservation.ReservationNameID,
+                                    ProcessType = Models.ReservationProcessType.CheckoutFailled.ToString(),
+                                    ReservationNumber = SessionData.OperaReservation.ReservationNumber,
+                                    ProcessStatus = "Checkout",
+                                    EmailSent = false
                                 }
                             }, "pre checked-out fetch", ConfigurationManager.AppSettings["APIBaseUrl"].ToString());
-
-                            if (!owsresponse1.result || owsresponse1.responseData == null)
+                            if (localResponse.result)
                             {
-                                #region pushing reservation track
-
-                                new LogHelper().Debug("pushing reservation track in local db ", SessionData.OperaReservation.ReservationNameID, "FetchDueoutReservation", "pre checked-out fetch");
-
-                                localResponse = await new Helpers.CloudHelper().PushReservationTrackLocally(SessionData.OperaReservation.ReservationNameID, new Models.APIRequestModel()
-                                {
-                                    RequestObject = new Models.ReservationTrackStatus()
-                                    {
-                                        ReservationNameID = SessionData.OperaReservation.ReservationNameID,
-                                        ProcessType = Models.ReservationProcessType.CheckoutFailled.ToString(),
-                                        ReservationNumber = SessionData.OperaReservation.ReservationNumber,
-                                        ProcessStatus = "Checkout",
-                                        EmailSent = false
-                                    }
-                                }, "pre checked-out fetch", ConfigurationManager.AppSettings["APIBaseUrl"].ToString());
-                                if (localResponse.result)
-                                {
-                                    new LogHelper().Debug("reservation track in local db updated successfully ", SessionData.OperaReservation.ReservationNameID, "FetchDueoutReservation", "pre checked-out fetch");
-                                }
-                                else
-                                {
-                                    new LogHelper().Log("failed to update reservation track in local db with reason :- " + localResponse.responseMessage, SessionData.OperaReservation.ReservationNameID, "FetchDueoutReservation", "pre checked-out fetch");
-                                }
-
-                                #endregion
-
-                                new LogHelper().Log("failed to check-out with reason :- " + owsresponse1.responseMessage, SessionData.OperaReservation.ReservationNameID, "FetchDueoutReservation", "pre checked-out fetch");
+                                new LogHelper().Log("Reservation track in local DB updated successfully ", SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
                             }
                             else
                             {
-                                new LogHelper().Debug("checked out successfully", SessionData.OperaReservation.ReservationNameID, "FetchDueoutReservation", "pre checked-out fetch");
+                                new LogHelper().Log("Failed to update reservation track in local DB with reason :- " + localResponse.responseMessage, SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
+                            }
 
-                                #region pushing reservation track
+                            #endregion
 
-                                new LogHelper().Debug("pushing reservation track in local db ", SessionData.OperaReservation.ReservationNameID, "FetchDueoutReservation", "pre checked-out fetch");
-
-                                localResponse = await new Helpers.CloudHelper().PushReservationTrackLocally(SessionData.OperaReservation.ReservationNameID, new Models.APIRequestModel()
+                            new LogHelper().Log("Failed to process check out, where the reservation balance is greater than 0", SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
+                        }
+                        else
+                        {
+                            if (SessionData.FolioModel.IsAllowedForCheckOut == true)
+                            {
+                                Models.OWS.OwsResponseModel owsresponse1 = await new CloudHelper().CheckoutReservation(SessionData.OperaReservation.ReservationNameID, new Models.OWS.OwsRequestModel()
                                 {
-                                    RequestObject = new Models.ReservationTrackStatus()
+                                    ChainCode = ChainCode,
+                                    DestinationEntityID = DestinationEntityID,
+                                    HotelDomain = HotelDomain,
+                                    KioskID = KioskID,
+                                    Language = Language,
+                                    LegNumber = LegNumber,
+                                    Password = Password,
+                                    SystemType = SystemType,
+                                    Username = Username,
+                                    SendFolio = true,
+                                    OperaReservation = new Models.OWS.OperaReservation()
                                     {
-                                        ReservationNameID = SessionData.OperaReservation.ReservationNameID,
-                                        ProcessType = Models.ReservationProcessType.CheckedoutSuccessfully.ToString(),
-                                        ReservationNumber = SessionData.OperaReservation.ReservationNumber,
-                                        ProcessStatus = "Checkout",
-                                        EmailSent = false
+                                        ReservationNameID = SessionData.OperaReservation.ReservationNameID
                                     }
                                 }, "pre checked-out fetch", ConfigurationManager.AppSettings["APIBaseUrl"].ToString());
-                                if (localResponse.result)
+
+                                if (!owsresponse1.result || owsresponse1.responseData == null)
                                 {
-                                    new LogHelper().Debug("reservation track in local db updated successfully ", SessionData.OperaReservation.ReservationNameID, "FetchDueoutReservation", "pre checked-out fetch");
+                                    #region pushing reservation track
+
+                                    new LogHelper().Debug("pushing reservation track in local db ", SessionData.OperaReservation.ReservationNameID, "FetchDueoutReservation", "pre checked-out fetch");
+
+                                    localResponse = await new Helpers.CloudHelper().PushReservationTrackLocally(SessionData.OperaReservation.ReservationNameID, new Models.APIRequestModel()
+                                    {
+                                        RequestObject = new Models.ReservationTrackStatus()
+                                        {
+                                            ReservationNameID = SessionData.OperaReservation.ReservationNameID,
+                                            ProcessType = Models.ReservationProcessType.CheckoutFailled.ToString(),
+                                            ReservationNumber = SessionData.OperaReservation.ReservationNumber,
+                                            ProcessStatus = "Checkout",
+                                            EmailSent = false
+                                        }
+                                    }, "pre checked-out fetch", ConfigurationManager.AppSettings["APIBaseUrl"].ToString());
+                                    if (localResponse.result)
+                                    {
+                                        new LogHelper().Debug("reservation track in local db updated successfully ", SessionData.OperaReservation.ReservationNameID, "FetchDueoutReservation", "pre checked-out fetch");
+                                    }
+                                    else
+                                    {
+                                        new LogHelper().Log("failed to update reservation track in local db with reason :- " + localResponse.responseMessage, SessionData.OperaReservation.ReservationNameID, "FetchDueoutReservation", "pre checked-out fetch");
+                                    }
+
+                                    #endregion
+
+                                    new LogHelper().Log("failed to check-out with reason :- " + owsresponse1.responseMessage, SessionData.OperaReservation.ReservationNameID, "FetchDueoutReservation", "pre checked-out fetch");
                                 }
                                 else
                                 {
-                                    new LogHelper().Log("failed to update reservation track in local db with reason :- " + localResponse.responseMessage, SessionData.OperaReservation.ReservationNameID, "FetchDueoutReservation", "pre checked-out fetch");
-                                }
+                                    new LogHelper().Debug("checked out successfully", SessionData.OperaReservation.ReservationNameID, "FetchDueoutReservation", "pre checked-out fetch");
 
-                                #endregion
+                                    #region pushing reservation track
 
-                                //if (SessionData.OperaReservation.SharerReservations != null && operareservations.count > 0)
-                                if (SessionData.OperaReservation.SharerReservations != null)
-                                {
-                                    new LogHelper().Debug("processing sharers", SessionData.OperaReservation.ReservationNameID, "FetchDueoutReservation", "pre checked-out fetch");
-                                    foreach (Models.OWS.OperaReservation sharer in SessionData.OperaReservation.SharerReservations)
+                                    new LogHelper().Debug("pushing reservation track in local db ", SessionData.OperaReservation.ReservationNameID, "FetchDueoutReservation", "pre checked-out fetch");
+
+                                    localResponse = await new Helpers.CloudHelper().PushReservationTrackLocally(SessionData.OperaReservation.ReservationNameID, new Models.APIRequestModel()
                                     {
-                                        new LogHelper().Debug("processing sharer reservation - " + sharer.ReservationNumber, SessionData.OperaReservation.ReservationNameID, "FetchDueoutReservation", "pre checked-out fetch");
-
-                                        if (!string.IsNullOrEmpty(sharer.ReservationNameID))
+                                        RequestObject = new Models.ReservationTrackStatus()
                                         {
-                                            owsresponse1 = await new Helpers.CloudHelper().CheckoutReservation(SessionData.OperaReservation.ReservationNameID, new Models.OWS.OwsRequestModel()
-                                            {
-                                                ChainCode = ChainCode,
-                                                DestinationEntityID = DestinationEntityID,
-                                                HotelDomain = HotelDomain,
-                                                KioskID = KioskID,
-                                                Language = Language,
-                                                LegNumber = LegNumber,
-                                                Password = Password,
-                                                SystemType = SystemType,
-                                                Username = Username,
-                                                OperaReservation = new Models.OWS.OperaReservation()
-                                                {
-                                                    ReservationNameID = sharer.ReservationNameID
-                                                }
-                                            }, "pre checked-out fetch", ConfigurationManager.AppSettings["APIBaseUrl"].ToString());
+                                            ReservationNameID = SessionData.OperaReservation.ReservationNameID,
+                                            ProcessType = Models.ReservationProcessType.CheckedoutSuccessfully.ToString(),
+                                            ReservationNumber = SessionData.OperaReservation.ReservationNumber,
+                                            ProcessStatus = "Checkout",
+                                            EmailSent = false
+                                        }
+                                    }, "pre checked-out fetch", ConfigurationManager.AppSettings["APIBaseUrl"].ToString());
+                                    if (localResponse.result)
+                                    {
+                                        new LogHelper().Debug("reservation track in local db updated successfully ", SessionData.OperaReservation.ReservationNameID, "FetchDueoutReservation", "pre checked-out fetch");
+                                    }
+                                    else
+                                    {
+                                        new LogHelper().Log("failed to update reservation track in local db with reason :- " + localResponse.responseMessage, SessionData.OperaReservation.ReservationNameID, "FetchDueoutReservation", "pre checked-out fetch");
+                                    }
 
-                                            if (!owsresponse1.result || owsresponse1.responseData == null)
+                                    #endregion
+
+                                    //if (SessionData.OperaReservation.SharerReservations != null && operareservations.count > 0)
+                                    if (SessionData.OperaReservation.SharerReservations != null)
+                                    {
+                                        new LogHelper().Debug("processing sharers", SessionData.OperaReservation.ReservationNameID, "FetchDueoutReservation", "pre checked-out fetch");
+                                        foreach (Models.OWS.OperaReservation sharer in SessionData.OperaReservation.SharerReservations)
+                                        {
+                                            new LogHelper().Debug("processing sharer reservation - " + sharer.ReservationNumber, SessionData.OperaReservation.ReservationNameID, "FetchDueoutReservation", "pre checked-out fetch");
+
+                                            if (!string.IsNullOrEmpty(sharer.ReservationNameID))
+                                            {
+                                                owsresponse1 = await new Helpers.CloudHelper().CheckoutReservation(SessionData.OperaReservation.ReservationNameID, new Models.OWS.OwsRequestModel()
+                                                {
+                                                    ChainCode = ChainCode,
+                                                    DestinationEntityID = DestinationEntityID,
+                                                    HotelDomain = HotelDomain,
+                                                    KioskID = KioskID,
+                                                    Language = Language,
+                                                    LegNumber = LegNumber,
+                                                    Password = Password,
+                                                    SystemType = SystemType,
+                                                    Username = Username,
+                                                    OperaReservation = new Models.OWS.OperaReservation()
+                                                    {
+                                                        ReservationNameID = sharer.ReservationNameID
+                                                    }
+                                                }, "pre checked-out fetch", ConfigurationManager.AppSettings["APIBaseUrl"].ToString());
+
+                                                if (!owsresponse1.result || owsresponse1.responseData == null)
+                                                {
+                                                    #region pushing reservation track
+
+                                                    new LogHelper().Debug("pushing reservation track in local db for sharer " + sharer.ReservationNumber, SessionData.OperaReservation.ReservationNameID, "FetchDueoutReservation", "pre checked-out fetch");
+
+                                                    localResponse = await new Helpers.CloudHelper().PushReservationTrackLocally(SessionData.OperaReservation.ReservationNameID, new Models.APIRequestModel()
+                                                    {
+                                                        RequestObject = new Models.ReservationTrackStatus()
+                                                        {
+                                                            ReservationNameID = SessionData.OperaReservation.ReservationNameID,
+                                                            ProcessType = Models.ReservationProcessType.CheckoutFailled.ToString(),
+                                                            ReservationNumber = SessionData.OperaReservation.ReservationNumber,
+                                                            ProcessStatus = "Checkout",
+                                                            EmailSent = false
+                                                        }
+                                                    }, "pre checked-out fetch", ConfigurationManager.AppSettings["APIBaseUrl"].ToString());
+                                                    if (localResponse.result)
+                                                    {
+                                                        new LogHelper().Debug("reservation track in local db updated successfully ", SessionData.OperaReservation.ReservationNameID, "FetchDueoutReservation", "pre checked-out fetch");
+                                                    }
+                                                    else
+                                                    {
+                                                        new LogHelper().Log("failed to update reservation track in local db with reason :- " + localResponse.responseMessage, SessionData.OperaReservation.ReservationNameID, "FetchDueoutReservation", "pre checked-out fetch");
+                                                    }
+
+                                                    #endregion
+
+                                                    new LogHelper().Log("failed to check-out sharer with reason :- " + owsresponse1.responseMessage + "sharer reservation no. : " + sharer.ReservationNumber, SessionData.OperaReservation.ReservationNameID, "FetchDueoutReservation", "pre checked-out fetch");
+                                                    new LogHelper().Warn("failed to check-out sharer with reason :- " + owsresponse1.responseMessage + "sharer reservation no. : " + sharer.ReservationNumber, SessionData.OperaReservation.ReservationNameID, "FetchDueoutReservation", "pre checked-out fetch");
+
+                                                }
+                                                else
+                                                {
+                                                    #region pushing reservation track
+
+                                                    new LogHelper().Debug("pushing reservation track in local db for sharer " + sharer.ReservationNumber, SessionData.OperaReservation.ReservationNameID, "FetchDueoutReservation", "pre checked-out fetch");
+
+                                                    localResponse = await new Helpers.CloudHelper().PushReservationTrackLocally(SessionData.OperaReservation.ReservationNameID, new Models.APIRequestModel()
+                                                    {
+                                                        RequestObject = new Models.ReservationTrackStatus()
+                                                        {
+                                                            ReservationNameID = SessionData.OperaReservation.ReservationNameID,
+                                                            ProcessType = Models.ReservationProcessType.CheckedoutSuccessfully.ToString(),
+                                                            ReservationNumber = SessionData.OperaReservation.ReservationNumber,
+                                                            ProcessStatus = "Checkout",
+                                                            EmailSent = false
+                                                        }
+                                                    }, "pre checked-out fetch", ConfigurationManager.AppSettings["APIBaseUrl"].ToString());
+                                                    if (localResponse.result)
+                                                    {
+                                                        new LogHelper().Debug("reservation track in local db updated successfully ", SessionData.OperaReservation.ReservationNameID, "FetchDueoutReservation", "pre checked-out fetch");
+                                                    }
+                                                    else
+                                                    {
+                                                        new LogHelper().Log("failed to update reservation track in local db with reason :- " + localResponse.responseMessage, SessionData.OperaReservation.ReservationNameID, "FetchDueoutReservation", "pre checked-out fetch");
+                                                    }
+
+                                                    #endregion
+
+                                                    new LogHelper().Log("sharer checked out successfully", SessionData.OperaReservation.ReservationNameID, "FetchDueoutReservation", "pre checked-out fetch");
+                                                }
+                                            }
+                                            else
                                             {
                                                 #region pushing reservation track
 
@@ -1170,139 +1244,76 @@ namespace CheckinPortal.Controllers
 
                                                 #endregion
 
-                                                new LogHelper().Log("failed to check-out sharer with reason :- " + owsresponse1.responseMessage + "sharer reservation no. : " + sharer.ReservationNumber, SessionData.OperaReservation.ReservationNameID, "FetchDueoutReservation", "pre checked-out fetch");
-                                                new LogHelper().Warn("failed to check-out sharer with reason :- " + owsresponse1.responseMessage + "sharer reservation no. : " + sharer.ReservationNumber, SessionData.OperaReservation.ReservationNameID, "FetchDueoutReservation", "pre checked-out fetch");
-
+                                                new Helpers.LogHelper().Log("reservation name id is null ", SessionData.OperaReservation.ReservationNameID, "FetchDueoutReservation", "pre checked-out fetch");
                                             }
-                                            else
-                                            {
-                                                #region pushing reservation track
-
-                                                new LogHelper().Debug("pushing reservation track in local db for sharer " + sharer.ReservationNumber, SessionData.OperaReservation.ReservationNameID, "FetchDueoutReservation", "pre checked-out fetch");
-
-                                                localResponse = await new Helpers.CloudHelper().PushReservationTrackLocally(SessionData.OperaReservation.ReservationNameID, new Models.APIRequestModel()
-                                                {
-                                                    RequestObject = new Models.ReservationTrackStatus()
-                                                    {
-                                                        ReservationNameID = SessionData.OperaReservation.ReservationNameID,
-                                                        ProcessType = Models.ReservationProcessType.CheckedoutSuccessfully.ToString(),
-                                                        ReservationNumber = SessionData.OperaReservation.ReservationNumber,
-                                                        ProcessStatus = "Checkout",
-                                                        EmailSent = false
-                                                    }
-                                                }, "pre checked-out fetch", ConfigurationManager.AppSettings["APIBaseUrl"].ToString());
-                                                if (localResponse.result)
-                                                {
-                                                    new LogHelper().Debug("reservation track in local db updated successfully ", SessionData.OperaReservation.ReservationNameID, "FetchDueoutReservation", "pre checked-out fetch");
-                                                }
-                                                else
-                                                {
-                                                    new LogHelper().Log("failed to update reservation track in local db with reason :- " + localResponse.responseMessage, SessionData.OperaReservation.ReservationNameID, "FetchDueoutReservation", "pre checked-out fetch");
-                                                }
-
-                                                #endregion
-
-                                                new LogHelper().Log("sharer checked out successfully", SessionData.OperaReservation.ReservationNameID, "FetchDueoutReservation", "pre checked-out fetch");
-                                            }
-                                        }
-                                        else
-                                        {
-                                            #region pushing reservation track
-
-                                            new LogHelper().Debug("pushing reservation track in local db for sharer " + sharer.ReservationNumber, SessionData.OperaReservation.ReservationNameID, "FetchDueoutReservation", "pre checked-out fetch");
-
-                                            localResponse = await new Helpers.CloudHelper().PushReservationTrackLocally(SessionData.OperaReservation.ReservationNameID, new Models.APIRequestModel()
-                                            {
-                                                RequestObject = new Models.ReservationTrackStatus()
-                                                {
-                                                    ReservationNameID = SessionData.OperaReservation.ReservationNameID,
-                                                    ProcessType = Models.ReservationProcessType.CheckoutFailled.ToString(),
-                                                    ReservationNumber = SessionData.OperaReservation.ReservationNumber,
-                                                    ProcessStatus = "Checkout",
-                                                    EmailSent = false
-                                                }
-                                            }, "pre checked-out fetch", ConfigurationManager.AppSettings["APIBaseUrl"].ToString());
-                                            if (localResponse.result)
-                                            {
-                                                new LogHelper().Debug("reservation track in local db updated successfully ", SessionData.OperaReservation.ReservationNameID, "FetchDueoutReservation", "pre checked-out fetch");
-                                            }
-                                            else
-                                            {
-                                                new LogHelper().Log("failed to update reservation track in local db with reason :- " + localResponse.responseMessage, SessionData.OperaReservation.ReservationNameID, "FetchDueoutReservation", "pre checked-out fetch");
-                                            }
-
-                                            #endregion
-
-                                            new Helpers.LogHelper().Log("reservation name id is null ", SessionData.OperaReservation.ReservationNameID, "FetchDueoutReservation", "pre checked-out fetch");
                                         }
                                     }
                                 }
                             }
-                        }
-                        else
-                        {
-                            #region pushing reservation track
-
-                            new LogHelper().Debug("pushing reservation track in local db ", SessionData.OperaReservation.ReservationNameID, "FetchDueoutReservation", "pre checked-out fetch");
-
-                            localResponse = await new Helpers.CloudHelper().PushReservationTrackLocally(SessionData.OperaReservation.ReservationNameID, new Models.APIRequestModel()
-                            {
-                                RequestObject = new Models.ReservationTrackStatus()
-                                {
-                                    ReservationNameID = SessionData.OperaReservation.ReservationNameID,
-                                    ProcessType = Models.ReservationProcessType.CheckoutFailled.ToString(),
-                                    ReservationNumber = SessionData.OperaReservation.ReservationNumber,
-                                    ProcessStatus = "Checkout",
-                                    EmailSent = false
-                                }
-                            }, "pre checked-out fetch", ConfigurationManager.AppSettings["APIBaseUrl"].ToString());
-                            if (localResponse.result)
-                            {
-                                new LogHelper().Debug("reservation track in local db updated successfully ", SessionData.OperaReservation.ReservationNameID, "FetchDueoutReservation", "pre checked-out fetch");
-                            }
                             else
                             {
-                                new LogHelper().Log("failed to update reservation track in local db with reason :- " + localResponse.responseMessage, SessionData.OperaReservation.ReservationNameID, "FetchDueoutReservation", "pre checked-out fetch");
+                                #region pushing reservation track
+
+                                new LogHelper().Debug("pushing reservation track in local db ", SessionData.OperaReservation.ReservationNameID, "FetchDueoutReservation", "pre checked-out fetch");
+
+                                localResponse = await new Helpers.CloudHelper().PushReservationTrackLocally(SessionData.OperaReservation.ReservationNameID, new Models.APIRequestModel()
+                                {
+                                    RequestObject = new Models.ReservationTrackStatus()
+                                    {
+                                        ReservationNameID = SessionData.OperaReservation.ReservationNameID,
+                                        ProcessType = Models.ReservationProcessType.CheckoutFailled.ToString(),
+                                        ReservationNumber = SessionData.OperaReservation.ReservationNumber,
+                                        ProcessStatus = "Checkout",
+                                        EmailSent = false
+                                    }
+                                }, "pre checked-out fetch", ConfigurationManager.AppSettings["APIBaseUrl"].ToString());
+                                if (localResponse.result)
+                                {
+                                    new LogHelper().Debug("reservation track in local db updated successfully ", SessionData.OperaReservation.ReservationNameID, "FetchDueoutReservation", "pre checked-out fetch");
+                                }
+                                else
+                                {
+                                    new LogHelper().Log("failed to update reservation track in local db with reason :- " + localResponse.responseMessage, SessionData.OperaReservation.ReservationNameID, "FetchDueoutReservation", "pre checked-out fetch");
+                                }
+
+                                #endregion
+
+                                new LogHelper().Log("failed to process check out, where the is allowedfor checkout flag is either null or  false", SessionData.OperaReservation.ReservationNameID, "FetchDueoutReservation", "pre checked-out fetch");
                             }
-
-                            #endregion
-
-                            new LogHelper().Log("failed to process check out, where the is allowedfor checkout flag is either null or  false", SessionData.OperaReservation.ReservationNameID, "FetchDueoutReservation", "pre checked-out fetch");
                         }
                     }
-                }
-            }
-            else
-            {
-                #region Pushing Reservation Track
-
-                new LogHelper().Debug("Pushing reservation track in local DB ", SessionData.OperaReservation.ReservationNameID, "FetchDueOutReservation", "pre checked-out fetch");
-
-                localResponse = await new Helpers.CloudHelper().PushReservationTrackLocally(SessionData.OperaReservation.ReservationNameID, new Models.APIRequestModel()
-                {
-                    RequestObject = new Models.ReservationTrackStatus()
-                    {
-                        ReservationNameID = SessionData.OperaReservation.ReservationNameID,
-                        ProcessType = Models.ReservationProcessType.CheckoutFailled.ToString(),
-                        ReservationNumber = SessionData.OperaReservation.ReservationNumber,
-                        ProcessStatus = "Checkout",
-                        EmailSent = false
-                    }
-                }, "pre checked-out fetch", ConfigurationManager.AppSettings["APIBaseUrl"].ToString());
-                if (localResponse.result)
-                {
-                    new LogHelper().Debug("reservation track in local db updated successfully ", SessionData.OperaReservation.ReservationNameID, "FetchDueoutReservation", "pre checked-out fetch");
                 }
                 else
                 {
-                    new LogHelper().Log("failed to update reservation track in local db with reason :- " + localResponse.responseMessage, SessionData.OperaReservation.ReservationNameID, "FetchDueoutReservation", "pre checked-out fetch");
+                    #region Pushing Reservation Track
+
+                    new LogHelper().Debug("Pushing reservation track in local DB ", SessionData.OperaReservation.ReservationNameID, "FetchDueOutReservation", "pre checked-out fetch");
+
+                    localResponse = await new Helpers.CloudHelper().PushReservationTrackLocally(SessionData.OperaReservation.ReservationNameID, new Models.APIRequestModel()
+                    {
+                        RequestObject = new Models.ReservationTrackStatus()
+                        {
+                            ReservationNameID = SessionData.OperaReservation.ReservationNameID,
+                            ProcessType = Models.ReservationProcessType.CheckoutFailled.ToString(),
+                            ReservationNumber = SessionData.OperaReservation.ReservationNumber,
+                            ProcessStatus = "Checkout",
+                            EmailSent = false
+                        }
+                    }, "pre checked-out fetch", ConfigurationManager.AppSettings["APIBaseUrl"].ToString());
+                    if (localResponse.result)
+                    {
+                        new LogHelper().Debug("reservation track in local db updated successfully ", SessionData.OperaReservation.ReservationNameID, "FetchDueoutReservation", "pre checked-out fetch");
+                    }
+                    else
+                    {
+                        new LogHelper().Log("failed to update reservation track in local db with reason :- " + localResponse.responseMessage, SessionData.OperaReservation.ReservationNameID, "FetchDueoutReservation", "pre checked-out fetch");
+                    }
+
+                    #endregion
+
+                    new LogHelper().Log("Failed to process check out, failed to retreave the guest balance", SessionData.OperaReservation.ReservationNameID, "FetchDueOutReservation", "pre checked-out fetch");
                 }
-
-                #endregion
-
-                new LogHelper().Log("Failed to process check out, failed to retreave the guest balance", SessionData.OperaReservation.ReservationNameID, "FetchDueOutReservation", "pre checked-out fetch");
             }
-
             #endregion
 
             #region Sending Email

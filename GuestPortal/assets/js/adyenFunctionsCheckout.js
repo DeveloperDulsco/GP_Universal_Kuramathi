@@ -46,7 +46,9 @@ var transactionID = moment().format('MMDDhhmmss');
 var transactionType = "Sale";
 
 // IsPaymentDisabled: never call GetOrginKey / Adyen — keeps precheckout usable without payment gateway
-if (typeof IsPaymentDisabled !== 'undefined' && IsPaymentDisabled) {
+// Prefer layout/view not loading this file; this is a safety net if it loads without the flag set early
+var __paymentDisabled = (typeof IsPaymentDisabled !== 'undefined') && (IsPaymentDisabled === true || IsPaymentDisabled === 'true' || IsPaymentDisabled === 'True');
+if (__paymentDisabled) {
     console.warn('Payment disabled — skipping Adyen origin key / drop-in init (checkout)');
 } else {
 getOrginkey(BaseURL).then(orginKey => {

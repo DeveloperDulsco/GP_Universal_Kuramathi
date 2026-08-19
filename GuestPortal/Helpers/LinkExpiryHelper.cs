@@ -11,6 +11,8 @@ namespace CheckinPortal.Helpers
         public const string AlreadyPreCheckedIn = "AlreadyPreCheckedIn";
         public const string AlreadyPreCheckedOut = "AlreadyPreCheckedOut";
         public const string CheckedOut = "CheckedOut";
+        public const string Cancelled = "Cancelled";
+        public const string NoShow = "NoShow";
         public const string ReservationNotFound = "ReservationNotFound";
         public const string InvalidStatus = "InvalidStatus";
         public const string NotEligible = "NotEligible";
@@ -36,6 +38,14 @@ namespace CheckinPortal.Helpers
 
                 case CheckedOut:
                     return "This reservation has already been checked out.\n" +
+                           "Please contact the hotel's Guest Reservations team for assistance.";
+
+                case Cancelled:
+                    return "This reservation has been cancelled.\n" +
+                           "Please contact the hotel's Guest Reservations team for assistance.";
+
+                case NoShow:
+                    return "This reservation was recorded as a no-show.\n" +
                            "Please contact the hotel's Guest Reservations team for assistance.";
 
                 case ReservationNotFound:

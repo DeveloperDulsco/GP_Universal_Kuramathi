@@ -174,12 +174,10 @@
                                     <p>We have successfully processed your check-out request. </p>
                                     <p>The room key will now be disabled.</p>
                                     <p>Please drop your room key in the express check-out box located at our lobby on departure.</p>
-                                    <p>Thank you once again for choosing Raffles. We look forward to welcome you back soon.</p>
+                                    <p>Thank you once again for choosing Niva Kuramathi. We look forward to welcoming you back soon.</p>
                                     <div class="row">
-                                        <div class="col-md-12 text-center mt-5">
-                                            <a href="https://www.Raffles.com/Singapore/">
-                                                <button class="btn_upload"><img src="~/assets/images/tick_icon.png">OK</button>
-                                            </a>
+                                        <div class="col-md-12 text-center thank-you-actions mt-5">
+                                            <a href="https://www.nivakuramathi.com" class="btnstyle blue thank-you-btn">OK</a>
                                         </div>
                                     </div>
                                 </div>
@@ -191,27 +189,14 @@
                                                 <label for="exampleInputEmail1">To receive a copy of your invoice via email</label>
                                                 <div class="mail-form">
                                                     <input id="emailID" type="email" class="form-control" value="@Model.EmailID" placeholder="Enter email">
-                                                    <button type="button" class="btn" onclick="sendEmail()">SEND</button>
+                                                    <button type="button" class="btnstyle blue" onclick="sendEmail()">SEND</button>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
 
                                 </div>
-                                <div class="social-media">
-                                    <p>Subscribe to our mailing list or follow us on Facebook and Instagram for exclusive offers and updates.</p>
-                                    <ul>
-                                        <li><a target="_blank" href="mailto:singapore@raffles.com"><i class="fas fa-envelope-square"></i></a></li>
-                                        <li>
-                                            <a target="_blank" href="https://www.facebook.com/share/19pCbAnTN2/
-?mibextid=LQQJ4d"><i class="fab fa-facebook-square"></i></a>
-                                        </li>
-                                        <li>
-                                            <a target="_blank" href="https://www.instagram.com/raffleshotelsingapor
-e?igsh=MWswMWN2eXVpaGFqZA=="><i class="fab fa-instagram"></i></a>
-                                        </li>
-                                    </ul>
-                                </div>
+                                @* Social footer omitted to match precheckin thank you (no Raffles / Accor links). *@
                             </div>
                         </div>
                     </div>
@@ -541,28 +526,37 @@ e?igsh=MWswMWN2eXVpaGFqZA=="><i class="fab fa-instagram"></i></a>
     <script>
 
 
-        function moveToNextTab(currentTab) {
-            var $parentDiv = $(currentTab).parents('div.tab-pane');
-            var currentTabIndex = $('.tab-pane').index($parentDiv);
-            var nextTab = $parentDiv.next();
-            if (nextTab.length > 0) {
-                $parentDiv.removeClass('active');
-                $parentDiv.next().addClass('active');
-                setActiveTab(+currentTabIndex + 1);
+        // Switch wizard panes: hide all, show target. Avoids folio+thankyou stacking when
+        // next() is taken from #payment while #folio is still .active.
+        function showCheckoutPane(paneSelector) {
+            var $pane = $(paneSelector);
+            if (!$pane.length) {
+                return;
             }
+            $('.tab-content > .tab-pane').removeClass('active');
+            $pane.addClass('active');
+            setActiveTab($('.tab-pane').index($pane));
             $("html, body").animate({ scrollTop: 0 }, "slow");
         }
 
-        function movePrevTab(currentTab) {
-            var $parentDiv = $(this).parents('div.tab-pane');
-            var currentTabIndex = $('.tab-pane').index($parentDiv);
-            var nextTab = $parentDiv.prev();
-            if (nextTab.length > 0) {
-                $parentDiv.removeClass('active');
-                $parentDiv.prev().addClass('active');
-                setActiveTab(+currentTabIndex - 1);
+        function moveToNextTab(currentTab) {
+            var $parentDiv = $(currentTab).closest('div.tab-pane');
+            var $nextTab = $parentDiv.nextAll('div.tab-pane').first();
+            if ($nextTab.length > 0) {
+                showCheckoutPane($nextTab);
+            } else {
+                $("html, body").animate({ scrollTop: 0 }, "slow");
             }
-            $("html, body").animate({ scrollTop: 0 }, "slow");
+        }
+
+        function movePrevTab(currentTab) {
+            var $parentDiv = $(currentTab).closest('div.tab-pane');
+            var $prevTab = $parentDiv.prevAll('div.tab-pane').first();
+            if ($prevTab.length > 0) {
+                showCheckoutPane($prevTab);
+            } else {
+                $("html, body").animate({ scrollTop: 0 }, "slow");
+            }
         }
 
 
@@ -629,13 +623,9 @@ e?igsh=MWswMWN2eXVpaGFqZA=="><i class="fab fa-instagram"></i></a>
                                 return;
                             }
                             setTimeout(function () {
-                                // Payment disabled: folio → thank you. Otherwise skip past payment pane via paymentNextButton.
-                                if (typeof IsPaymentDisabled !== 'undefined' && IsPaymentDisabled) {
-                                    moveToNextTab(obj);
-                                } else {
-                                    var obj1 = $('#paymentNextButton');
-                                    moveToNextTab(obj1.length ? obj1 : obj);
-                                }
+                                // Always folio → Thank You on same page (never window.open / new tab).
+                                // Clearing all panes first prevents folio+thankyou stacking when #payment exists in DOM.
+                                showCheckoutPane('#thankyou');
                                 $('.loader-screen').fadeOut(500);
                             }, 500);
                         }).catch(error => {
@@ -669,7 +659,7 @@ e?igsh=MWswMWN2eXVpaGFqZA=="><i class="fab fa-instagram"></i></a>
                 body: formdata,
             }).then(response => response = response.json()).then(response => {
                 setTimeout(function () {
-                    moveToNextTab(obj);
+                    showCheckoutPane('#thankyou');
                      $('.loader-screen').fadeOut(800);
                 }, 500);
             });
