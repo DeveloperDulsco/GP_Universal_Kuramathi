@@ -517,6 +517,9 @@ namespace CheckinPortal.Controllers
                     }
                     else
                     {
+                        Helpers.LogHelper.Instance.Log(
+                            "Microblink unavailable. HTTP=" + response.StatusCode + " " + response.ReasonPhrase,
+                            "", "ExtractDataFromMBDocument", "GuestPortal");
                         return new BlinkDocumentResponseModel()
                         {
                             Result = false,
@@ -524,6 +527,7 @@ namespace CheckinPortal.Controllers
                         };
                     }
                 }
+                Helpers.LogHelper.Instance.Log("Microblink unavailable. Null response.", "", "ExtractDataFromMBDocument", "GuestPortal");
                 return new BlinkDocumentResponseModel()
                 {
                     Result = false,
@@ -532,6 +536,9 @@ namespace CheckinPortal.Controllers
             }
             catch (Exception ex)
             {
+                Helpers.LogHelper.Instance.Log(
+                    "Microblink down/unavailable. " + ex.Message,
+                    "", "ExtractDataFromMBDocument", "GuestPortal");
                 return new BlinkDocumentResponseModel()
                 {
                     Result = false,

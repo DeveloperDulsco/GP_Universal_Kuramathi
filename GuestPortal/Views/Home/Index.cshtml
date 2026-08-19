@@ -201,7 +201,7 @@
                         <li class="@((ViewBag.PaymentProcessed && ViewBag.IsPaymentSuccess) ? "paymentdone active" : "") tabs"><a href="#payment"><label>Payment</label><span class="count">@PageNo</span></a></li>
                     }*@
             @{ PageNo++;}
-            <li class="@(useResumeTab && resumeTabIndex >= 2 ? "active" : "") @((ViewBag.PaymentProcessed && ViewBag.IsPaymentSuccess && ViewBag.uploadcomplete) ? "paymentdone active" : "") tabs"><a href="#document"><label>Document</label><span class="count">@PageNo</span></a></li>
+            <li class="@(useResumeTab && resumeTabIndex >= 2 ? "active" : "") @((ViewBag.PaymentProcessed && ViewBag.IsPaymentSuccess && ViewBag.uploadcomplete) ? "paymentdone active" : "") tabs"><a href="#document"><label>Document Upload</label><span class="count">@PageNo</span></a></li>
             @{ PageNo++;}
             <li class="@(useResumeTab && resumeTabIndex >= 3 ? "active" : "") @((ViewBag.IsPaymentSuccess && ViewBag.uploadcomplete) ? "paymentdone active" : "") tabs"><a href="#qrCode"><label>Thank You</label><span class="count">@PageNo</span></a></li>
 
@@ -689,11 +689,11 @@ new { @class = "text-danger" }
                         @if (!Model.IsUploadComplete)
                         {
                             <div class="tab-pane  cstm-form @((ViewBag.PaymentProcessed && ViewBag.IsPaymentSuccess && !ViewBag.uploadcomplete) || (useResumeTab && resumeTabIndex == 2) ? "active" : "")  " id="document">
-                                <h1>Document</h1>
+                                <h1>Upload document</h1>
                                 <div class="content">
                                     <p>Dear @Model.Profiles[0].Salutation @Model.Profiles[0].FirstName @Model.Profiles[0].MiddleName @Model.Profiles[0].LastName,</p>
-                                    <p>In this final step for identity verification, please upload one valid document per guest (passport or national ID).</p>
-                                    <p id="documentUploadIntro">Only one valid document is required per guest. Document upload is mandatory for every guest in the reservation.</p>
+                                    <p>In this final step for identity verification, please upload one valid document per guest (passport from any country, or Maldives national ID only).</p>
+                                    <p id="documentUploadIntro">Only one valid document is required per guest. Accepted: passport (any country) or Maldives national ID. Document upload is mandatory for every guest in the reservation.</p>
                                     <div id="documentUploadSkipHelp" class="alert alert-warning" style="display:none;" role="alert">
                                         If you experience any issues uploading your ID, you can skip. Kindly present your ID at the front office so staff can upload it manually.
                                     </div>
@@ -1186,12 +1186,12 @@ new { @class = "text-danger" }
                 </div>
 
                 <div class="button-wrapper1">
-                    <button class="btn_cancel " data-dismiss="modal" aria-label="Close">Cancel</button>
+                    <button class="btn_cancel " data-dismiss="modal" aria-label="Close">CANCEL</button>
                     <button class="btn_ok" data-guestid="" aria-label="Close">OK</button>
 
                 </div>
                 <div class="mt-4 text-center mb-4">
-                    <span class="support">Supported File Type is .jpb and .png With Max Size Of 2MB</span>
+                    <span class="support">Supported file types are .jpg and .png with max. size of 2MB.</span>
                 </div>
             </div>
         </div>
@@ -1285,9 +1285,9 @@ new { @class = "text-danger" }
                 If you experience any issues uploading your ID, you can skip. Kindly present your ID at the front office so staff can upload it manually.
             </div>
             <div class="button-wrapper1">
-                <button class="btn_cancel " data-dismiss="modal" aria-label="Close" onclick="resetDocumentInfo(); clearFileUpload();">Cancel</button>
+                <button class="btn_cancel " data-dismiss="modal" aria-label="Close" onclick="resetDocumentInfo(); clearFileUpload(); logDocumentAction('DocumentUploadCancelled');">CANCEL</button>
                 <button class="btn_ok btnUploadPrimaryDoc" data-guestid="1">OK</button>
-                <button style="display:none" id="btnDocumentSkipModal" class="btn_ok skipdocument">Skip</button>
+                <button style="display:none" id="btnDocumentSkipModal" class="btn_ok skipdocument" type="button">SKIP</button>
             </div>
             <div class="mt-4 text-center mb-4">
                 <span class="support">Supported file types are .jpg and .png with max. size of 2MB.</span>
@@ -1320,7 +1320,7 @@ new { @class = "text-danger" }
                             </div>
 
                             <div class="btn-grp upsellconfirmDiv">
-                                <button class="btn_cancel" id="upsellDetailCancelButton" onclick="cancelPackageDetailPopup(this)" data-dismiss="modal" data-packageID="">Cancel</button>  @*data-toggle="modal" data-target="#ConfirmCancelUpsell"*@
+                                <button class="btn_cancel" id="upsellDetailCancelButton" onclick="cancelPackageDetailPopup(this)" data-dismiss="modal" data-packageID="">CANCEL</button>  @*data-toggle="modal" data-target="#ConfirmCancelUpsell"*@
                                 <button class="btn_next" onclick="confirmPackage(this)" id="upsellConfirmButton" data-packageID="" data-upselltype="">
                                     <i class="fas fa-check-circle"></i> Request
                                 </button>
@@ -1344,8 +1344,8 @@ new { @class = "text-danger" }
                         <div class="col-md-12 text-center">
                             <p>Are you sure you want to discard this option?</p>
                             <div class="button-wrapper text-center mt-4">
-                                <button class="btnstyle grey" data-dismiss="modal" data-toggle="modal" data-target="#upsellModal">No</button>
-                                <button class="btnstyle blue" data-dismiss="modal" data-packageID="" data-upselltype="" id="upsellCancelButton" onclick="cancelPackage(this)"><i class="fas fa-check-circle"></i> Yes</button>
+                                <button class="btnstyle grey" data-dismiss="modal" data-toggle="modal" data-target="#upsellModal">NO</button>
+                                <button class="btnstyle blue" data-dismiss="modal" data-packageID="" data-upselltype="" id="upsellCancelButton" onclick="cancelPackage(this)"><i class="fas fa-check-circle"></i> YES</button>
                             </div>
                         </div>
                     </div>
@@ -1398,8 +1398,8 @@ new { @class = "text-danger" }
                     </div>
 
                     <div class="btns">
-                        <button class="no" data-dismiss="modal" aria-label="Close">No</button>
-                        <button class="yes" data-dismiss="modal" data-toggle="modal" onclick="proceedWithPayment()">Yes</button>
+                        <button class="no" data-dismiss="modal" aria-label="Close">NO</button>
+                        <button class="yes" data-dismiss="modal" data-toggle="modal" onclick="proceedWithPayment()">YES</button>
                     </div>
                 </div>
             </div>
@@ -1440,8 +1440,8 @@ new { @class = "text-danger" }
                     </div>
                 </div>
                 <div class="button-wrapper text-center mt-3 mb-3">
-                    <button class="btnstyle grey" data-dismiss="modal" aria-label="Close">No</button>
-                    <button class="btnstyle blue" data-guestid="" onclick="proceedWithPayment()">Yes</button>
+                    <button class="btnstyle grey" data-dismiss="modal" aria-label="Close">NO</button>
+                    <button class="btnstyle blue" data-guestid="" onclick="proceedWithPayment()">YES</button>
 
                 </div>
             </div>
@@ -1918,7 +1918,7 @@ new { @class = "text-danger" }
 
             var $intro = $('#documentUploadIntro');
             if ($intro.length) {
-                $intro.text('Only one valid document is required per guest (passport or national ID). Upload is mandatory for every guest.');
+                $intro.text('Only one valid document is required per guest. Accepted: passport (any country) or Maldives national ID. Upload is mandatory for every guest.');
             }
 
             updateDocumentUploadGuidance();
@@ -1931,7 +1931,7 @@ new { @class = "text-danger" }
             }
 
             $guidance.html(
-                '<li>Only one valid document is required per guest (passport or national ID).</li>' +
+                '<li>Only passport (any country) or Maldives national ID is accepted.</li>' +
                 '<li>Document upload is mandatory for every guest before you can proceed.</li>' +
                 '<li>If an upload fails twice, use Skip in that upload box, or Skip &amp; Save on this page.</li>'
             );
@@ -2756,6 +2756,304 @@ new { @class = "text-danger" }
                     })
     // Track only document numbers that were successfully saved via UploadDocument.
     var uploadedDocs = [];
+    var DOCUMENT_MAX_BYTES = 2 * 1024 * 1024; // 2MB — aligned with UI copy
+    var DOCUMENT_ACCEPT_MSG = 'Only passport (any country) or Maldives national ID is accepted. Please upload a valid document.';
+
+    function logDocumentAction(eventName) {
+        try {
+            $.ajax({
+                url: "@Url.Action("InsertEvent", "Home")",
+                method: "POST",
+                data: {
+                    EventName: eventName,
+                    reservationid: $("#ReservationID").val()
+                },
+                dataType: "json"
+            });
+        } catch (e) { }
+    }
+
+    function hideDocumentLoader() {
+        try { $('.loader-screen').fadeOut(100); } catch (e) { }
+    }
+
+    function isAcceptedGuestDocument(idType, issueCountry) {
+        var type = (idType || '').toString().trim().toUpperCase();
+        var country = (issueCountry || '').toString().trim().toUpperCase();
+        if (!type) {
+            return false;
+        }
+        if (type === 'PASSPORT' || type === 'P' || type === 'PP' || type.indexOf('PASSPORT') >= 0) {
+            return true;
+        }
+        var isIdCard = type === 'IDENTITY_CARD' || type === 'NID' || type === 'NATIONAL_ID'
+            || type === 'ID_CARD' || type === 'ID' || type.indexOf('IDENTITY') >= 0;
+        var isMaldives = country === 'MDV' || country === 'MV' || country === 'MALDIVES'
+            || country.indexOf('MALDIV') >= 0;
+        return isIdCard && isMaldives;
+    }
+
+    function rejectUnsupportedDocument(alertId, fileControl, filecontrolID, message) {
+        hideDocumentLoader();
+        showAlert(alertId, message || DOCUMENT_ACCEPT_MSG, "warning");
+        recordDocumentUploadFailure($("#currentGuestIndex").val());
+        logDocumentAction('DocumentUploadInvalidType');
+        $(fileControl).val('');
+        $(fileControl).siblings(".custom-file-label").removeClass("selected").html('Choose file');
+        $(fileControl).parent('div').find('img').attr('src', '');
+        $(fileControl).parent('div').find('img').hide();
+        if (filecontrolID === "primaryDoc1") {
+            resetDocumentInfo();
+        }
+    }
+
+    // Full multi-tab lock per reservation (BroadcastChannel + localStorage heartbeat)
+    (function initReservationTabLock() {
+        var resNo = '@Model.ReservationNumber';
+        if (!resNo) {
+            return;
+        }
+        var lockKey = 'gp_precheckin_tab_lock_' + resNo;
+        var tabId = 'tab_' + Date.now() + '_' + Math.random().toString(36).slice(2);
+        var HEARTBEAT_MS = 2500;
+        var STALE_MS = 12000;
+        var channel = null;
+        var isOwner = false;
+        var isBlocked = false;
+        var heartbeatTimer = null;
+        var watchTimer = null;
+        var BLOCK_MSG = 'This reservation is already open in another tab. Please continue in that tab.';
+
+        try {
+            if (typeof BroadcastChannel !== 'undefined') {
+                channel = new BroadcastChannel(lockKey);
+            }
+        } catch (e) { }
+
+        function now() {
+            return Date.now();
+        }
+
+        function readLock() {
+            try {
+                var raw = localStorage.getItem(lockKey);
+                if (!raw) {
+                    return null;
+                }
+                if (raw.charAt(0) !== '{') {
+                    // Legacy string-only lock (no heartbeat) — treat as stale so a new tab can recover
+                    return { tabId: raw, ts: 0 };
+                }
+                return JSON.parse(raw);
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function writeLock() {
+            localStorage.setItem(lockKey, JSON.stringify({ tabId: tabId, ts: now() }));
+        }
+
+        function isLockStale(lock) {
+            if (!lock) {
+                return true;
+            }
+            return (now() - (lock.ts || 0)) > STALE_MS;
+        }
+
+        function ownsLock(lock) {
+            return !!(lock && lock.tabId === tabId);
+        }
+
+        function showMultiTabBlock() {
+            if (isBlocked) {
+                return;
+            }
+            isBlocked = true;
+            isOwner = false;
+            window.gpReservationTabBlocked = true;
+
+            try {
+                $('.modal').not('#customMessageModal').modal('hide');
+            } catch (e) { }
+
+            if (!$('#gpTabLockOverlay').length) {
+                $('body').append(
+                    '<div id="gpTabLockOverlay" style="position:fixed;inset:0;z-index:20000;background:rgba(0,0,0,0.55);display:flex;align-items:center;justify-content:center;padding:24px;">' +
+                    '<div style="max-width:480px;width:100%;background:#fff;padding:28px 24px;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,.25);">' +
+                    '<h5 style="margin:0 0 16px;">Message</h5>' +
+                    '<p style="margin:0;font-size:16px;line-height:1.45;">' + BLOCK_MSG + '</p>' +
+                    '</div></div>'
+                );
+            }
+
+            try {
+                $('#customMessageModalMessage').html(BLOCK_MSG);
+                $('#customMessageModal').modal({ backdrop: false, keyboard: false, show: true });
+            } catch (e) { }
+
+            $('.left-menu, .content-wrapper, .tab-content, .menu, .room-bg')
+                .css('pointer-events', 'none');
+            $('a, button, input, select, textarea, .tabs, .moveNext, .movePrev')
+                .css('pointer-events', 'none')
+                .attr('disabled', true)
+                .addClass('disabled');
+        }
+
+        function releaseLock() {
+            try {
+                var lock = readLock();
+                if (ownsLock(lock)) {
+                    localStorage.removeItem(lockKey);
+                }
+                if (channel) {
+                    channel.postMessage({ type: 'release', tabId: tabId });
+                }
+            } catch (e) { }
+            isOwner = false;
+        }
+
+        function becomeOwner() {
+            writeLock();
+            isOwner = true;
+            isBlocked = false;
+            window.gpReservationTabBlocked = false;
+            if (channel) {
+                channel.postMessage({ type: 'acquired', tabId: tabId });
+            }
+        }
+
+        function tryClaim(allowTakeoverReload) {
+            try {
+                var lock = readLock();
+                if (ownsLock(lock)) {
+                    writeLock();
+                    isOwner = true;
+                    return true;
+                }
+                if (!lock || isLockStale(lock)) {
+                    becomeOwner();
+                    if (allowTakeoverReload && $('#gpTabLockOverlay').length) {
+                        window.location.reload();
+                        return true;
+                    }
+                    return true;
+                }
+                showMultiTabBlock();
+                return false;
+            } catch (e) {
+                // localStorage unavailable — allow flow rather than hard-block guests
+                return true;
+            }
+        }
+
+        function startHeartbeat() {
+            if (heartbeatTimer) {
+                return;
+            }
+            heartbeatTimer = setInterval(function () {
+                if (!isOwner || isBlocked) {
+                    return;
+                }
+                try {
+                    var lock = readLock();
+                    if (ownsLock(lock)) {
+                        writeLock();
+                    } else if (!lock || isLockStale(lock)) {
+                        becomeOwner();
+                    } else {
+                        showMultiTabBlock();
+                    }
+                } catch (e) { }
+            }, HEARTBEAT_MS);
+        }
+
+        function startWatcher() {
+            if (watchTimer) {
+                return;
+            }
+            watchTimer = setInterval(function () {
+                if (isOwner && !isBlocked) {
+                    return;
+                }
+                tryClaim(true);
+            }, HEARTBEAT_MS);
+        }
+
+        tryClaim(false);
+        startHeartbeat();
+        startWatcher();
+
+        if (channel) {
+            channel.onmessage = function (ev) {
+                if (!ev || !ev.data) {
+                    return;
+                }
+                // Owner ignores other tabs' claim/acquired noise; only release frees the lock
+                if (ev.data.type === 'release' && ev.data.tabId !== tabId) {
+                    tryClaim(true);
+                }
+                if (ev.data.type === 'acquired' && ev.data.tabId !== tabId && !isOwner) {
+                    showMultiTabBlock();
+                }
+            };
+        }
+
+        window.addEventListener('storage', function (e) {
+            if (e.key !== lockKey) {
+                return;
+            }
+            if (!e.newValue) {
+                // Lock cleared — attempt takeover
+                tryClaim(true);
+                return;
+            }
+            try {
+                var lock = JSON.parse(e.newValue);
+                if (lock && lock.tabId !== tabId) {
+                    if (isOwner) {
+                        // Another tab overwrote us (rare); yield
+                        showMultiTabBlock();
+                    } else {
+                        showMultiTabBlock();
+                    }
+                }
+            } catch (ex) {
+                if (e.newValue !== tabId) {
+                    showMultiTabBlock();
+                }
+            }
+        });
+
+        function onPageExit() {
+            if (heartbeatTimer) {
+                clearInterval(heartbeatTimer);
+                heartbeatTimer = null;
+            }
+            releaseLock();
+        }
+
+        window.addEventListener('pagehide', onPageExit);
+        window.addEventListener('beforeunload', onPageExit);
+        document.addEventListener('visibilitychange', function () {
+            if (!document.hidden && isOwner && !isBlocked) {
+                try {
+                    var lock = readLock();
+                    if (ownsLock(lock) || !lock || isLockStale(lock)) {
+                        writeLock();
+                        isOwner = true;
+                    } else {
+                        showMultiTabBlock();
+                    }
+                } catch (e) { }
+            }
+        });
+    })();
+
+    @if (ViewBag.ForceDocumentResume == true)
+    {
+        <text>logDocumentAction('DocumentPageReopen');</text>
+    }
 
     function normalizeUploadedDocNumber(docNum) {
         if (docNum == null || docNum === undefined) {
@@ -2870,7 +3168,8 @@ new { @class = "text-danger" }
                 data: {
                     ButtonName: buttonName,
                     ReservationNumber: '@Model.ReservationNumber',
-                    ReservationNameID: '@Model.ReservationNameID'
+                    ReservationNameID: '@Model.ReservationNameID',
+                    ReservationID: @Model.ReservationID
                 }
             });
         }
@@ -2984,6 +3283,7 @@ new { @class = "text-danger" }
 
                     $('.skipAndProceedDocument').on('click', function (e) {
                         e.preventDefault();
+                        logDocumentAction('DocumentUploadSkipFinalize');
 
                         // Mark any incomplete required guests as skipped
                         $('.fileUpload').each(function () {
@@ -3011,32 +3311,14 @@ new { @class = "text-danger" }
                         if (guestID) {
                             markGuestDocumentSkipped(guestID);
                         }
-                        $.ajax({
-                            url: "@Url.Action("InsertEvent", "Home")",
-                            method: "POST",
-                            data: {
-                                EventName: "DocumentUploadSkip",
-                                reservationid: $("#ReservationID").val()
-                            },
-                            type: "POST",
-                            dataType: "json"
-                        });
+                        logDocumentAction('DocumentUploadSkipModal');
                     });
 
                     $(document).on('click', '.guestDocumentSkip', function (e) {
                         e.preventDefault();
                         var guestID = $(this).data('guestid');
                         markGuestDocumentSkipped(guestID);
-                        $.ajax({
-                            url: "@Url.Action("InsertEvent", "Home")",
-                            method: "POST",
-                            data: {
-                                EventName: "DocumentUploadSkip",
-                                reservationid: $("#ReservationID").val()
-                            },
-                            type: "POST",
-                            dataType: "json"
-                        });
+                        logDocumentAction('DocumentUploadSkip');
                     });
                     function checkFileExtensions() {
 
@@ -3074,19 +3356,86 @@ new { @class = "text-danger" }
                         middleName: "",
                         lastName: "",
                         nationality: "",
+                        nationality_fullname: "",
                         issueCountry: "",
                         birthDate: "",
                         faceImage: "",
-                        fullName: ""
+                        fullName: "",
+                        address1: "",
+                        address2: "",
+                        city: "",
+                        state: "",
+                        zip: ""
                     };
 
         function applySelectedNationalityFallback() {
             if (!documentInformation.nationality || !documentInformation.nationality.trim()) {
+                // Maldives national ID: nationality is MDV/MV even when OCR MRZ nationality is blank.
+                if (isAcceptedGuestDocument(documentInformation.documentType, documentInformation.issueCountry)
+                    && isMaldivesIssueCountry(documentInformation.issueCountry)
+                    && isNationalIdDocumentType(documentInformation.documentType)) {
+                    documentInformation.nationality = 'MV';
+                    return;
+                }
                 var bookingNationality = getSelectedNationalityCode();
                 if (bookingNationality) {
                     documentInformation.nationality = bookingNationality;
                 }
             }
+        }
+
+        function isNationalIdDocumentType(idType) {
+            var type = (idType || '').toString().trim().toUpperCase();
+            return type === 'IDENTITY_CARD' || type === 'NID' || type === 'NATIONAL_ID'
+                || type === 'ID_CARD' || type === 'ID' || type.indexOf('IDENTITY') >= 0;
+        }
+
+        function isMaldivesIssueCountry(issueCountry) {
+            var country = (issueCountry || '').toString().trim().toUpperCase();
+            return country === 'MDV' || country === 'MV' || country === 'MALDIVES'
+                || country.indexOf('MALDIV') >= 0;
+        }
+
+        function hydratePrimaryGuestDetailsFromUpload(response) {
+            try {
+                var primaryProfileDetailId = '@(Model.Profiles != null && Model.Profiles.Count > 0 ? Model.Profiles[0].ProfileDetailID : 0)';
+                var uploadedProfileDetailId = (response.profileDetailID != null && response.profileDetailID !== undefined)
+                    ? String(response.profileDetailID)
+                    : ($('#currentProfileID').val() || '').toString();
+                if (!response || !response.result || String(uploadedProfileDetailId) !== String(primaryProfileDetailId)) {
+                    return;
+                }
+
+                if (response.nationality) {
+                    var $nat = $('select.selectNationality');
+                    if ($nat.length) {
+                        $nat.selectpicker('val', response.nationality);
+                        if (!$nat.val()) {
+                            $nat.val(response.nationality);
+                        }
+                        $nat.selectpicker('refresh');
+                        $('#selectedNationality').val($nat.val() || response.nationality);
+                    }
+                }
+
+                if (response.addressLine1) {
+                    $('#Profiles_0__AddressLine1').val(response.addressLine1);
+                }
+                if (response.city) {
+                    $('#Profiles_0__City').val(response.city);
+                }
+                if (response.postalCode) {
+                    $('#Profiles_0__PostalCode').val(response.postalCode);
+                }
+                if (response.countryId) {
+                    var $country = $('select.selectCountry');
+                    if ($country.length) {
+                        $country.selectpicker('val', String(response.countryId));
+                        $country.trigger('change');
+                        $country.selectpicker('refresh');
+                    }
+                }
+            } catch (e) { }
         }
 
                     function uploadDocumentToCloud() {
@@ -3106,6 +3455,13 @@ new { @class = "text-danger" }
                             if (!documentInformation.documentType?.trim()) {
                                 $('#customMessageModalMessage').html('Please upload a valid document');
                                 $('#customMessageModal').modal('show');
+                                recordDocumentUploadFailure($("#currentGuestIndex").val());
+                                return;
+                            }
+                            if (!isAcceptedGuestDocument(documentInformation.documentType, documentInformation.issueCountry)) {
+                                $('#customMessageModalMessage').html(DOCUMENT_ACCEPT_MSG);
+                                $('#customMessageModal').modal('show');
+                                logDocumentAction('DocumentUploadInvalidType');
                                 recordDocumentUploadFailure($("#currentGuestIndex").val());
                                 return;
                             }
@@ -3173,6 +3529,7 @@ new { @class = "text-danger" }
                                     trackUploadedDocumentNumber(docInfoSnapshot.documentNumber);
                                     markGuestUploadCompleted(guestID);
                                     updateDocumentUploadSkipVisibility();
+                                    hydratePrimaryGuestDetailsFromUpload(response);
                                 })
                                 .catch(function () {
                                     delete pendingDocumentUploads[guestID];
@@ -3283,179 +3640,33 @@ new { @class = "text-danger" }
 
 
             var filext = "." + filextension.slice(-1)[0];
-            var valid = [".jpg", ".png", ".jpeg", ".pdf"];
+            var valid = [".jpg", ".png", ".jpeg"];
+            var selectedFile = files && files.length ? files[0] : null;
 
             if (valid.indexOf(filext.toLowerCase()) == -1) {
-
-                //$('#customMessageModalMessage').html('File type not supported');
-                //$('#customMessageModal').modal('show');
-
-                showAlert(alertId, "File type not supported", "warning");
+                hideDocumentLoader();
+                showAlert(alertId, "File type not supported. Please upload a JPG or PNG image (max 2MB).", "warning");
+                logDocumentAction('DocumentUploadInvalidFile');
                 $(fileControl).val('');
                 $(fileControl).siblings(".custom-file-label").removeClass("selected").html('Choose file');
                 $(fileControl).parent('div').find('img').attr('src', '');
                 $(fileControl).parent('div').find('img').hide();
-                /* $(documentReadStatus).hide();*/
+                return;
             }
-            else {
+            if (selectedFile && selectedFile.size > DOCUMENT_MAX_BYTES) {
+                hideDocumentLoader();
+                showAlert(alertId, "File is too large. Maximum size is 2MB.", "warning");
+                logDocumentAction('DocumentUploadOversized');
+                $(fileControl).val('');
+                $(fileControl).siblings(".custom-file-label").removeClass("selected").html('Choose file');
+                $(fileControl).parent('div').find('img').attr('src', '');
+                $(fileControl).parent('div').find('img').hide();
+                return;
+            }
+
+            {
                 $('.loader-screen').fadeIn(100);
-                if (filext.toLowerCase() == ".pdf") {
-                    var formData = new FormData();
-                    formData.append('pdfFile', files[0]);
-                    formData.append('ReservationID', ReservationID);
-                    $.ajax({
-                        url: '/Home/ConvertPdfToImage',
-                        type: 'POST',
-                        data: formData,
-                        processData: false,
-                        contentType: false,
-                        success: function (data) {
-                            //console.log(data);
-
-                            imageBase64 = data.Base64Image;
-
-
-                            // Compress before sending to MicroBlink
-                            // imageBase64 = compressBase64Image(imageBase64, 1280, 0.7);
-
-                            @*validateDocumentDirect({
-                                RequestObject: {
-                                    Base64Image: imageBase64,
-                                    ImageFormat: ".jpg",
-                                    OCRURL: OCRAPIBaseURL
-                                },
-                                 RequestIdentifier: @Model.ReservationNumber
-
-                            })*@
-
-
-                            validateDocumentDirect({
-                                imageBase64: imageBase64,
-                                extension: ".jpg"
-                            }).then(response => {
-                                if (response.Result) {
-                                    //$(documentReadStatus).html('document not validated');
-                                    //$(documentReadStatus).hide();
-                                    assignDocumentInfo(response);
-
-                                    var transactionIDRequestObj = {
-                                        "RequestObject": response.responseData.TransactionID
-                                    };
-                                    const isValid =
-                                        filecontrolID === "primaryDoc2" ||
-                                        (
-                                            filecontrolID === "primaryDoc1" &&
-                                            response.responseData?.idType != null &&
-                                            response.responseData.idType !== ""
-                                        );
-                                    if (isValid) {
-                                        if (!response.responseData.IsExpired) {
-                                            //console.log(response.responseData.documentNumber);
-                                            //console.log(uploadedDocs);
-                                            if (isDocumentNumberAlreadyUploaded(response.responseData.documentNumber)) {
-                                                $('.loader-screen').fadeOut(100);
-
-                                                showAlert(alertId, "This document is already uploaded now for another guest.", "warning");
-
-                                                $(fileControl).val('');
-                                                $(fileControl).siblings(".custom-file-label").removeClass("selected").html('Choose file');
-                                                $(fileControl).parent('div').find('img').attr('src', '');
-                                                $(fileControl).parent('div').find('img').hide();
-                                                if (filecontrolID === "primaryDoc1") {
-                                                    resetDocumentInfo();
-                                                }
-                                                return;
-                                            }
-
-                                            if (response.responseData && response.responseData.fullImage) {
-                                                $(imgPreview).attr('src', "data:image/jpg;base64," + response.responseData.fullImage);
-                                                $(imgPreview).show();
-                                            }
-                                            else {
-                                                $(imgPreview).attr('src', `${imgout.prefix}${imgout.data}`);
-                                                $(imgPreview).show();
-                                            }
-
-                                            if (((response.responseData.idType != "PASSPORT" || response.responseData.idType == "") && filecontrolID == "primaryDoc1") || filecontrolID == "primaryDoc2") {
-                                                $('#primaryDoc2').attr('disabled', false);
-                                            }
-                                            else {
-
-                                                $('#primaryDoc2').attr('disabled', true);
-
-                                            }
-
-                                            clearDocumentUploadSkipOption();
-                                            $('.loader-screen').fadeOut(100);
-
-                                            //ValidateDocumentIssueCountry(response.responseData.documentTypeCode, response.responseData.issueCountry).then(docIssueCountryResponse => {
-
-                                            //    if (docIssueCountryResponse.result) {
-                                            //        $('.loader-screen').fadeOut(100);
-                                            //        //$(documentReadStatus).html('document validated');
-                                            //        //$(documentReadStatus).hide();
-                                            //        //$(documentReadStatus).removeClass('alert-success');
-                                            //        //$(documentReadStatus).removeClass('alert-danger');
-                                            //        //$(documentReadStatus).addClass('alert-success');
-                                            //    }
-                                            //    else {
-                                            //        $('.loader-screen').fadeOut(100);
-                                            //        //$(documentReadStatus).html('document not validated');
-                                            //        //$(documentReadStatus).hide();
-                                            //        //$(documentReadStatus).removeClass('alert-success');
-                                            //        //$(documentReadStatus).removeClass('alert-danger');
-                                            //        //$(documentReadStatus).addClass('alert-danger');
-                                            //    }
-                                            //});
-
-
-                                        }
-                                        else {
-                                            //$(imgPreview).attr('src', `${imgout.prefix}${imgout.data}`);
-                                            //$(imgPreview).show();
-                                            $('.loader-screen').fadeOut(100);
-
-                                            showAlert(alertId, "Document is expired.Please upload a valid one", "warning");
-                                            recordDocumentUploadFailure($("#currentGuestIndex").val());
-
-                                            $(fileControl).val('');
-                                            $(fileControl).siblings(".custom-file-label").removeClass("selected").html('Choose file');
-                                            $(fileControl).parent('div').find('img').attr('src', '');
-                                            $(fileControl).parent('div').find('img').hide();
-                                        }
-                                    }
-                                    else {
-                                        $('.loader-screen').fadeOut(100);
-
-                                        showAlert(alertId, "Please upload a valid document", "warning");
-                                        recordDocumentUploadFailure($("#currentGuestIndex").val());
-
-                                        $(fileControl).val('');
-                                        $(fileControl).siblings(".custom-file-label").removeClass("selected").html('Choose file');
-                                        $(fileControl).parent('div').find('img').attr('src', '');
-                                        $(fileControl).parent('div').find('img').hide();
-
-                                    }
-
-                                }
-                                else {
-                                    //$(imgPreview).attr('src', `${imgout.prefix}${imgout.data}`);
-                                    //$(imgPreview).show();
-                                    $('.loader-screen').fadeOut(100);
-                                    showAlert(alertId, "Please upload a valid Document", "warning");
-                                    recordDocumentUploadFailure($("#currentGuestIndex").val());
-
-                                    $(fileControl).val('');
-                                    $(fileControl).siblings(".custom-file-label").removeClass("selected").html('Choose file');
-                                    $(fileControl).parent('div').find('img').attr('src', '');
-                                    $(fileControl).parent('div').find('img').hide();
-                                }
-
-                            });
-                        }
-                    });
-                }
-                else {
+                logDocumentAction('DocumentUploadAttempt');
                     compress.compress(files, {
                         size: 2,
                         quality: 0.75,
@@ -3465,27 +3676,12 @@ new { @class = "text-danger" }
                     }).then((images) => {
                         const imgout = images[0]
                         var imageBase64 = imgout.data;
-                        //imageBase64 = compressBase64Image(imageBase64, 1280, 0.7);
-                        @*validateDocumentDirect({
-                            RequestObject: {
-                                Base64Image: imageBase64,
-                                ImageFormat: ".jpg",
-                                OCRURL: OCRAPIBaseURL
-                            },
-                            RequestIdentifier: @Model.ReservationNumber
-
-                        })*@
                         validateDocumentDirect({
                             imageBase64: imageBase64,
                             extension: ".jpg"
                         }).then(response => {
-                            //alert('1 : ' + response.responseData.issueCountry + ' 2 : ' + response.Result + ' 3 : ' + response.result + ' 4: ' + response.responseData.idType);
                             console.log(response);
                             if (response.Result) {
-                                // alert('1 : ' + response.responseData.issueCountry + ' 2 : ' + response.responseData.idType + ' 3: ' + response.responseData.idType);
-                                // alert('IsExpired ' + response.responseData.IsExpired);
-                                //$(documentReadStatus).html('document not validated');
-                                //$(documentReadStatus).hide();
                                 assignDocumentInfo(response);
 
                                 var transactionIDRequestObj = {
@@ -3501,10 +3697,15 @@ new { @class = "text-danger" }
                                 console.log('isValid : ' + isValid);
                                 if (isValid) {
                                    if (!response.responseData.IsExpired) {
-                                        //console.log(response.responseData.documentNumber);
-                                        //console.log(uploadedDocs);
+                                        if (filecontrolID === "primaryDoc1"
+                                            && !isAcceptedGuestDocument(
+                                                response.responseData.idType,
+                                                response.responseData.issueCountry || response.responseData.issueCountry_fullname)) {
+                                            rejectUnsupportedDocument(alertId, fileControl, filecontrolID, DOCUMENT_ACCEPT_MSG);
+                                            return;
+                                        }
                                         if (isDocumentNumberAlreadyUploaded(response.responseData.documentNumber)) {
-                                            $('.loader-screen').fadeOut(100);
+                                            hideDocumentLoader();
 
                                             showAlert(alertId, "This document is already uploaded now for another guest.", "warning");
 
@@ -3534,26 +3735,15 @@ new { @class = "text-danger" }
                                         }
                                         console.log('isValid : ' + response.responseData.idType);
                                         clearDocumentUploadSkipOption();
-                                        //ValidateDocumentIssueCountry(response.responseData.idType, response.responseData.issueCountry).then(docIssueCountryResponse => {
-
-                                        //    if (docIssueCountryResponse.result) {
-                                        //        $('.loader-screen').fadeOut(100);
-
-                                        //    }
-                                        //    else {
-                                                $('.loader-screen').fadeOut(100);
-
-                                        //    }
-                                        //});
+                                        hideDocumentLoader();
 
 
                                     }
                                     else {
-                                        //$(imgPreview).attr('src', `${imgout.prefix}${imgout.data}`);
-                                        //$(imgPreview).show();
-                                        $('.loader-screen').fadeOut(100);
+                                        hideDocumentLoader();
                                         showAlert(alertId, "Document is expired. Please upload a valid one", "warning");
                                         recordDocumentUploadFailure($("#currentGuestIndex").val());
+                                        logDocumentAction('DocumentUploadExpiryFail');
 
                                         $(fileControl).val('');
                                         $(fileControl).siblings(".custom-file-label").removeClass("selected").html('Choose file');
@@ -3562,10 +3752,11 @@ new { @class = "text-danger" }
                                     }
                                 }
                                 else {
-                                    $('.loader-screen').fadeOut(100);
+                                    hideDocumentLoader();
 
                                     showAlert(alertId, "Please upload a valid document", "warning");
                                     recordDocumentUploadFailure($("#currentGuestIndex").val());
+                                    logDocumentAction('DocumentUploadInvalid');
 
                                     $(fileControl).val('');
                                     $(fileControl).siblings(".custom-file-label").removeClass("selected").html('Choose file');
@@ -3576,11 +3767,14 @@ new { @class = "text-danger" }
 
                             }
                             else {
-                                //$(imgPreview).attr('src', `${imgout.prefix}${imgout.data}`);
-                                //$(imgPreview).show();
-                                $('.loader-screen').fadeOut(100);
+                                hideDocumentLoader();
+                                var failMsg = (response && response.ResponseMessage) ? response.ResponseMessage : "Please upload a valid document";
+                                if (failMsg && /microblink|unable to read|null|unavailable|timeout/i.test(failMsg)) {
+                                    logDocumentAction('MicroblinkUnavailable');
+                                }
                                 showAlert(alertId, "Please upload a valid document", "warning");
                                 recordDocumentUploadFailure($("#currentGuestIndex").val());
+                                logDocumentAction('DocumentUploadInvalid');
 
                                 $(fileControl).val('');
                                 $(fileControl).siblings(".custom-file-label").removeClass("selected").html('Choose file');
@@ -3588,11 +3782,27 @@ new { @class = "text-danger" }
                                 $(fileControl).parent('div').find('img').hide();
                             }
 
+                        }).catch(function () {
+                            hideDocumentLoader();
+                            logDocumentAction('MicroblinkUnavailable');
+                            showAlert(alertId, "Document service is temporarily unavailable. Please try again.", "warning");
+                            recordDocumentUploadFailure($("#currentGuestIndex").val());
+                            $(fileControl).val('');
+                            $(fileControl).siblings(".custom-file-label").removeClass("selected").html('Choose file');
+                            $(fileControl).parent('div').find('img').attr('src', '');
+                            $(fileControl).parent('div').find('img').hide();
                         });
 
 
+                    }).catch(function () {
+                        hideDocumentLoader();
+                        logDocumentAction('DocumentUploadCompressFail');
+                        showAlert(alertId, "Unable to process this image. Please try a smaller JPG or PNG (max 2MB).", "warning");
+                        $(fileControl).val('');
+                        $(fileControl).siblings(".custom-file-label").removeClass("selected").html('Choose file');
+                        $(fileControl).parent('div').find('img').attr('src', '');
+                        $(fileControl).parent('div').find('img').hide();
                     });
-                }
 
                 $(fileControl).siblings(".custom-file-label").addClass("selected").html(fileName);
             }
@@ -3667,9 +3877,21 @@ new { @class = "text-danger" }
                             documentInformation.fullName = response.responseData.fullName;
                         if (!documentInformation.nationality)
                             documentInformation.nationality = response.responseData.nationality;
-                        applySelectedNationalityFallback();
+                        if (!documentInformation.nationality_fullname)
+                            documentInformation.nationality_fullname = response.responseData.nationality_fullname;
                         if (!documentInformation.issueCountry)
-                            documentInformation.issueCountry = response.responseData.issueCountry_fullname;
+                            documentInformation.issueCountry = response.responseData.issueCountry || response.responseData.issueCountry_fullname;
+                        if (!documentInformation.address1)
+                            documentInformation.address1 = response.responseData.address1;
+                        if (!documentInformation.address2)
+                            documentInformation.address2 = response.responseData.address2;
+                        if (!documentInformation.city)
+                            documentInformation.city = response.responseData.city;
+                        if (!documentInformation.state)
+                            documentInformation.state = response.responseData.state;
+                        if (!documentInformation.zip)
+                            documentInformation.zip = response.responseData.zip;
+                        applySelectedNationalityFallback();
                         if (!documentInformation.faceImage)
                             documentInformation.faceImage = response.responseData.faceImage;
                         if (!documentInformation.documentType)
@@ -3726,10 +3948,16 @@ new { @class = "text-danger" }
                             middleName: "",
                             lastName: "",
                             nationality: "",
+                            nationality_fullname: "",
                             issueCountry: "",
                             birthDate: "",
                             faceImage: "",
-                            fullName:""
+                            fullName: "",
+                            address1: "",
+                            address2: "",
+                            city: "",
+                            state: "",
+                            zip: ""
                         };
                     }
 

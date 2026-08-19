@@ -3,6 +3,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
@@ -2661,6 +2662,72 @@ namespace CheckinPortal.Helpers
             }
         }
 
+        public async Task<APIResponseModel> PushSearchedDueOutReservation(string reservationNameID, Models.APIRequestModel localRequest, string groupName, string api_url)
+        {
+            try
+            {
+                new LogHelper().Debug("Pushing due-out searched reservation details using web api", reservationNameID, "PushSearchedDueOutReservation", groupName);
+                HttpClient httpClient = new HttpClient();
+                if (httpClient == null)
+                {
+                    new LogHelper().Debug("Failed to push due-out searched reservation details using web api due to proxy error", reservationNameID, "PushSearchedDueOutReservation", groupName);
+                    return new Models.APIResponseModel()
+                    {
+                        result = false,
+                        responseMessage = "Failed to generate the proxy http client"
+                    };
+                }
+                httpClient.DefaultRequestHeaders.Clear();
+                var accessToken = AuthenticationHelper.GetAPIAccessToken();
+                if (!string.IsNullOrEmpty(accessToken))
+                {
+                    httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+                }
+                string requestString = JsonConvert.SerializeObject(localRequest, Formatting.None);
+                new LogHelper().Debug("web api url :- " + api_url + @"/localService/PushCloudSearchedDueOutReservation", reservationNameID, "PushSearchedDueOutReservation", groupName);
+                new LogHelper().Debug("web api request :- " + requestString, reservationNameID, "PushSearchedDueOutReservation", groupName);
+                var requestContent = new StringContent(requestString, Encoding.UTF8, "application/json");
+                HttpResponseMessage response = await httpClient.PostAsync(api_url + @"/localService/PushCloudSearchedDueOutReservation", requestContent);
+                if (response != null)
+                {
+                    if (response.IsSuccessStatusCode)
+                    {
+                        string apiResponse = await response.Content.ReadAsStringAsync();
+                        new LogHelper().Debug("web API response :- " + apiResponse, reservationNameID, "PushSearchedDueOutReservation", groupName);
+                        Models.APIResponseModel localResponse = JsonConvert.DeserializeObject<Models.APIResponseModel>(apiResponse);
+                        return localResponse;
+                    }
+                    else
+                    {
+                        new LogHelper().Debug("Failed to push due-out searched reservation details using web api due to HTTP error : " + response.ReasonPhrase, reservationNameID, "PushSearchedDueOutReservation", groupName);
+                        return new Models.APIResponseModel()
+                        {
+                            result = false,
+                            responseMessage = response.ReasonPhrase
+                        };
+                    }
+                }
+                else
+                {
+                    new LogHelper().Debug("Failed to push due-out searched reservation details using web api due to null returned from the local web api", reservationNameID, "PushSearchedDueOutReservation", groupName);
+                    return new Models.APIResponseModel()
+                    {
+                        result = false,
+                        responseMessage = "Local web API returned null"
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                new LogHelper().Error(ex, reservationNameID, "PushSearchedDueOutReservation", groupName);
+                return new Models.APIResponseModel()
+                {
+                    result = false,
+                    responseMessage = "Generic Exception : " + ex.Message
+                };
+            }
+        }
+
         public async Task<CheckinPortal.Models.Whatsapp.WhatsAppResponse> SendWhatsappMsg(string reservationNameID, Models.Whatsapp.WhatsAppTemplateRequest emailRequest, string groupName, string api_url)
         {
             try
@@ -3134,6 +3201,15 @@ namespace CheckinPortal.Helpers
             catch (Exception ex)
             {
                 new LogHelper().Error(ex, reservationNameID, "InsertAuditLog", groupName);
+                try
+                {
+                    string logDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "App_Data", "LocalLogs");
+                    Directory.CreateDirectory(logDir);
+                    File.AppendAllText(
+                        Path.Combine(logDir, "api-unreachable.txt"),
+                        DateTime.UtcNow.ToString("o") + " | InsertAuditLog | " + (reservationNameID ?? "") + " | " + ex.Message + Environment.NewLine);
+                }
+                catch { }
                 return false;
             }
         }

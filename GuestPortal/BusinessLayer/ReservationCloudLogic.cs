@@ -32,7 +32,12 @@ namespace CheckinPortal.BusinessLayer
                         }
                         else if (process.ToUpper().Trim().Equals("CHECKOUT"))
                         {
-                            if (reservationDataTable.ReservationStatus.ToUpper().Trim().Equals("DUEOUT"))
+                            // Align with search IsPreCheckoutStatus: DUEOUT, INHOUSE, CHECKED IN, CHECKEDIN
+                            string checkoutStatus = reservationDataTable.ReservationStatus.ToUpper().Trim();
+                            if (checkoutStatus.Equals("DUEOUT") ||
+                                checkoutStatus.Equals("INHOUSE") ||
+                                checkoutStatus.Equals("CHECKED IN") ||
+                                checkoutStatus.Equals("CHECKEDIN"))
                             {
                                 reservationDatas.Add(reservationDataTable);
                             }
@@ -67,7 +72,12 @@ namespace CheckinPortal.BusinessLayer
                         }
                         else if (process.ToUpper().Trim().Equals("CHECKOUT"))
                         {
-                            if (reservationDataTable.ReservationStatus.ToUpper().Trim().Equals("DUEOUT"))
+                            // Align with search IsPreCheckoutStatus: DUEOUT, INHOUSE, CHECKED IN, CHECKEDIN
+                            string checkoutStatus = reservationDataTable.ReservationStatus.ToUpper().Trim();
+                            if (checkoutStatus.Equals("DUEOUT") ||
+                                checkoutStatus.Equals("INHOUSE") ||
+                                checkoutStatus.Equals("CHECKED IN") ||
+                                checkoutStatus.Equals("CHECKEDIN"))
                             {
                                 reservationDatas.Add(reservationDataTable);
                             }

@@ -82,15 +82,17 @@
                 $(".searchError").text(message).show();
             }
 
+            function showLoader() {
+                $(".loader-screen").stop(true, true).fadeIn(100);
+            }
+
             function hideLoader() {
-                $(".loader-screen").hide();
+                $(".loader-screen").stop(true, true).fadeOut(500);
             }
 
             // bfcache / Back restore: never leave the spinner stuck after QR → portal redirect
-            window.addEventListener("pageshow", function (e) {
-                if (e.persisted) {
-                    hideLoader();
-                }
+            window.addEventListener("pageshow", function () {
+                hideLoader();
             });
 
             $("#confirmation-number").on("input paste", function () {
@@ -131,7 +133,8 @@
                     return;
                 }
 
-                $(".loader-screen").show();
+                var keepLoaderVisible = false;
+                showLoader();
                 $(".searchError").hide();
 
                 $.ajax({
@@ -139,22 +142,23 @@
                     type: "POST",
                     data: { ConfirmationNo: confirmationNumber },
                     success: function (response) {
-                        if (response.result) {
-                            if (response.redirectUrl) {
-                                // replace so browser Back does not return to Search (avoids loader hang / re-POST loop)
-                                window.location.replace(response.redirectUrl);
-                            } else {
-                                hideLoader();
-                                showError("Reservation not found.");
-                            }
-                        } else {
-                            hideLoader();
-                            showError(response.errorMessage || "Reservation not found.");
+                        if (response.result && response.redirectUrl) {
+                            // Keep overlay visible during navigate; replace avoids Back → loader hang
+                            keepLoaderVisible = true;
+                            window.location.replace(response.redirectUrl);
+                            return;
                         }
+                        showError(
+                            (response && response.errorMessage) || "Reservation not found."
+                        );
                     },
                     error: function () {
-                        hideLoader();
                         showError("An error occurred while searching for the reservation.");
+                    },
+                    complete: function () {
+                        if (!keepLoaderVisible) {
+                            hideLoader();
+                        }
                     }
                 });
             };

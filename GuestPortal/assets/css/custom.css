@@ -274,6 +274,9 @@ label.signlbl{font-family: 'Agenda-Light';font-size: 16px;text-transform: none;c
         color: #ffffff;
         border: 1px solid #acacac;
         border-radius: 24px;
+        text-transform: uppercase;
+        font-family: "Inter", Arial, sans-serif;
+        font-weight: 600;
     }
 
     .button-wrapper1 button.btn_ok {
@@ -282,6 +285,9 @@ label.signlbl{font-family: 'Agenda-Light';font-size: 16px;text-transform: none;c
         border: 1px solid #37697A;
         border-radius: 24px;
         margin-left: 5px;
+        text-transform: uppercase;
+        font-family: "Inter", Arial, sans-serif;
+        font-weight: 600;
     }
 
     .button-wrapper1 button.btn_cancel:hover {
@@ -353,8 +359,16 @@ label.signlbl{font-family: 'Agenda-Light';font-size: 16px;text-transform: none;c
 .user-list ul li.sucess a {
     background: #008080; /*#40E0D0;*/
 }
-.user-list ul li.skipped{background: #fff8e8;}
-.user-list ul li.skipped a.fileUpload{background:#c9a227;color:#fff;}
+.user-list ul li.skipped{background: #eaf0f5;}
+.user-list ul li.skipped a.fileUpload{background:#5f7992;color:#fff;}
+
+/* Skip-help banners: brand soft teal instead of Bootstrap warning yellow */
+#documentUploadSkipHelp.alert-warning,
+#documentUploadSkipHelpModal.alert-warning{
+  background-color:#e2f5ef;
+  border-color:#a8c5c0;
+  color:#1e3d4c;
+}
 
 .cstm-m {
     height: 250px;
@@ -398,15 +412,23 @@ width:150px;padding:58px 0;margin: 0 auto;content:''!important;word-break: break
 .cstm-modal .close_icon{background:url("../images/close_icon.png");height:23px;width: 23px;display: block;}
 .cstm-modal .modal-body p{font-size: 14px;color: #5f6062;}
 .cstm-modal .modal-body p a{font-weight: 600;color: #000;}
-/* Modal OK / Continue / Yes / No / Cancel — match BACK/NEXT/CLEAR (body text stays sentence case) */
+/* Modal / confirm OK · Continue · Yes · No · Cancel — match UPLOAD/NEXT (body text stays sentence case) */
 .cstm-modal .btns button,
 .cstm-modal .modal-footer button,
+.cstm-modal .button-wrapper1 button,
 .cstm-modal button.yes,
 .cstm-modal button.no,
 .cstm-modal button.btn_ok,
+.cstm-modal button.btn_cancel,
+.cstm-modal button.btnstyle,
+.button-wrapper1 button,
 button.yes,
 button.no,
-button.btn_ok{
+button.btn_ok,
+button.btn_cancel,
+.swal2-confirm,
+.swal2-cancel,
+.swal2-deny {
   text-transform: uppercase;
   font-family: "Inter", Arial, sans-serif;
   font-weight: 600;
@@ -521,6 +543,8 @@ body.modal-open {
   background: rgba(5, 5, 6, 0.8);
     color: rgba(5, 5, 6, 0.8);    
     position: fixed;
+    top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
     z-index: 100;

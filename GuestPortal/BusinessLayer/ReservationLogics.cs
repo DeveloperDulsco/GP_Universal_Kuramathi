@@ -882,6 +882,98 @@ ActionGroup);
                 return false;
             }
         }
+
+        public async Task<bool> PushDueOutSearchedReservation(string ConfirmationNo)
+        {
+            try
+            {
+                string ActionGroup = "Pre-Checkout Push";
+
+                string _HotelDomain = AppSettingsManager.GetDecryptedSetting("HotelDomain");
+                string _KioskID = AppSettingsManager.GetDecryptedSetting("KioskID");
+                string _Username = AppSettingsManager.GetDecryptedSetting("Username");
+                string _Password = AppSettingsManager.GetDecryptedSetting("Password");
+                string _SystemType = AppSettingsManager.GetDecryptedSetting("SystemType");
+                string _Language = AppSettingsManager.GetDecryptedSetting("Language");
+                string _ChainCode = AppSettingsManager.GetDecryptedSetting("ChainCode");
+                string _DestinationEntityID = AppSettingsManager.GetDecryptedSetting("DestinationEntityID");
+                string _GarunteeTypeCode = AppSettingsManager.GetDecryptedSetting("GarunteeTypeCode");
+                string _preAuthUDF = AppSettingsManager.GetDecryptedSetting("preAuthUDF");
+                string _preAuthAmntUDF = AppSettingsManager.GetDecryptedSetting("preAuthAmntUDF");
+                string _ApiBaseUrl = AppSettingsManager.GetDecryptedSetting("APIBaseUrl");
+
+                string _PreCheckoutFromEmail = AppSettingsManager.GetDecryptedSetting("PreCheckoutFromEmail");
+                string _PreCheckoutEmailSubject = AppSettingsManager.GetDecryptedSetting("PreCheckoutEmailSubject");
+                string _EmailDisplayName = AppSettingsManager.GetDecryptedSetting("EmailDisplayName");
+
+                APIRequestModel _APIRequestModel = new APIRequestModel();
+
+                var sendPrecheckoutRequest = new APIRequestModel()
+                {
+                    RequestObject = new
+                    {
+                        ReservationNumber = ConfirmationNo,
+                        isForceFetch = true,
+                        ServiceParameters = new
+                        {
+                            isProxyEnableForCloudAPI = false,
+                            CloudAPIProxyHost = "",
+                            CloudAPIProxyUN = "",
+                            CloudAPIProxyPswd = "",
+                            CloudAPIURL = _ApiBaseUrl,
+                            isProxyEnableForLocalAPI = false,
+                            LocalAPIProxyHost = "",
+                            LocalAPIProxyUN = "",
+                            LocalAPIProxyPswd = "",
+                            LocalAPIURL = _ApiBaseUrl,
+                            isProxyEnableForEmailAPI = false,
+                            EmailAPIProxyHost = "",
+                            EmailAPIProxyUN = "",
+                            EmailAPIProxyPswd = "",
+                            EmailURL = _ApiBaseUrl,
+
+                            PreCheckoutFromEmail = _PreCheckoutFromEmail,
+                            PreCheckoutEmailSubject = _PreCheckoutEmailSubject,
+                            EmailDisplayName = _EmailDisplayName,
+
+                            ChainCode = _ChainCode,
+                            DestinationEntityID = _DestinationEntityID,
+                            HotelDomain = _HotelDomain,
+                            KioskID = _KioskID,
+                            Language = _Language,
+                            Legnumber = "1",
+                            Password = _Password,
+                            SystemType = _SystemType,
+                            Username = _Username,
+                            ClientID = "MCI",
+                            PreAuthUDF = _preAuthUDF,
+                            PreAuthAmntUDF = _preAuthAmntUDF,
+                            GarunteeTypeCode = _GarunteeTypeCode,
+                            IsETADefault = false,
+                            IsPaymentDisabled = false
+                        }
+                    },
+                };
+
+                _APIRequestModel = sendPrecheckoutRequest;
+
+                var localResponse = await new CloudHelper().PushSearchedDueOutReservation("", _APIRequestModel, ActionGroup, AppSettingsManager.GetDecryptedSetting("APIBaseUrl"));
+                if (!localResponse.result)
+                {
+                    new LogHelper().Log("Failed to pushing Searched Due-Out Reservation with reason :- " + localResponse.responseMessage, ConfirmationNo, "PushDueOutSearchedReservation", ActionGroup);
+                    new LogHelper().Warn("Failed to pushing Searched Due-Out Reservation with reason :- " + localResponse.responseMessage, ConfirmationNo, "", ActionGroup);
+                    return false;
+                }
+
+                new LogHelper().Log("Searched Due-Out Reservation updated in Cloud DB successfully", ConfirmationNo, "PushDueOutSearchedReservation", ActionGroup);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+        
         public async Task<string> GetLastEvetIDByReservation(int ReservationID)
         {
             string ActionGroup = "Reservation";

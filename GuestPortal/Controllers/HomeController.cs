@@ -133,8 +133,8 @@ namespace CheckinPortal.Controllers
                     #region setsession
                     SessionDt booking = new SessionDt
                     {
-                        ReservationNameID = operaReservation.ReservationNumber,
-                        ReservationNumber = operaReservation.ReservationNameID,
+                        ReservationNameID = operaReservation.ReservationNameID,
+                        ReservationNumber = operaReservation.ReservationNumber,
                         ReservationStatus = operaReservation.ReservationStatus,
                     };
                     //Session["ReservationNameID"] = operaReservation.ReservationNumber;
@@ -167,6 +167,18 @@ namespace CheckinPortal.Controllers
                         if (!IsPreCheckinStatus(reservationStatus))
                         {
                             return ShowLinkExpiry(LinkExpiryHelper.InvalidStatus, confirmationNo, ActionName, ActionGroup);
+                        }
+                    }
+
+                    // Prefer Opera infant count when local DB still has 0 (sync gap / UDF missed on insert)
+                    if (operaReservation != null && operaReservation.Infant.HasValue && operaReservation.Infant.Value > 0)
+                    {
+                        if (!reservations.InfantCount.HasValue || reservations.InfantCount.Value < operaReservation.Infant.Value)
+                        {
+                            Helpers.LogHelper.Instance.Log(
+                                $"InfantCount updated from Opera. DB={reservations.InfantCount ?? 0} Opera={operaReservation.Infant.Value}",
+                                reservations.ReservationNameID, ActionName, ActionGroup);
+                            reservations.InfantCount = operaReservation.Infant.Value;
                         }
                     }
 
@@ -541,8 +553,9 @@ namespace CheckinPortal.Controllers
                         }
                         else
                         {
+                            // Keep Document pane available while any guest is still pending.
+                            // Do not set ForceDocumentResume here — that would skip START on fresh links.
                             ViewBag.uploadcomplete = false;
-                            ViewBag.ForceDocumentResume = anyGuestDocPending;
                         }
 
                         // Resume mid-wizard from tbReservationMetaData (email link + QR search).
@@ -552,11 +565,12 @@ namespace CheckinPortal.Controllers
                             ActionName,
                             ActionGroup);
 
-                        // Mid-flow: reopen must land on Document with completed/skipped guests restored
+                        // Mid-flow: force Document ONLY when meta already places the guest at/ past Policies
+                        // (completedIdx >= 1 → next step is Document). Never jump to Document or skip
+                        // START when CompletedTabIndex is missing / -1 (fresh email/QR link).
                         if (anyGuestDocPending)
                         {
                             ViewBag.uploadcomplete = false;
-                            ViewBag.SkipPrecheckinSplash = true;
                             int ci = -1;
                             int completedIdx = ViewBag.CompletedTabIndex != null
                                 && int.TryParse(ViewBag.CompletedTabIndex.ToString(), out ci)
@@ -565,11 +579,14 @@ namespace CheckinPortal.Controllers
                             int ri = -1;
                             int resumeIdx = ViewBag.ResumeTabIndex != null
                                 && int.TryParse(ViewBag.ResumeTabIndex.ToString(), out ri) ? ri : -1;
-                            // Force Document only if guest already passed Guest Details, or was wrongly sent to Thank You
-                            if (completedIdx >= 1 || resumeIdx >= 2 || resumeIdx < 0)
+                            if (completedIdx >= 1 || resumeIdx >= 2)
+                            {
                                 ViewBag.ResumeTabIndex = 2;
+                                ViewBag.SkipPrecheckinSplash = true;
+                                ViewBag.ForceDocumentResume = true;
+                            }
                             Helpers.LogHelper.Instance.Log(
-                                $"Per-guest document resume. pendingGuests=true profiles={profiles.Count} slots={totalGuestSlots} ResumeTabIndex={ViewBag.ResumeTabIndex}",
+                                $"Per-guest document resume. pendingGuests=true profiles={profiles.Count} slots={totalGuestSlots} completedIdx={completedIdx} ResumeTabIndex={ViewBag.ResumeTabIndex}",
                                 reservations.ReservationNameID, ActionName, ActionGroup);
                         }
 
@@ -980,25 +997,25 @@ namespace CheckinPortal.Controllers
                             if (emailUpdated)
                             {
                                 new LogHelper().Log("Opera email update: Success", reservationModel.ReservationNameID, ActionName, ActionGroup);
-                                AuditProgressHelper.Log(
-                                    AuditProgressHelper.ModulePreCheckin,
-                                    AuditProgressHelper.Actions.OperaEmailUpdateSuccess,
-                                    reservationModel.ReservationID,
-                                    reservationModel.ReservationNameID,
-                                    guestName: auditGuestName);
+                                //AuditProgressHelper.Log(
+                                //    AuditProgressHelper.ModulePreCheckin,
+                                //    AuditProgressHelper.Actions.OperaEmailUpdateSuccess,
+                                //    reservationModel.ReservationID,
+                                //    reservationModel.ReservationNameID,
+                                //    guestName: auditGuestName);
                             }
                             else
                             {
                                 string emailFailReason = "PMS update returned false";
                                 new LogHelper().Log("Opera email update: Failed - " + emailFailReason, reservationModel.ReservationNameID, ActionName, ActionGroup);
                                 new LogHelper().Warn("Opera email update: Failed - " + emailFailReason, reservationModel.ReservationNameID, ActionName, ActionGroup);
-                                AuditProgressHelper.Log(
-                                    AuditProgressHelper.ModulePreCheckin,
-                                    AuditProgressHelper.Actions.OperaEmailUpdateFailed,
-                                    reservationModel.ReservationID,
-                                    reservationModel.ReservationNameID,
-                                    extraDetail: emailFailReason,
-                                    guestName: auditGuestName);
+                                //AuditProgressHelper.Log(
+                                //    AuditProgressHelper.ModulePreCheckin,
+                                //    AuditProgressHelper.Actions.OperaEmailUpdateFailed,
+                                //    reservationModel.ReservationID,
+                                //    reservationModel.ReservationNameID,
+                                //    extraDetail: emailFailReason,
+                                //    guestName: auditGuestName);
                             }
                             #endregion
                         }
@@ -1047,25 +1064,25 @@ namespace CheckinPortal.Controllers
                             if (phoneUpdated)
                             {
                                 new LogHelper().Log("Opera phone update: Success", reservationModel.ReservationNameID, ActionName, ActionGroup);
-                                AuditProgressHelper.Log(
-                                    AuditProgressHelper.ModulePreCheckin,
-                                    AuditProgressHelper.Actions.OperaPhoneUpdateSuccess,
-                                    reservationModel.ReservationID,
-                                    reservationModel.ReservationNameID,
-                                    guestName: auditGuestName);
+                                //AuditProgressHelper.Log(
+                                //    AuditProgressHelper.ModulePreCheckin,
+                                //    AuditProgressHelper.Actions.OperaPhoneUpdateSuccess,
+                                //    reservationModel.ReservationID,
+                                //    reservationModel.ReservationNameID,
+                                //    guestName: auditGuestName);
                             }
                             else
                             {
                                 string phoneFailReason = "PMS update returned false";
                                 new LogHelper().Log("Opera phone update: Failed - " + phoneFailReason, reservationModel.ReservationNameID, ActionName, ActionGroup);
                                 new LogHelper().Warn("Opera phone update: Failed - " + phoneFailReason, reservationModel.ReservationNameID, ActionName, ActionGroup);
-                                AuditProgressHelper.Log(
-                                    AuditProgressHelper.ModulePreCheckin,
-                                    AuditProgressHelper.Actions.OperaPhoneUpdateFailed,
-                                    reservationModel.ReservationID,
-                                    reservationModel.ReservationNameID,
-                                    extraDetail: phoneFailReason,
-                                    guestName: auditGuestName);
+                                //AuditProgressHelper.Log(
+                                //    AuditProgressHelper.ModulePreCheckin,
+                                //    AuditProgressHelper.Actions.OperaPhoneUpdateFailed,
+                                //    reservationModel.ReservationID,
+                                //    reservationModel.ReservationNameID,
+                                //    extraDetail: phoneFailReason,
+                                //    guestName: auditGuestName);
                             }
                             #endregion
                         }
@@ -1117,23 +1134,23 @@ namespace CheckinPortal.Controllers
                             string addressFailReason = owsResponse.responseMessage ?? "unknown";
                             new LogHelper().Log("Opera address update: Failed - " + addressFailReason, reservationModel.ReservationNameID, ActionName, ActionGroup);
                             new LogHelper().Warn("Opera address update: Failed - " + addressFailReason, reservationModel.ReservationNameID, ActionName, ActionGroup);
-                            AuditProgressHelper.Log(
-                                AuditProgressHelper.ModulePreCheckin,
-                                AuditProgressHelper.Actions.OperaAddressUpdateFailed,
-                                reservationModel.ReservationID,
-                                reservationModel.ReservationNameID,
-                                extraDetail: addressFailReason,
-                                guestName: auditGuestName);
+                            //AuditProgressHelper.Log(
+                            //    AuditProgressHelper.ModulePreCheckin,
+                            //    AuditProgressHelper.Actions.OperaAddressUpdateFailed,
+                            //    reservationModel.ReservationID,
+                            //    reservationModel.ReservationNameID,
+                            //    extraDetail: addressFailReason,
+                            //    guestName: auditGuestName);
                         }
                         else
                         {
                             new LogHelper().Log("Opera address update: Success", reservationModel.ReservationNameID, ActionName, ActionGroup);
-                            AuditProgressHelper.Log(
-                                AuditProgressHelper.ModulePreCheckin,
-                                AuditProgressHelper.Actions.OperaAddressUpdateSuccess,
-                                reservationModel.ReservationID,
-                                reservationModel.ReservationNameID,
-                                guestName: auditGuestName);
+                            //AuditProgressHelper.Log(
+                            //    AuditProgressHelper.ModulePreCheckin,
+                            //    AuditProgressHelper.Actions.OperaAddressUpdateSuccess,
+                            //    reservationModel.ReservationID,
+                            //    reservationModel.ReservationNameID,
+                            //    guestName: auditGuestName);
                         }
                         #endregion
 
@@ -1165,25 +1182,25 @@ namespace CheckinPortal.Controllers
                                 if (nationalityResponse != null && nationalityResponse.result)
                                 {
                                     new LogHelper().Log("Opera nationality update: Success", reservationModel.ReservationNameID, ActionName, ActionGroup);
-                                    AuditProgressHelper.Log(
-                                        AuditProgressHelper.ModulePreCheckin,
-                                        AuditProgressHelper.Actions.OperaNationalityUpdateSuccess,
-                                        reservationModel.ReservationID,
-                                        reservationModel.ReservationNameID,
-                                        guestName: auditGuestName);
+                                    //AuditProgressHelper.Log(
+                                    //    AuditProgressHelper.ModulePreCheckin,
+                                    //    AuditProgressHelper.Actions.OperaNationalityUpdateSuccess,
+                                    //    reservationModel.ReservationID,
+                                    //    reservationModel.ReservationNameID,
+                                    //    guestName: auditGuestName);
                                 }
                                 else
                                 {
                                     string nationalityFailReason = nationalityResponse != null ? nationalityResponse.responseMessage : "null response";
                                     new LogHelper().Log("Opera nationality update: Failed - " + nationalityFailReason, reservationModel.ReservationNameID, ActionName, ActionGroup);
                                     new LogHelper().Warn("Opera nationality update: Failed - " + nationalityFailReason, reservationModel.ReservationNameID, ActionName, ActionGroup);
-                                    AuditProgressHelper.Log(
-                                        AuditProgressHelper.ModulePreCheckin,
-                                        AuditProgressHelper.Actions.OperaNationalityUpdateFailed,
-                                        reservationModel.ReservationID,
-                                        reservationModel.ReservationNameID,
-                                        extraDetail: nationalityFailReason,
-                                        guestName: auditGuestName);
+                                    //AuditProgressHelper.Log(
+                                    //    AuditProgressHelper.ModulePreCheckin,
+                                    //    AuditProgressHelper.Actions.OperaNationalityUpdateFailed,
+                                    //    reservationModel.ReservationID,
+                                    //    reservationModel.ReservationNameID,
+                                    //    extraDetail: nationalityFailReason,
+                                    //    guestName: auditGuestName);
                                 }
                             }
                             catch (Exception nationalityEx)
@@ -1652,7 +1669,7 @@ namespace CheckinPortal.Controllers
                 //push events to DB
                 SessionDt session = dt;
                 reservationLogics.InsertEvent(uploadGuestDocumentModel.ReservationID, "DocumentUploadTry");
-                Helpers.LogHelper.Instance.Log($"Uploading guest document", $"{dt.ReservationNameID}", ActionName, ActionGroup);
+                Helpers.LogHelper.Instance.Log($"Document upload attempt. ProfileDetailID={uploadGuestDocumentModel.ProfileDetailID}", $"{dt.ReservationNameID}", ActionName, ActionGroup);
 
 
                 var documentModel = new UpdateReservationModel();
@@ -1662,6 +1679,16 @@ namespace CheckinPortal.Controllers
                     var docInfo = Newtonsoft.Json.JsonConvert.DeserializeObject<DocumentInformation>(uploadGuestDocumentModel.documentInformation);
                     if (docInfo != null)
                     {
+                        string rejectReason;
+                        if (!IsAcceptedGuestDocument(docInfo.documentType, docInfo.issueCountry, out rejectReason))
+                        {
+                            Helpers.LogHelper.Instance.Log(
+                                $"Invalid document rejected. IdType={docInfo.documentType}; IssueCountry={docInfo.issueCountry}",
+                                $"{dt.ReservationNameID}", ActionName, ActionGroup);
+                            reservationLogics.InsertEvent(uploadGuestDocumentModel.ReservationID, "DocumentUploadInvalidType");
+                            return Json(new { result = false, message = rejectReason });
+                        }
+
                         DateTime expiryDate = new DateTime(1900, 01, 01);
                         DateTime issueDate = new DateTime(1900, 01, 01);
                         DateTime birthDate = new DateTime(1900, 01, 01);
@@ -1673,6 +1700,14 @@ namespace CheckinPortal.Controllers
                         if (!DateTime.TryParseExact(docInfo.expiryDate, "yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out expiryDate))
                         {
                             expiryDate = new DateTime(1900, 01, 01);
+                        }
+                        else if (expiryDate.Year > 1900 && expiryDate.Date < DateTime.Today)
+                        {
+                            Helpers.LogHelper.Instance.Log(
+                                $"Expiry validation fail. IdType={docInfo.documentType}; IssueCountry={docInfo.issueCountry}",
+                                $"{dt.ReservationNameID}", ActionName, ActionGroup);
+                            reservationLogics.InsertEvent(uploadGuestDocumentModel.ReservationID, "DocumentUploadExpiryFail");
+                            return Json(new { result = false, message = "Document is expired. Please upload a valid one." });
                         }
                         if (!DateTime.TryParseExact(docInfo.birthDate, "yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out birthDate))
                         {
@@ -1686,10 +1721,19 @@ namespace CheckinPortal.Controllers
                         documentModel.DocumentType = docInfo.documentType;
                         documentModel.DocumentNumber = docInfo.documentNumber;
                         documentModel.BirthDate = birthDate;
-                        documentModel.Nationality = docInfo.nationality;
+                        documentModel.Nationality = ResolveDocumentNationalityForUpload(docInfo);
                         if (string.IsNullOrWhiteSpace(documentModel.Nationality))
                         {
                             documentModel.Nationality = await ResolveBookingNationalityAsync(uploadGuestDocumentModel.ReservationID);
+                        }
+
+                        documentModel.AddressLine1 = string.IsNullOrWhiteSpace(docInfo.address1) ? null : docInfo.address1.Trim();
+                        documentModel.AddressLine2 = string.IsNullOrWhiteSpace(docInfo.address2) ? null : docInfo.address2.Trim();
+                        documentModel.City = string.IsNullOrWhiteSpace(docInfo.city) ? null : docInfo.city.Trim();
+                        documentModel.PostalCode = string.IsNullOrWhiteSpace(docInfo.zip) ? null : docInfo.zip.Trim();
+                        if (!string.IsNullOrWhiteSpace(documentModel.IssueCountry))
+                        {
+                            documentModel.CountryMasterID = await GetCountryMasterIdByCode(documentModel.IssueCountry);
                         }
 
                         documentModel.FirstName = docInfo.firstName;
@@ -1749,7 +1793,9 @@ namespace CheckinPortal.Controllers
                             if (row["ProfileDetailID"].ToString() != uploadGuestDocumentModel.ProfileDetailID.ToString()
                                 && string.Equals(existingDocumentNumber, incomingDocumentNumber, StringComparison.OrdinalIgnoreCase))
                             {
-                                Helpers.LogHelper.Instance.Debug($"This document is already uploaded for another guest with Profileid:{row["ProfileDetailID"].ToString()} and doumentNumber : {incomingDocumentNumber}", $"{session.ReservationNameID}", ActionName, ActionGroup);
+                                string docNumTail = incomingDocumentNumber.Length <= 4 ? (string.IsNullOrEmpty(incomingDocumentNumber) ? "(empty)" : "****") : ("****" + incomingDocumentNumber.Substring(incomingDocumentNumber.Length - 4));
+
+                                Helpers.LogHelper.Instance.Debug($"This document is already uploaded for another guest with Profileid:{row["ProfileDetailID"].ToString()} and doumentNumber : {docNumTail}", $"{session.ReservationNameID}", ActionName, ActionGroup);
 
                                 return Json(new
                                 {
@@ -1905,7 +1951,80 @@ namespace CheckinPortal.Controllers
                     }
                 }
 
+                #region Address from document (Opera UpdateAddresList)
+                // Push OCR address when present. Empty address must not fail the overall upload.
+                if (!string.IsNullOrEmpty(uploadGuestDocumentModel.ProfileID)
+                    && !string.IsNullOrWhiteSpace(documentModel.AddressLine1))
+                {
+                    try
+                    {
+                        string addressCountry = !string.IsNullOrWhiteSpace(documentModel.IssueCountry)
+                            ? await GetCountryByCode(documentModel.IssueCountry)
+                            : null;
 
+                        var addressUpdateRequest = new Models.UpdateProfile()
+                        {
+                            ProfileID = uploadGuestDocumentModel.ProfileID,
+                            Addresses = new List<Models.Address>()
+                            {
+                                new Models.Address()
+                                {
+                                    address1 = documentModel.AddressLine1,
+                                    address2 = documentModel.AddressLine2,
+                                    city = documentModel.City,
+                                    state = null,
+                                    country = addressCountry,
+                                    zip = documentModel.PostalCode,
+                                    displaySequence = 1,
+                                    primary = true,
+                                    addressType = "BUSINESS"
+                                }
+                            }
+                        };
+
+                        Models.OwsResponseModel addressResponse = await CloudHelper.UpdateProfileAddressAsync(
+                            session.ReservationNameID,
+                            new OWSRequestModel()
+                            {
+                                ChainCode = ConfigurationManager.AppSettings["ChainCode"].ToString(),
+                                DestinationEntityID = ConfigurationManager.AppSettings["DestinationEntityID"].ToString(),
+                                DestinationSystemType = ConfigurationManager.AppSettings["DestinationSystemType"].ToString(),
+                                HotelDomain = ConfigurationManager.AppSettings["HotelDomain"].ToString(),
+                                KioskID = ConfigurationManager.AppSettings["KioskID"].ToString(),
+                                LegNumber = "1",
+                                Language = ConfigurationManager.AppSettings["Language"].ToString(),
+                                Password = ConfigurationManager.AppSettings["Password"].ToString(),
+                                Username = ConfigurationManager.AppSettings["Username"].ToString(),
+                                SystemType = ConfigurationManager.AppSettings["SystemType"].ToString(),
+                                UpdateProileRequest = addressUpdateRequest
+                            },
+                            "Pre-Checkin",
+                            ConfigurationManager.AppSettings["APIBaseUrl"].ToString());
+
+                        if (addressResponse != null && addressResponse.result)
+                        {
+                            new LogHelper().Log("Opera address update from document: Success", session.ReservationNameID, ActionName, ActionGroup);
+                        }
+                        else
+                        {
+                            string addressFailReason = addressResponse != null ? addressResponse.responseMessage : "null response";
+                            new LogHelper().Log("Opera address update from document: Failed - " + addressFailReason, session.ReservationNameID, ActionName, ActionGroup);
+                            new LogHelper().Warn("Opera address update from document: Failed - " + addressFailReason, session.ReservationNameID, ActionName, ActionGroup);
+                        }
+                    }
+                    catch (Exception addressEx)
+                    {
+                        new LogHelper().Error(addressEx, session.ReservationNameID, ActionName, ActionGroup);
+                        new LogHelper().Log("Opera address update from document: Failed - " + addressEx.Message, session.ReservationNameID, ActionName, ActionGroup);
+                    }
+                }
+                else if (!string.IsNullOrEmpty(uploadGuestDocumentModel.ProfileID))
+                {
+                    new LogHelper().Debug(
+                        "Skipping Opera address update from document (no address1). IdType=" + (documentModel.DocumentType ?? ""),
+                        session.ReservationNameID, ActionName, ActionGroup);
+                }
+                #endregion
 
 
 
@@ -1980,32 +2099,15 @@ namespace CheckinPortal.Controllers
                 //    else
                 //        new LogHelper().Log("Profile documents updated in Local DB successfully", session.ReservationNameID, "UploadDocument", "Pre-Checkin");
                 #endregion
-                var logRequest = JsonConvert.DeserializeObject<UpdateReservationModel>(
-                                        JsonConvert.SerializeObject(documentModel)
-                                        );
-
-
-                if (logRequest?.DocumentImage1 != null)
-                {
-                    
-                    logRequest.DocumentImage1 = new byte[12];
-                }
-                if (logRequest?.DocumentImage2 != null)
-                {
-
-                    logRequest.DocumentImage2 = new byte[12];
-                }
-                if (logRequest?.DocumentImage3 != null)
-                {
-
-                    logRequest.DocumentImage3 = new byte[12];
-                }
-                if (logRequest?.FaceImage != null)
-                {
-
-                    logRequest.FaceImage = new byte[12];
-                }
-                Helpers.LogHelper.Instance.Debug("Uploading Document Json :- " + JsonConvert.SerializeObject(logRequest), $"{uploadGuestDocumentModel.ReservationID}", ActionName, ActionGroup);
+                Helpers.LogHelper.Instance.Debug(
+                    "Uploading Document meta :- IdType=" + (documentModel.DocumentType ?? "")
+                    + "; IssueCountry=" + (documentModel.IssueCountry ?? "")
+                    + "; Nationality=" + (documentModel.Nationality ?? "")
+                    + "; AddressPresent=" + !string.IsNullOrWhiteSpace(documentModel.AddressLine1)
+                    + "; ExpiryPresent=" + (documentModel.ExpiryDate.HasValue && documentModel.ExpiryDate.Value.Year > 1900)
+                    + "; DocNumberTail=" + RedactDocumentNumberTail(documentModel.DocumentNumber)
+                    + "; ProfileDetailID=" + uploadGuestDocumentModel.ProfileDetailID,
+                    $"{uploadGuestDocumentModel.ReservationID}", ActionName, ActionGroup);
 
                 // Helpers.LogHelper.Instance.Debug($"Uploading Document Json : {Newtonsoft.Json.JsonConvert.SerializeObject(documentModel)}", $"{uploadGuestDocumentModel.ReservationID}", ActionName, ActionGroup);
 
@@ -2045,7 +2147,25 @@ namespace CheckinPortal.Controllers
                     }
                 }
 
-                return Json(new { result = true });
+                string nationalityForUi = !string.IsNullOrWhiteSpace(documentModel.Nationality)
+                    ? await GetCountryByCode(documentModel.Nationality)
+                    : null;
+                if (string.IsNullOrWhiteSpace(nationalityForUi))
+                {
+                    nationalityForUi = documentModel.Nationality;
+                }
+
+                return Json(new
+                {
+                    result = true,
+                    nationality = nationalityForUi,
+                    addressLine1 = documentModel.AddressLine1,
+                    addressLine2 = documentModel.AddressLine2,
+                    city = documentModel.City,
+                    postalCode = documentModel.PostalCode,
+                    countryId = documentModel.CountryMasterID,
+                    profileDetailID = uploadGuestDocumentModel.ProfileDetailID
+                });
             }
             catch (Exception ex)
             {
@@ -2107,15 +2227,31 @@ namespace CheckinPortal.Controllers
         }
 
         /// <summary>
-        /// NLog for Thank You page button clicks (OK is logged via CompletePreCheckin).
+        /// Thank You page button clicks → NLog + TbAuditTrailUserDetails (AuditProgressHelper).
+        /// OK also hits CompletePreCheckin for redirect; click audit is recorded here for all buttons.
         /// </summary>
         [HttpPost]
-        public ActionResult LogThankYouClick(string ButtonName, string ReservationNumber, string ReservationNameID)
+        public ActionResult LogThankYouClick(string ButtonName, string ReservationNumber, string ReservationNameID, int? ReservationID = null)
         {
             string refKey = string.IsNullOrEmpty(ReservationNameID) ? ReservationNumber : ReservationNameID;
+            string safeButton = string.IsNullOrWhiteSpace(ButtonName) ? "(unknown)" : ButtonName.Trim();
+            if (safeButton.Length > 80)
+                safeButton = safeButton.Substring(0, 80);
+
             Helpers.LogHelper.Instance.Log(
-                $"Thank You button clicked: {ButtonName}. ReservationNumber={ReservationNumber}",
+                $"Thank You button clicked: {safeButton}. ReservationNumber={ReservationNumber}",
                 refKey ?? "0", "ThankYouClick", "Pre-Checkin");
+
+            object detailId = ReservationID.HasValue && ReservationID.Value > 0
+                ? (object)ReservationID.Value
+                : ReservationNumber;
+            AuditProgressHelper.Log(
+                AuditProgressHelper.ModulePreCheckin,
+                AuditProgressHelper.Actions.ThankYouButtonClicked,
+                detailId,
+                ReservationNameID,
+                extraDetail: "Button=" + safeButton + ";ResNo=" + (ReservationNumber ?? ""));
+
             return Json(new { result = true });
         }
 
@@ -2165,8 +2301,7 @@ namespace CheckinPortal.Controllers
                     ConfigurationManager.AppSettings["APIBaseUrl"].ToString());
 
                 new LogHelper().Log(
-                    "DocumentSkipped result=" + (statusResponse != null && statusResponse.result)
-                    + " Finalize=" + FinalizeDocumentStep
+                    "Document skip. Finalize=" + FinalizeDocumentStep
                     + " Profiles=" + (ProfileDetailIDs ?? "")
                     + " ReservationNumber=" + ReservationNumber,
                     ReservationNameID, ActionName, ActionGroup);
@@ -3586,26 +3721,116 @@ namespace CheckinPortal.Controllers
         {
             string ActionName = "ValidateDocumentIssueCountry", ActionGroup = "Pre-Checkin";
             Helpers.LogHelper.Instance.Log($"Validating Document Type {idType} and Issue Country {issueCountry} ", $"", ActionName, ActionGroup);
-            MastersLogics mastersLogics = new MastersLogics();
-            var ResponseDataTable = await mastersLogics.validateDocumentIssueCountry(idType, issueCountry);
-            if (ResponseDataTable != null && ResponseDataTable.Rows.Count > 0)
+
+            string rejectReason;
+            if (IsAcceptedGuestDocument(idType, issueCountry, out rejectReason))
             {
-                if (ResponseDataTable.Rows[0][0].ToString() == "1")
+                Helpers.LogHelper.Instance.Log($"Validating Document Type {idType} and Issue Country {issueCountry} is valid", $"", ActionName, ActionGroup);
+                return Json(new { result = true });
+            }
+
+            Helpers.LogHelper.Instance.Log($"Validating Document Type {idType} and Issue Country {issueCountry} is not valid", $"", ActionName, ActionGroup);
+            return Json(new { result = false, message = rejectReason });
+        }
+
+        /// <summary>
+        /// Kuramathi rule: accept all-country passport, or Maldives national ID only.
+        /// </summary>
+        private static bool IsAcceptedGuestDocument(string idType, string issueCountry, out string rejectReason)
+        {
+            rejectReason = "Only passport (any country) or Maldives national ID is accepted. Please upload a valid document.";
+            string type = (idType ?? string.Empty).Trim().ToUpperInvariant();
+            string country = (issueCountry ?? string.Empty).Trim().ToUpperInvariant();
+
+            if (string.IsNullOrEmpty(type))
+            {
+                return false;
+            }
+
+            if (type == "PASSPORT" || type == "P" || type == "PP" || type.Contains("PASSPORT"))
+            {
+                return true;
+            }
+
+            bool isIdCard = IsNationalIdDocumentType(type);
+            bool isMaldives = IsMaldivesCountryCode(country);
+
+            if (isIdCard && isMaldives)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        private static bool IsNationalIdDocumentType(string idType)
+        {
+            string type = (idType ?? string.Empty).Trim().ToUpperInvariant();
+            return type == "IDENTITY_CARD"
+                || type == "NID"
+                || type == "NATIONAL_ID"
+                || type == "ID_CARD"
+                || type == "ID"
+                || type.Contains("IDENTITY");
+        }
+
+        private static bool IsMaldivesCountryCode(string country)
+        {
+            string value = (country ?? string.Empty).Trim().ToUpperInvariant();
+            return value == "MDV" || value == "MV" || value == "MALDIVES"
+                || value.IndexOf("MALDIV", StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+
+        /// <summary>
+        /// Resolve nationality for document upload: OCR code, then OCR name/code alias,
+        /// then Maldives ID issue country (MDV/MV), else leave empty for booking fallback.
+        /// </summary>
+        private static string ResolveDocumentNationalityForUpload(DocumentInformation docInfo)
+        {
+            if (docInfo == null)
+            {
+                return null;
+            }
+
+            if (!string.IsNullOrWhiteSpace(docInfo.nationality))
+            {
+                return docInfo.nationality.Trim();
+            }
+
+            if (!string.IsNullOrWhiteSpace(docInfo.nationality_fullname))
+            {
+                string nameOrCode = docInfo.nationality_fullname.Trim();
+                if (nameOrCode.Length <= 3)
                 {
-                    Helpers.LogHelper.Instance.Log($"Validating Document Type {idType} and Issue Country {issueCountry} is valid", $"", ActionName, ActionGroup);
-                    return Json(new { result = true });
+                    return nameOrCode;
                 }
-                else
+                if (IsMaldivesCountryCode(nameOrCode))
                 {
-                    Helpers.LogHelper.Instance.Log($"Validating Document Type {idType} and Issue Country {issueCountry} is not valid", $"", ActionName, ActionGroup);
-                    return Json(new { result = false });
+                    return "MDV";
                 }
             }
-            else
+
+            if (IsNationalIdDocumentType(docInfo.documentType) && IsMaldivesCountryCode(docInfo.issueCountry))
             {
-                Helpers.LogHelper.Instance.Log($"Validating Document Type {idType} and Issue Country {issueCountry} is not valid", $"", ActionName, ActionGroup);
-                return Json(new { result = false });
+                // Prefer ISO3 from Blink issueCountry when present; GetCountryByCode accepts MDV/MV/Maldives.
+                return string.IsNullOrWhiteSpace(docInfo.issueCountry) ? "MDV" : docInfo.issueCountry.Trim();
             }
+
+            return null;
+        }
+
+        private static string RedactDocumentNumberTail(string documentNumber)
+        {
+            if (string.IsNullOrWhiteSpace(documentNumber))
+            {
+                return "(empty)";
+            }
+            string doc = documentNumber.Trim();
+            if (doc.Length <= 4)
+            {
+                return "****";
+            }
+            return "****" + doc.Substring(doc.Length - 4);
         }
 
 
@@ -3658,6 +3883,28 @@ namespace CheckinPortal.Controllers
             }
 
             return "";
+        }
+
+        private async Task<int?> GetCountryMasterIdByCode(string countryCodeOrName)
+        {
+            if (string.IsNullOrWhiteSpace(countryCodeOrName))
+            {
+                return null;
+            }
+
+            var countryList = await new MastersLogics().GetCountryList();
+            if (countryList == null || countryList.Count == 0)
+            {
+                return null;
+            }
+
+            var normalized = countryCodeOrName.Trim();
+            var match = countryList.FirstOrDefault(x =>
+                string.Equals(x.Country_Full_name, normalized, StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(x.Country_3Char_code, normalized, StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(x.Country_2Char_code, normalized, StringComparison.OrdinalIgnoreCase));
+
+            return match?.CountryMasterID;
         }
 
         public async Task<string> GetDocumentByCode(string Id)
@@ -4158,44 +4405,17 @@ namespace CheckinPortal.Controllers
         [HttpPost]
         public JsonResult ConvertPdfToImage(HttpPostedFileBase pdfFile, string ReservationID)
         {
-            if (pdfFile != null && pdfFile.ContentLength > 0)
+            // PDF uploads are no longer accepted for document OCR (align with jpg/png 2MB UI rule).
+            Helpers.LogHelper.Instance.Log(
+                "PDF document upload rejected (images only).",
+                ReservationID ?? "",
+                "ConvertPdfToImage",
+                "Pre-Checkin");
+            return Json(new
             {
-                try
-                {
-                    using (var memoryStream = new MemoryStream())
-                    {
-                        pdfFile.InputStream.CopyTo(memoryStream);
-                        memoryStream.Position = 0;
-
-                        using (var document = PdfiumViewer.PdfDocument.Load(memoryStream))
-                        {
-                            // Render the first page (page index 0)
-                            using (var image = document.Render(0, 300, 300, true))
-                            {
-                                using (var imgStream = new MemoryStream())
-                                {
-                                    image.Save(imgStream, System.Drawing.Imaging.ImageFormat.Png);
-
-                                    //string base64String = "data:image/png;base64," +
-                                    //    Convert.ToBase64String(imgStream.ToArray());
-                                    string base64String = Convert.ToBase64String(imgStream.ToArray());
-                                    return Json(new
-                                    {
-                                        Success = true,
-                                        Base64Image = base64String
-                                    });
-                                }
-                            }
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    return Json(new { Success = false, Message = ex.Message });
-                }
-            }
-
-            return Json(new { Success = false, Message = "No file uploaded!" });
+                Success = false,
+                Message = "PDF is not supported. Please upload a JPG or PNG image (max 2MB)."
+            });
         }
         [HttpPost]
         public ActionResult ScanResult()
@@ -4317,8 +4537,8 @@ namespace CheckinPortal.Controllers
                     #region setsession
                     SessionDt booking = new SessionDt
                     {
-                        ReservationNameID = operaReservation.ReservationNumber,
-                        ReservationNumber = operaReservation.ReservationNameID,
+                        ReservationNameID = operaReservation.ReservationNameID,
+                        ReservationNumber = operaReservation.ReservationNumber,
                         ReservationStatus = operaReservation.ReservationStatus,
                     };
                     //Session["ReservationNameID"] = operaReservation.ReservationNumber;
@@ -4339,7 +4559,13 @@ namespace CheckinPortal.Controllers
                     ViewBag.IsPaymentSuccess = IsPaymentSuccess;
                     ViewBag.PaymentFailureMessage = PaymentFailureMessage;
 
-
+                    if (operaReservation != null && operaReservation.Infant.HasValue && operaReservation.Infant.Value > 0)
+                    {
+                        if (!reservations.InfantCount.HasValue || reservations.InfantCount.Value < operaReservation.Infant.Value)
+                        {
+                            reservations.InfantCount = operaReservation.Infant.Value;
+                        }
+                    }
 
                     if (reservations.IsPreCheckedInPMS.HasValue && !reservations.IsPreCheckedInPMS.Value || isredirectfromPaymentPage && IsPaymentSuccess)
                     {
@@ -5155,6 +5381,44 @@ namespace CheckinPortal.Controllers
                 // 3) Pre-checkout — Opera DUEOUT/INHOUSE wins; PrecheckinCompleted must NOT block checkout
                 if (flow == "precheckout")
                 {
+                    if (cloudRes == null && operaRes != null)
+                    {
+                        await reservationLogics.PushDueOutSearchedReservation(operaRes.ReservationNumber);
+
+                        const int maxFetchAttempts = 5;
+                        const int delayMs = 500;
+                        for (int attempt = 1; attempt <= maxFetchAttempts; attempt++)
+                        {
+                            await Task.Delay(delayMs);
+                            cloudResponse = await new CloudHelper().FetchReservationDetailsByReferenceNumber(
+                                operaRes.ReservationNumber,
+                                new APIRequestModel { RequestObject = operaRes.ReservationNumber },
+                                ActionGroup,
+                                apiBaseUrl);
+
+                            if (cloudResponse?.responseData != null)
+                            {
+                                cloudList = JsonConvert.DeserializeObject<List<CloudReservationModel>>(cloudResponse.responseData.ToString());
+                                cloudRes = cloudList?.FirstOrDefault();
+                            }
+
+                            if (cloudRes != null)
+                            {
+                                reservationNumber = cloudRes.ReservationNumber ?? operaRes.ReservationNumber;
+                                encryptedId = Url.Encode(Helpers.EncryptionHelper.EncryptString(reservationNumber));
+                                break;
+                            }
+                        }
+                    }
+
+                    if (cloudRes == null)
+                    {
+                        Helpers.LogHelper.Instance.Warn(
+                            $"Search reservation failed. Reason=Reservation Not Found! (cloud push/fetch). Res#={reservationNumber}",
+                            reservationNumber, ActionName, ActionGroup);
+                        return Json(new { result = false, redirectUrl = string.Empty, errorMessage = "Reservation Not Found!" });
+                    }
+
                     string checkoutUrl = hostedUrl + "/Checkout/Index?id=" + encryptedId;
                     Helpers.LogHelper.Instance.Log(
                         $"Search routed to Pre Check-out. Status={status}, TrackHint={trackingHint ?? "none"}, Res#={reservationNumber}",

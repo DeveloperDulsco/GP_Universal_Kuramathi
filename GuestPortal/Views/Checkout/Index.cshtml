@@ -332,8 +332,8 @@ e?igsh=MWswMWN2eXVpaGFqZA=="><i class="fab fa-instagram"></i></a>
                     </div>
 
                     <div class="btns">
-                        <button class="no" data-dismiss="modal" aria-label="Close">Cancel</button>
-                        <button class="yes" onclick="processExistingTransaction()">Proceed</button>
+                        <button class="no" data-dismiss="modal" aria-label="Close">CANCEL</button>
+                        <button class="yes" onclick="processExistingTransaction()">PROCEED</button>
                     </div>
 
                 </div>
@@ -678,6 +678,240 @@ e?igsh=MWswMWN2eXVpaGFqZA=="><i class="fab fa-instagram"></i></a>
                 $('#exampleModal2').modal('show');
             }
         }
+
+        // Full multi-tab lock per reservation (BroadcastChannel + localStorage heartbeat)
+        (function initCheckoutReservationTabLock() {
+            var resNo = (typeof ReservationNumber !== 'undefined' ? ReservationNumber : '') || '@Model.ReservationNumber';
+            if (!resNo) {
+                return;
+            }
+            var lockKey = 'gp_checkout_tab_lock_' + resNo;
+            var tabId = 'tab_' + Date.now() + '_' + Math.random().toString(36).slice(2);
+            var HEARTBEAT_MS = 2500;
+            var STALE_MS = 12000;
+            var channel = null;
+            var isOwner = false;
+            var isBlocked = false;
+            var heartbeatTimer = null;
+            var watchTimer = null;
+            var BLOCK_MSG = 'This reservation is already open in another tab. Please continue in that tab.';
+
+            try {
+                if (typeof BroadcastChannel !== 'undefined') {
+                    channel = new BroadcastChannel(lockKey);
+                }
+            } catch (e) { }
+
+            function now() {
+                return Date.now();
+            }
+
+            function readLock() {
+                try {
+                    var raw = localStorage.getItem(lockKey);
+                    if (!raw) {
+                        return null;
+                    }
+                    if (raw.charAt(0) !== '{') {
+                        return { tabId: raw, ts: 0 };
+                    }
+                    return JSON.parse(raw);
+                } catch (e) {
+                    return null;
+                }
+            }
+
+            function writeLock() {
+                localStorage.setItem(lockKey, JSON.stringify({ tabId: tabId, ts: now() }));
+            }
+
+            function isLockStale(lock) {
+                if (!lock) {
+                    return true;
+                }
+                return (now() - (lock.ts || 0)) > STALE_MS;
+            }
+
+            function ownsLock(lock) {
+                return !!(lock && lock.tabId === tabId);
+            }
+
+            function showMultiTabBlock() {
+                if (isBlocked) {
+                    return;
+                }
+                isBlocked = true;
+                isOwner = false;
+                window.gpCheckoutTabBlocked = true;
+
+                try {
+                    $('.modal').not('#customMessageModal').modal('hide');
+                } catch (e) { }
+
+                if (!$('#gpTabLockOverlay').length) {
+                    $('body').append(
+                        '<div id="gpTabLockOverlay" style="position:fixed;inset:0;z-index:20000;background:rgba(0,0,0,0.55);display:flex;align-items:center;justify-content:center;padding:24px;">' +
+                        '<div style="max-width:480px;width:100%;background:#fff;padding:28px 24px;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,.25);">' +
+                        '<h5 style="margin:0 0 16px;">Message</h5>' +
+                        '<p style="margin:0;font-size:16px;line-height:1.45;">' + BLOCK_MSG + '</p>' +
+                        '</div></div>'
+                    );
+                }
+
+                try {
+                    $('#customMessageModalMessage').html(BLOCK_MSG);
+                    $('#customMessageModal').modal({ backdrop: false, keyboard: false, show: true });
+                } catch (e) { }
+
+                $('.left-menu, .content-wrapper, .tab-content, .menu, .room-bg')
+                    .css('pointer-events', 'none');
+                $('a, button, input, select, textarea, .tabs, .moveNext, .movePrev')
+                    .css('pointer-events', 'none')
+                    .attr('disabled', true)
+                    .addClass('disabled');
+            }
+
+            function releaseLock() {
+                try {
+                    var lock = readLock();
+                    if (ownsLock(lock)) {
+                        localStorage.removeItem(lockKey);
+                    }
+                    if (channel) {
+                        channel.postMessage({ type: 'release', tabId: tabId });
+                    }
+                } catch (e) { }
+                isOwner = false;
+            }
+
+            function becomeOwner() {
+                writeLock();
+                isOwner = true;
+                isBlocked = false;
+                window.gpCheckoutTabBlocked = false;
+                if (channel) {
+                    channel.postMessage({ type: 'acquired', tabId: tabId });
+                }
+            }
+
+            function tryClaim(allowTakeoverReload) {
+                try {
+                    var lock = readLock();
+                    if (ownsLock(lock)) {
+                        writeLock();
+                        isOwner = true;
+                        return true;
+                    }
+                    if (!lock || isLockStale(lock)) {
+                        becomeOwner();
+                        if (allowTakeoverReload && $('#gpTabLockOverlay').length) {
+                            window.location.reload();
+                            return true;
+                        }
+                        return true;
+                    }
+                    showMultiTabBlock();
+                    return false;
+                } catch (e) {
+                    return true;
+                }
+            }
+
+            function startHeartbeat() {
+                if (heartbeatTimer) {
+                    return;
+                }
+                heartbeatTimer = setInterval(function () {
+                    if (!isOwner || isBlocked) {
+                        return;
+                    }
+                    try {
+                        var lock = readLock();
+                        if (ownsLock(lock)) {
+                            writeLock();
+                        } else if (!lock || isLockStale(lock)) {
+                            becomeOwner();
+                        } else {
+                            showMultiTabBlock();
+                        }
+                    } catch (e) { }
+                }, HEARTBEAT_MS);
+            }
+
+            function startWatcher() {
+                if (watchTimer) {
+                    return;
+                }
+                watchTimer = setInterval(function () {
+                    if (isOwner && !isBlocked) {
+                        return;
+                    }
+                    tryClaim(true);
+                }, HEARTBEAT_MS);
+            }
+
+            tryClaim(false);
+            startHeartbeat();
+            startWatcher();
+
+            if (channel) {
+                channel.onmessage = function (ev) {
+                    if (!ev || !ev.data) {
+                        return;
+                    }
+                    if (ev.data.type === 'release' && ev.data.tabId !== tabId) {
+                        tryClaim(true);
+                    }
+                    if (ev.data.type === 'acquired' && ev.data.tabId !== tabId && !isOwner) {
+                        showMultiTabBlock();
+                    }
+                };
+            }
+
+            window.addEventListener('storage', function (e) {
+                if (e.key !== lockKey) {
+                    return;
+                }
+                if (!e.newValue) {
+                    tryClaim(true);
+                    return;
+                }
+                try {
+                    var lock = JSON.parse(e.newValue);
+                    if (lock && lock.tabId !== tabId) {
+                        showMultiTabBlock();
+                    }
+                } catch (ex) {
+                    if (e.newValue !== tabId) {
+                        showMultiTabBlock();
+                    }
+                }
+            });
+
+            function onPageExit() {
+                if (heartbeatTimer) {
+                    clearInterval(heartbeatTimer);
+                    heartbeatTimer = null;
+                }
+                releaseLock();
+            }
+
+            window.addEventListener('pagehide', onPageExit);
+            window.addEventListener('beforeunload', onPageExit);
+            document.addEventListener('visibilitychange', function () {
+                if (!document.hidden && isOwner && !isBlocked) {
+                    try {
+                        var lock = readLock();
+                        if (ownsLock(lock) || !lock || isLockStale(lock)) {
+                            writeLock();
+                            isOwner = true;
+                        } else {
+                            showMultiTabBlock();
+                        }
+                    } catch (e) { }
+                }
+            });
+        })();
 
 
     </script>

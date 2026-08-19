@@ -40,6 +40,7 @@ namespace CheckinPortal.Models
         public Nullable<System.DateTime> DepartureDate { get; set; }
         public Nullable<int> Adultcount { get; set; }
         public Nullable<int> Childcount { get; set; }
+        [Newtonsoft.Json.JsonProperty("InfantCount")]
         public Nullable<int> InfantCount { get; set; }
         public string MembershipNo { get; set; }
         public string MembershipType { get; set; }

@@ -33,6 +33,7 @@ namespace CheckinPortal.Helpers
             public const string RegistrationCardUpdated = "Registration card updated";
             public const string DisclaimerSaved = "Disclaimer saved";
             public const string PrecheckinCompleted = "Precheckin completed";
+            public const string ThankYouButtonClicked = "Thank You button clicked";
             public const string FolioAgreed = "Folio agreed";
             public const string FolioSigned = "Folio signed";
             public const string PrecheckoutCompleted = "Precheckout completed";

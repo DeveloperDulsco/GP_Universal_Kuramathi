@@ -3,6 +3,7 @@ using Newtonsoft.Json;
 using NLog;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net.Http.Headers;
 using System.Net.Http;
@@ -202,6 +203,22 @@ namespace CheckinPortal.Helpers
             }
             catch (Exception ex)
             {
+                try
+                {
+                    string logDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "App_Data", "LocalLogs");
+                    Directory.CreateDirectory(logDir);
+                    string line = DateTime.UtcNow.ToString("o")
+                        + " | Nlog unreachable | " + (localRequest?.ActionName ?? "")
+                        + " | " + (localRequest?.ReservationNameID ?? "")
+                        + " | " + (localRequest?.Message ?? "")
+                        + " | " + ex.Message
+                        + Environment.NewLine;
+                    File.AppendAllText(Path.Combine(logDir, "nlog-fallback.txt"), line);
+                }
+                catch
+                {
+                    // ignore disk fallback failures
+                }
                 return new Models.APIResponseModel()
                 {
                     result = false,

@@ -65,10 +65,16 @@ namespace CheckinPortal.Models
         public string middleName { get; set; }
         public string lastName { get; set; }
         public string nationality { get; set; }
+        public string nationality_fullname { get; set; }
         public string issueCountry { get; set; }
         public string birthDate { get; set; }
         public string faceImage { get; set; }
         public string fullName { get; set; }
+        public string address1 { get; set; }
+        public string address2 { get; set; }
+        public string city { get; set; }
+        public string state { get; set; }
+        public string zip { get; set; }
     }
 
     public class DocumentTypeMasterModel
