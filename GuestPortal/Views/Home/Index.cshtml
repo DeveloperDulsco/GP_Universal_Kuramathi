@@ -552,7 +552,12 @@ new { @class = "text-danger" }
                                             </div>
                                             <input type="hidden" id="Allergies" name="Allergies" value="" />
                                             <input type="hidden" id="OtherAllergies" name="OtherAllergies" value="" />
-                                            <div id="allergenSummary" style="display:none; margin-top:8px; font-size:13px; color:#444;"></div>
+                                            <div id="allergenSummary" style="display:none; margin-top:8px; font-size:13px; color:#444; align-items:flex-start;">
+                                                <span id="allergenSummaryText" style="flex:1;"></span>
+                                                <a href="javascript:void(0);" id="allergenEditBtn" title="Edit allergen details" aria-label="Edit allergen details" style="margin-left:10px; color:#2c5f6e; font-size:15px; line-height:1.2; text-decoration:none;">
+                                                    <i class="fas fa-pencil-alt"></i>
+                                                </a>
+                                            </div>
                                         </div>
 
                                         <div class="form-check" style="margin-top: 14px;">
@@ -999,9 +1004,9 @@ new { @class = "text-danger" }
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="allergenFormModalLabel">ALLERGEN DISCLAIMER FORM</h5>
-                <button type="button" class="close" id="allergenFormCloseBtn" aria-label="Close" title="Close without saving">
+                @*<button type="button" class="close" id="allergenFormCloseBtn" aria-label="Close" title="Close without saving">
                     <span aria-hidden="true">&times;</span>
-                </button>
+                </button>*@
             </div>
             <div class="modal-body" style="max-height:70vh; overflow:auto;">
                 <p style="font-size:13px; line-height:1.45;">
@@ -1009,7 +1014,7 @@ new { @class = "text-danger" }
                     but not limited to food allergy, skin allergy, dust allergy, insect sting allergy, and mould allergy.
                     Every effort is made by the Milaidhoo Resort to instruct the staff of all departments on the type and severity of guest
                     allergies when they are communicated in advance by guests or travel agents/tour operators through the Reservations and/or Front office teams.
-                    However, although the kitchen teams have awareness of the risks of cross- contamination, the Resort does not have control over this
+                    However, although the kitchen teams have awareness of the risks of cross - contact, the Resort does not have control over this
                     as all products are provided by overseas suppliers, and hence with little or no control over them during transportation and
                     handling of the products until it reaches the Milaidhoo Resort. As such, the Milaidhoo Resort cannot guarantee a total absence
                     of these products in our dishes.
@@ -1020,7 +1025,7 @@ new { @class = "text-danger" }
                         var standardAllergens = new[] {
                             "Peanuts", "Eggs", "Molluscs", "Sesame Seeds", "Celery / Celeriac", "Fish", "Mustard",
                             "Soya", "Gluten", "Lupin", "Tree Nuts", "Sulphur Dioxide", "Crustaceans",
-                            "Products containing Lactose protein","MGS Monosodium of Glutamate"
+                            "Milk and Milk Products"
                         };
                     }
                     @foreach (var allergen in standardAllergens)
@@ -1041,19 +1046,20 @@ new { @class = "text-danger" }
                 <p style="font-weight:600; font-size:13px; line-height:1.45; margin-top:14px; margin-bottom:8px;">
                     Therefore, I freely and voluntarily agree to the following terms and conditions.
                 </p>
-                <ul style="font-size:13px; line-height:1.45; padding-left:18px; margin-bottom:12px;">
-                    <li>I have the full and final responsibility of choosing any food, beverage and/or service taking into consideration the health and safety of my well-being.</li>
-                    <li>I acknowledge and agree that the Milaidhoo Resort is unable to specially prepare any food, beverages and dishes catering only to my needs;</li>
-                    <li>I agree that the Milaidhoo Resort shall not be liable in case of any allergic reaction encountered as a result thereof.</li>
-                    <li>I knowingly assume all risks and responsibilities involved in consuming dishes served at the Resort which might include ingredients which are allergens to me;</li>
-                    <li>I forever release and discharge the Milaidhoo Resort, its owner, manager, staff, agents, and sub-contractors from any and all claims, demands, liabilities, rights, damages, expenses, any causes of action whatsoever nature and any losses whatsoever kind resulting from the food consumed at the Resort including but not limited to any bodily harm, injury, death, illness to me;</li>
-                    <li>I waive and relinquish my rights to sue or bring any claim against the Milaidhoo Resort its owner, manager, staff, agent, sub-contractor, any other guest or any third party (&quot;Indemnitees&quot;) on account of any causes of action or any loss arising from the food consumed at the Resort including any bodily harm, injury, death and illness to me;</li>
-                    <li>I further agree to indemnify and hold any or all of the Indemnitees harmless against any claims, demands, liabilities, rights, damages, or expenses arising as a result of any action taken by a third party in relation to any causes of action whatsoever or losses whatsoever kind resulting from the food consumed at the Milaidhoo Resort including but not limited to any bodily harm, injury, illness, death to me.</li>
-                    <li>These Terms and Conditions are governed by the laws of the Maldives and subject to the Courts of the Maldives.</li>
-                </ul>
-                <div class="mt-3 text-right">
-                    <button type="button" class="btnstyle blue" id="allergenFormSaveBtn">Save allergen details</button>
-                </div>
+                <ul style="font-size:13px; line-height:1.45; padding-left:25px; margin-bottom:12px; list-style-type: upper-alpha;">                   
+                        <li>I have the full and final responsibility of choosing any food, beverage and/or service taking into consideration the health and safety of my well-being.</li>
+                        <li>I acknowledge and agree that the Milaidhoo Resort is unable to specially prepare any food, beverages and dishes catering only to my needs;</li>
+                        <li>I agree that the Milaidhoo Resort shall not be liable in case of any allergic reaction encountered as a result thereof.</li>
+                        <li>I knowingly assume all risks and responsibilities involved in consuming dishes served at the Resort which might include ingredients which are allergens to me;</li>
+                        <li>I forever release and discharge the Milaidhoo Resort, its owner, manager, staff, agents, and sub-contractors from any and all claims, demands, liabilities, rights, damages, expenses, any causes of action whatsoever nature and any losses whatsoever kind resulting from the food consumed at the Resort including but not limited to any bodily harm, injury, death, illness to me;</li>
+                        <li>I waive and relinquish my rights to sue or bring any claim against the Milaidhoo Resort its owner, manager, staff, agent, sub-contractor, any other guest or any third party (&quot;Indemnitees&quot;) on account of any causes of action or any loss arising from the food consumed at the Resort including any bodily harm, injury, death and illness to me;</li>
+                        <li>I further agree to indemnify and hold any or all of the Indemnitees harmless against any claims, demands, liabilities, rights, damages, or expenses arising as a result of any action taken by a third party in relation to any causes of action whatsoever or losses whatsoever kind resulting from the food consumed at the Milaidhoo Resort including but not limited to any bodily harm, injury, illness, death to me.</li>
+                        <li>These Terms and Conditions are governed by the laws of the Maldives and subject to the Courts of the Maldives.</li>
+                    </ul>
+                    <div class="button-wrapper1 mt-3">
+                        <button type="button" class="btn_cancel" id="allergenFormCancelBtn" title="Close without saving">CANCEL</button>
+                        <button type="button" class="btn_ok" id="allergenFormSaveBtn">Save allergen details</button>
+                    </div>
             </div>
         </div>
     </div>
@@ -1088,7 +1094,7 @@ new { @class = "text-danger" }
                 <p style="margin-top:10px;font-weight:600;">Participants (up to <span id="excursionPartMaxLabel">1</span>) - enter each name and signature</p>
                 <input type="hidden" id="ExcursionParticipants" name="ExcursionParticipants" value="" />
                 <div id="excursionParticipantsList"></div>
-                <div style="margin:10px 0;">
+                <div style="margin:10px 0;text-align:right;">
                     <button type="button" class="btnstyle blue" id="addExcursionParticipantBtn" style="min-width:140px;padding:6px 12px;font-size:12px;">Add participant</button>
                 </div>
                 <p style="margin-top:8px;font-size:12px;color:#555;">By selecting OK and ticking the disclaimer checkbox, I confirm I have read and agree to this form. Participant names and signatures will appear on the registration card.</p>
@@ -1220,9 +1226,9 @@ new { @class = "text-danger" }
 
                     <div class="message" id="upgradeTerms" style="margin:0;text-align:left">
                         <ul id="documentUploadGuidance">
-                            <li>Indonesian guests: upload KTP (national ID) or passport for the main guest.</li>
-                            <li>Foreign guests: upload passport for the main guest.</li>
-                            <li>Document upload for accompanying guests, children, and infants is optional.</li>
+                            <li>Maldives national ID: upload the Front and Back separately.</li>
+                            <li>Passport (any country): upload the information page (one image).</li>
+                            <li>Document upload is mandatory for every guest before you can proceed.</li>
                         </ul>
 
                         @*1. For Singaporeans & Permanent Residents, please upload the front and back of your Identity Card separately.<br>
@@ -1233,13 +1239,13 @@ new { @class = "text-danger" }
                 <div class="row">
                     <div class="col-md-12">
                         <div class="file-up-wrap">
-                            <label class="lb suces-sp"><span>1</span>Document</label>
+                            <label class="lb suces-sp" id="docSide1Label"><span>1</span> Front</label>
                             <div class="custom-file">
                                 <div class="row" style="margin:auto">
                                     <img src="" id="imgprimaryDoc1" class="img-fluid " style="display: none;margin: auto;height: 200px;" />
                                 </div>
                                 <input type="file" class="custom-file-input docUploadFile" id="primaryDoc1">
-                                <label class="custom-file-label" for="customFile" style="width: 100%;margin-top: -30px;position: relative;">Choose file</label>
+                                <label class="custom-file-label" for="primaryDoc1" style="width: 100%;margin-top: -30px;position: relative;">Choose file</label>
                                 <div id="primaryDoc1_alert"
                                      class="row alert alert-success fade-alert" style="margin: 0px; padding: 10px; margin-top: -22px;">
                                     <span></span>
@@ -1249,13 +1255,14 @@ new { @class = "text-danger" }
                         <br />
                         <br />
                         <br />
-                        <label class="lb suces-sp" style="display:none"><span>2</span>Document</label>
-                        <div class="custom-file" style="display:none">
+                        @* Dual-side slot (re-enabled for national ID; was display:none for prior property) *@
+                        <label class="lb suces-sp" id="docSide2Label"><span>2</span> Back</label>
+                        <div class="custom-file" id="docSide2Slot">
                             <div class="row" style="margin:auto">
                                 <img src="" id="imgprimaryDoc2" class="img-fluid " style="display:none;margin: auto;height: 200px;" />
                             </div>
                             <input type="file" class="custom-file-input docUploadFile" id="primaryDoc2" disabled>
-                            <label class="custom-file-label" for="customFile" style="width: 100%;margin-top: -30px;position: relative;">Choose file</label>
+                            <label class="custom-file-label" for="primaryDoc2" style="width: 100%;margin-top: -30px;position: relative;">Choose file</label>
                             <div id="primaryDoc2_alert" class="row alert-success alert" style="margin: 0px; padding: 10px; margin-top: -22px;">
                                 <span></span>
                             </div>
@@ -1918,7 +1925,7 @@ new { @class = "text-danger" }
 
             var $intro = $('#documentUploadIntro');
             if ($intro.length) {
-                $intro.text('Only one valid document is required per guest. Accepted: passport (any country) or Maldives national ID. Upload is mandatory for every guest.');
+                $intro.text('Only one valid document is required per guest. Accepted: passport (any country, one image) or Maldives national ID (Front and Back). Upload is mandatory for every guest.');
             }
 
             updateDocumentUploadGuidance();
@@ -1931,7 +1938,8 @@ new { @class = "text-danger" }
             }
 
             $guidance.html(
-                '<li>Only passport (any country) or Maldives national ID is accepted.</li>' +
+                '<li>Maldives national ID: upload the Front and Back separately.</li>' +
+                '<li>Passport (any country): upload the information page (one image).</li>' +
                 '<li>Document upload is mandatory for every guest before you can proceed.</li>' +
                 '<li>If an upload fails twice, use Skip in that upload box, or Skip &amp; Save on this page.</li>'
             );
@@ -2328,6 +2336,30 @@ new { @class = "text-danger" }
 
                     // Allergen Yes/No + form modal
                     var allergenFormCommitted = false;
+
+                    function restoreAllergenFormFromSaved() {
+                        var saved = ($('#Allergies').val() || '').split(',').map(function (s) { return $.trim(s); }).filter(Boolean);
+                        $('.allergen-item').each(function () {
+                            $(this).prop('checked', saved.indexOf($(this).val()) >= 0);
+                        });
+                        $('#allergenOtherNotes').val($('#OtherAllergies').val() || '');
+                    }
+
+                    function clearAllergenFormState() {
+                        $('input[name="HasAllergies"]').prop('checked', false);
+                        $('#Allergies').val('');
+                        $('#OtherAllergies').val('');
+                        $('.allergen-item').prop('checked', false);
+                        $('#allergenOtherNotes').val('');
+                        $('#allergenSummaryText').text('');
+                        $('#allergenSummary').hide();
+                    }
+
+                    function showAllergenSummary(summary) {
+                        $('#allergenSummaryText').text('Allergens: ' + summary);
+                        $('#allergenSummary').css('display', 'flex');
+                    }
+
                     $('input[name="HasAllergies"]').on('change', function () {
                         var val = $(this).val();
                         if (val === 'true') {
@@ -2339,20 +2371,26 @@ new { @class = "text-danger" }
                             $('#OtherAllergies').val('');
                             $('.allergen-item').prop('checked', false);
                             $('#allergenOtherNotes').val('');
-                            $('#allergenSummary').hide().text('');
+                            $('#allergenSummaryText').text('');
+                            $('#allergenSummary').hide();
                             $('#allergenFormModal').modal('hide');
                         }
                     });
 
-                    $('#allergenFormCloseBtn').on('click', function () {
-                        // Close without saving — allow switching Yes/No freely
+                    // Bottom CANCEL (and legacy close btn if re-enabled): discard without save
+                    $('#allergenFormCancelBtn, #allergenFormCloseBtn').on('click', function () {
                         $('#allergenFormModal').modal('hide');
                         if (!allergenFormCommitted) {
-                            $('input[name="HasAllergies"]').prop('checked', false);
-                            $('#Allergies').val('');
-                            $('#OtherAllergies').val('');
-                            $('#allergenSummary').hide().text('');
+                            clearAllergenFormState();
+                        } else {
+                            restoreAllergenFormFromSaved();
                         }
+                    });
+
+                    $('#allergenEditBtn').on('click', function (e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        $('#allergenFormModal').modal('show');
                     });
 
                     $('#allergenFormSaveBtn').on('click', function () {
@@ -2369,7 +2407,7 @@ new { @class = "text-danger" }
                         allergenFormCommitted = true;
                         var summary = selected.join(', ');
                         if (other) { summary += (summary ? '; ' : '') + 'Other: ' + other; }
-                        $('#allergenSummary').show().text('Allergens: ' + summary);
+                        showAllergenSummary(summary);
                         $('#allergenFormModal').modal('hide');
                     });
 
@@ -2558,7 +2596,15 @@ new { @class = "text-danger" }
                     }
 
                     $('#addExcursionParticipantBtn').on('click', function () {
+                        var prevCount = excursionPartCount;
                         addExcursionParticipant();
+                        if (excursionPartCount <= prevCount) return;
+                        var $row = $('#excursionParticipantsList .excursion-part-row').last();
+                        var $modalBody = $('#excursionDisclaimerModal .modal-body');
+                        if (!$row.length || !$modalBody.length) return;
+                        // Scroll modal body so the newly added participant section is in view
+                        var targetTop = $modalBody.scrollTop() + ($row.offset().top - $modalBody.offset().top) - 12;
+                        $modalBody.animate({ scrollTop: Math.max(0, targetTop) }, 'slow');
                     });
 
                     $(document).on('click', '.remove-excursion-part', function () {
@@ -2782,19 +2828,72 @@ new { @class = "text-danger" }
     }
 
     function isAcceptedGuestDocument(idType, issueCountry) {
-        var type = (idType || '').toString().trim().toUpperCase();
+        var type = (idType || '').toString().trim().toUpperCase().replace(/^TYPE_/, '');
         var country = (issueCountry || '').toString().trim().toUpperCase();
         if (!type) {
             return false;
         }
-        if (type === 'PASSPORT' || type === 'P' || type === 'PP' || type.indexOf('PASSPORT') >= 0) {
+        if (isPassportDocumentType(type)) {
             return true;
         }
-        var isIdCard = type === 'IDENTITY_CARD' || type === 'NID' || type === 'NATIONAL_ID'
-            || type === 'ID_CARD' || type === 'ID' || type.indexOf('IDENTITY') >= 0;
-        var isMaldives = country === 'MDV' || country === 'MV' || country === 'MALDIVES'
-            || country.indexOf('MALDIV') >= 0;
-        return isIdCard && isMaldives;
+        return isNationalIdDocumentType(type) && (
+            country === 'MDV' || country === 'MV' || country === 'MALDIVES'
+            || country.indexOf('MALDIV') >= 0
+        );
+    }
+
+    function isPassportDocumentType(idType) {
+        var type = (idType || '').toString().trim().toUpperCase().replace(/^TYPE_/, '');
+        return type === 'PASSPORT' || type === 'P' || type === 'PP'
+            || type.indexOf('PASSPORT') >= 0;
+    }
+
+    function isNationalIdDocumentType(idType) {
+        var type = (idType || '').toString().trim().toUpperCase().replace(/^TYPE_/, '');
+        if (!type || isPassportDocumentType(type)) {
+            return false;
+        }
+        // BlinkID kebab types (id, multipurpose-id, eid) + legacy IDENTITY_CARD / NID.
+        var normalized = type.replace(/[-_\s]/g, '');
+        return type === 'IDENTITY_CARD' || type === 'NID' || type === 'NATIONAL_ID'
+            || type === 'ID_CARD' || type === 'ID' || type === 'EID'
+            || type.indexOf('IDENTITY') >= 0
+            || type.indexOf('CARD') >= 0
+            || normalized === 'NATIONALID' || normalized.indexOf('NATIONALID') >= 0
+            || /(^|[^A-Z])ID$/.test(type.replace(/[-_\s]/g, ' '));
+    }
+
+    function looksLikeMaldivesNationalIdNumber(docNumber) {
+        var n = (docNumber || '').toString().trim().toUpperCase().replace(/\s/g, '');
+        // Maldives NIC commonly A + digits (e.g. A117183).
+        return /^A\d{6,}$/.test(n);
+    }
+
+    // Dual-side Back unlock: do not require a narrow OCR type match.
+    // Passport stays single-side; Maldives NIC / national ID / unknown non-passport unlock Back.
+    function shouldEnableBackSide(idType, issueCountry, documentNumber) {
+        if (looksLikeMaldivesNationalIdNumber(documentNumber)) {
+            return true;
+        }
+        if (isNationalIdDocumentType(idType)) {
+            return true;
+        }
+        if (isPassportDocumentType(idType)) {
+            return false;
+        }
+        return true;
+    }
+
+    function setPrimaryDoc2Enabled(enabled) {
+        var $doc2 = $('#primaryDoc2');
+        var $label = $doc2.siblings('label.custom-file-label');
+        if (enabled) {
+            $doc2.prop('disabled', false).removeAttr('disabled');
+            $label.removeClass('doc-side-disabled');
+        } else {
+            $doc2.prop('disabled', true).attr('disabled', 'disabled');
+            $label.addClass('doc-side-disabled');
+        }
     }
 
     function rejectUnsupportedDocument(alertId, fileControl, filecontrolID, message) {
@@ -2808,6 +2907,7 @@ new { @class = "text-danger" }
         $(fileControl).parent('div').find('img').hide();
         if (filecontrolID === "primaryDoc1") {
             resetDocumentInfo();
+            setPrimaryDoc2Enabled(false);
         }
     }
 
@@ -3233,8 +3333,17 @@ new { @class = "text-danger" }
                 }),
                 success: function (result) {
                     if (result && result.success && result.redirectUrl) {
-                        // replace so Back from property site does not return to Thank You / landing
-                        window.location.replace(result.redirectUrl);
+                        // Lock Thank You in history so Back returns here (not Document/Policies bfcache).
+                        if (typeof markPrecheckinFullyComplete === 'function') {
+                            markPrecheckinFullyComplete();
+                        }
+                        try {
+                            if (window.history && history.replaceState) {
+                                history.replaceState({ gpPrecheckin: 1, gpThankYouLocked: 1 }, '', window.location.href);
+                            }
+                        } catch (histEx) { }
+                        // Assign (not replace) so Back from property site restores locked Thank You.
+                        window.location.href = result.redirectUrl;
                         return;
                     }
                     $('.loader-screen').fadeOut(200);
@@ -3269,6 +3378,13 @@ new { @class = "text-danger" }
                     });
 
     $('.checkUpload').on('click', function (e) {
+      if (typeof isPrecheckinFullyComplete === 'function' && isPrecheckinFullyComplete()) {
+          e.preventDefault();
+          if (typeof lockPrecheckinToThankYou === 'function') {
+              lockPrecheckinToThankYou();
+          }
+          return;
+      }
       var $btn = $(this);
       function tryProceedAfterUploads() {
           if (!isDocumentUploadComplete()) {
@@ -3421,12 +3537,6 @@ new { @class = "text-danger" }
             }
         }
 
-        function isNationalIdDocumentType(idType) {
-            var type = (idType || '').toString().trim().toUpperCase();
-            return type === 'IDENTITY_CARD' || type === 'NID' || type === 'NATIONAL_ID'
-                || type === 'ID_CARD' || type === 'ID' || type.indexOf('IDENTITY') >= 0;
-        }
-
         function isMaldivesIssueCountry(issueCountry) {
             var country = (issueCountry || '').toString().trim().toUpperCase();
             return country === 'MDV' || country === 'MV' || country === 'MALDIVES'
@@ -3487,8 +3597,9 @@ new { @class = "text-danger" }
                         var guestID = $('#currentGuestIndex').val();
                         var profileid = $('#currentguestprofileid').val();
                         if (Img1 != '') {
-                            //if ((documentInformation.documentType == "Identity Card" || documentInformation.documentType == "NID") ||
-                            //    (documentInformation.documentType && documentInformation.issueCountry == "SGP"))
+                            // Dual-side required for national ID / identity card (prior property used SGP IC;
+                            // Kuramathi: Maldives national ID). Passport stays single image.
+                            // Was: Identity Card / NID / SGP — re-enabled via isNationalIdDocumentType.
                             if (!documentInformation.documentType?.trim()) {
                                 $('#customMessageModalMessage').html('Please upload a valid document');
                                 $('#customMessageModal').modal('show');
@@ -3503,12 +3614,12 @@ new { @class = "text-danger" }
                                 return;
                             }
                             else {
-                                if (documentInformation.issueCountry == "SGP" && documentInformation.documentType == "IDENTITY_CARD") {
+                                if (isNationalIdDocumentType(documentInformation.documentType)) {
                                     if (Img1 != '' && Img2 != '') {
 
                                     }
                                     else {
-                                        $('#customMessageModalMessage').html('Please upload other side of the document');
+                                        $('#customMessageModalMessage').html('Please upload both the Front and Back of your national ID.');
                                         $('#customMessageModal').modal('show');
                                         return;
                                     }
@@ -3659,7 +3770,7 @@ new { @class = "text-danger" }
             var filecontrolID = $(fileControl).attr("id");
             var alertId = documentReadStatus.attr("id");
             if (filecontrolID == "primaryDoc1") {
-                $('#primaryDoc2').attr('disabled', true);
+                setPrimaryDoc2Enabled(false);
             }
             $(documentReadStatus).hide();
 
@@ -3671,7 +3782,7 @@ new { @class = "text-danger" }
                 $('#primaryDoc2').parent('div').find('img').attr('src', '');
                 $('#primaryDoc2').parent('div').find('img').hide();
                 if (filecontrolID == "primaryDoc1") {
-                    $('#primaryDoc2').attr('disabled', true);
+                    setPrimaryDoc2Enabled(false);
                 }
                 var primaryDoc2alert = $('#primaryDoc2').parent('div').find(".alert")
                 $(primaryDoc2alert).hide();
@@ -3704,6 +3815,11 @@ new { @class = "text-danger" }
             }
 
             {
+                // Pragmatic: once Front file is accepted client-side, unlock Back for dual-side ID.
+                // OCR may later re-lock if the document is a passport.
+                if (filecontrolID === "primaryDoc1") {
+                    setPrimaryDoc2Enabled(true);
+                }
                 $('.loader-screen').fadeIn(100);
                 logDocumentAction('DocumentUploadAttempt');
                 var ocrGeneration = documentUploadOcrGeneration;
@@ -3762,6 +3878,7 @@ new { @class = "text-danger" }
                                             if (filecontrolID === "primaryDoc1") {
                                                 resetDocumentInfo();
                                                 clearPendingModalDocNumber();
+                                                setPrimaryDoc2Enabled(false);
                                             }
                                             return;
                                         }
@@ -3778,11 +3895,19 @@ new { @class = "text-danger" }
                                             $(imgPreview).show();
                                         }
 
-                                        if (response.responseData.idType != "PASSPORT" || response.responseData.idType == "") {
-                                            $('#primaryDoc2').attr('disabled', false);
-                                        }
-                                        else {
-                                            $('#primaryDoc2').attr('disabled', true);
+                                        if (filecontrolID === "primaryDoc1") {
+                                            // Unlock Back for national ID / Maldives NIC; passport stays single-side.
+                                            // Do not require a narrow OCR type match — prior fix failed when BlinkID
+                                            // returned PASSPORT / odd types while the Front preview still showed.
+                                            if (shouldEnableBackSide(
+                                                response.responseData.idType,
+                                                response.responseData.issueCountry || response.responseData.issueCountry_fullname,
+                                                response.responseData.documentNumber)) {
+                                                setPrimaryDoc2Enabled(true);
+                                            }
+                                            else {
+                                                setPrimaryDoc2Enabled(false);
+                                            }
                                         }
                                         console.log('isValid : ' + response.responseData.idType);
                                         clearDocumentUploadSkipOption();
@@ -3800,6 +3925,9 @@ new { @class = "text-danger" }
                                         $(fileControl).siblings(".custom-file-label").removeClass("selected").html('Choose file');
                                         $(fileControl).parent('div').find('img').attr('src', '');
                                         $(fileControl).parent('div').find('img').hide();
+                                        if (filecontrolID === "primaryDoc1") {
+                                            setPrimaryDoc2Enabled(false);
+                                        }
                                     }
                                 }
                                 else {
@@ -3813,6 +3941,9 @@ new { @class = "text-danger" }
                                     $(fileControl).siblings(".custom-file-label").removeClass("selected").html('Choose file');
                                     $(fileControl).parent('div').find('img').attr('src', '');
                                     $(fileControl).parent('div').find('img').hide();
+                                    if (filecontrolID === "primaryDoc1") {
+                                        setPrimaryDoc2Enabled(false);
+                                    }
 
                                 }
 
@@ -3831,6 +3962,9 @@ new { @class = "text-danger" }
                                 $(fileControl).siblings(".custom-file-label").removeClass("selected").html('Choose file');
                                 $(fileControl).parent('div').find('img').attr('src', '');
                                 $(fileControl).parent('div').find('img').hide();
+                                if (filecontrolID === "primaryDoc1") {
+                                    setPrimaryDoc2Enabled(false);
+                                }
                             }
 
                         }).catch(function () {
@@ -3842,6 +3976,9 @@ new { @class = "text-danger" }
                             $(fileControl).siblings(".custom-file-label").removeClass("selected").html('Choose file');
                             $(fileControl).parent('div').find('img').attr('src', '');
                             $(fileControl).parent('div').find('img').hide();
+                            if (filecontrolID === "primaryDoc1") {
+                                setPrimaryDoc2Enabled(false);
+                            }
                         });
 
 
@@ -3853,6 +3990,9 @@ new { @class = "text-danger" }
                         $(fileControl).siblings(".custom-file-label").removeClass("selected").html('Choose file');
                         $(fileControl).parent('div').find('img').attr('src', '');
                         $(fileControl).parent('div').find('img').hide();
+                        if (filecontrolID === "primaryDoc1") {
+                            setPrimaryDoc2Enabled(false);
+                        }
                     });
 
                 $(fileControl).siblings(".custom-file-label").addClass("selected").html(fileName);
@@ -4032,8 +4172,8 @@ new { @class = "text-danger" }
                         $('#primaryDoc3').parent('div').find('.alert').hide();
 
 
-                        $('#primaryDoc2').attr('disabled', true);
-                        $('#primaryDoc3').attr('disabled', true);
+                        setPrimaryDoc2Enabled(false);
+                        $('#primaryDoc3').prop('disabled', true);
         }
         function findIntlCountryByDropdownText(selectedCountryText) {
 

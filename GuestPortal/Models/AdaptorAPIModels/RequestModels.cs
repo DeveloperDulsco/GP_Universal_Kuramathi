@@ -44,6 +44,8 @@ namespace CheckinPortal.Models.AdaptorAPIModels
     {
 
         public string Base64Image { get; set; }
+        /// <summary>Optional back/side-2 for identity-card multi-side OCR.</summary>
+        public string Base64Image2 { get; set; }
         public string ImageFormat { get; set; }
 
     }

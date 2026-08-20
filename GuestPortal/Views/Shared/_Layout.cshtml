@@ -225,9 +225,19 @@
             }
             gpHistoryGuarded = true;
             try {
-                history.replaceState({ gpPrecheckin: 1 }, '', window.location.href);
-                history.pushState({ gpPrecheckin: 1 }, '', window.location.href);
+                var completeLocked = (typeof isPrecheckinFullyComplete === 'function' && isPrecheckinFullyComplete());
+                history.replaceState({ gpPrecheckin: 1, gpThankYouLocked: completeLocked ? 1 : 0 }, '', window.location.href);
+                if (!completeLocked) {
+                    history.pushState({ gpPrecheckin: 1 }, '', window.location.href);
+                }
                 window.addEventListener('popstate', function () {
+                    if (typeof isPrecheckinFullyComplete === 'function' && isPrecheckinFullyComplete()) {
+                        if (typeof lockPrecheckinToThankYou === 'function') {
+                            lockPrecheckinToThankYou();
+                        }
+                        history.pushState({ gpPrecheckin: 1, gpThankYouLocked: 1 }, '', window.location.href);
+                        return;
+                    }
                     history.pushState({ gpPrecheckin: 1 }, '', window.location.href);
                 });
             } catch (e) { }
@@ -264,7 +274,11 @@
                         var resumeIdx = (typeof ServerResumeTabIndex !== 'undefined' && ServerResumeTabIndex >= 0)
                             ? ServerResumeTabIndex
                             : LayoutResumeTabIndex;
-                        if (typeof resumePrecheckinFromServer === 'function') {
+                        if (typeof isPrecheckinFullyComplete === 'function' && isPrecheckinFullyComplete()) {
+                            if (typeof lockPrecheckinToThankYou === 'function') {
+                                lockPrecheckinToThankYou();
+                            }
+                        } else if (typeof resumePrecheckinFromServer === 'function') {
                             resumePrecheckinFromServer(resumeIdx);
                         } else if (typeof activatePrecheckinStep === 'function' && typeof getPrecheckinStepByIndex === 'function') {
                             activatePrecheckinStep(getPrecheckinStepByIndex(resumeIdx));

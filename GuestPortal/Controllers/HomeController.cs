@@ -574,6 +574,7 @@ namespace CheckinPortal.Controllers
                         // Mid-flow: force Document ONLY when meta already places the guest at/ past Policies
                         // (completedIdx >= 1 → next step is Document). Never jump to Document or skip
                         // START when CompletedTabIndex is missing / -1 (fresh email/QR link).
+                        // Never reopen Document once Thank You is reached (CompletedTabIndex >= 3).
                         if (anyGuestDocPending)
                         {
                             ViewBag.uploadcomplete = false;
@@ -585,7 +586,13 @@ namespace CheckinPortal.Controllers
                             int ri = -1;
                             int resumeIdx = ViewBag.ResumeTabIndex != null
                                 && int.TryParse(ViewBag.ResumeTabIndex.ToString(), out ri) ? ri : -1;
-                            if (completedIdx >= 1 || resumeIdx >= 2)
+                            if (completedIdx >= 3 || resumeIdx >= 3)
+                            {
+                                ViewBag.ResumeTabIndex = 3;
+                                ViewBag.SkipPrecheckinSplash = true;
+                                ViewBag.ForceDocumentResume = false;
+                            }
+                            else if (completedIdx >= 1 || resumeIdx >= 2)
                             {
                                 ViewBag.ResumeTabIndex = 2;
                                 ViewBag.SkipPrecheckinSplash = true;
@@ -1917,7 +1924,7 @@ namespace CheckinPortal.Controllers
                 if (!string.IsNullOrEmpty(uploadGuestDocumentModel.ProfileID))
                 {
                     documentModel.ProfileID = uploadGuestDocumentModel.ProfileID;
-                    new LogHelper().Log("Updating passport info in opera  - (Last name - +" + documentModel.LastName + ")", session.ReservationNameID, ActionName, ActionGroup);
+                    new LogHelper().Log("Updating passport info in opera  - (Last name - +" + documentModel.LastName + ") DocumentType : "+documentModel.DocumentType, session.ReservationNameID, ActionName, ActionGroup);
                     Models.OWS.OwsResponseModel owsResponse = await new CloudHelper().UpdateGuestPassport(session.ReservationNameID, new Models.OWS.OwsRequestModel()
                     {
                         ChainCode = ConfigurationManager.AppSettings["ChainCode"].ToString(),
@@ -3772,12 +3779,32 @@ namespace CheckinPortal.Controllers
         private static bool IsNationalIdDocumentType(string idType)
         {
             string type = (idType ?? string.Empty).Trim().ToUpperInvariant();
+            if (type.StartsWith("TYPE_", StringComparison.Ordinal))
+            {
+                type = type.Substring("TYPE_".Length);
+            }
+            if (string.IsNullOrEmpty(type)
+                || type == "PASSPORT"
+                || type == "P"
+                || type == "PP"
+                || type.IndexOf("PASSPORT", StringComparison.Ordinal) >= 0)
+            {
+                return false;
+            }
+
+            string normalized = type.Replace("-", "").Replace("_", "").Replace(" ", "");
+            string spaced = type.Replace("-", " ").Replace("_", " ");
+            // BlinkID kebab types (id, multipurpose-id, eid) + legacy IDENTITY_CARD / NID.
             return type == "IDENTITY_CARD"
                 || type == "NID"
                 || type == "NATIONAL_ID"
                 || type == "ID_CARD"
                 || type == "ID"
-                || type.Contains("IDENTITY");
+                || type == "EID"
+                || type.Contains("IDENTITY")
+                || normalized == "NATIONALID"
+                || normalized.Contains("NATIONALID")
+                || System.Text.RegularExpressions.Regex.IsMatch(spaced, @"(^|[^A-Z])ID$");
         }
 
         private static bool IsMaldivesCountryCode(string country)
@@ -4230,8 +4257,8 @@ namespace CheckinPortal.Controllers
             #endregion
 
 
-            bool? isEmailSent = null;
-            bool? IsEmailProcessed = null;
+            bool? isEmailSent = false;
+            bool? IsEmailProcessed = false;
             if (alreadyPrecheckinCompleted)
             {
                 // Idempotent: do not re-send confirmation or re-push PrecheckinCompleted track

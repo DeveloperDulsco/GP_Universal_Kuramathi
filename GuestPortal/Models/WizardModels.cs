@@ -29,6 +29,8 @@ namespace CheckinPortal.Models
     {
         public string extension { get; set; }
         public string imageBase64 { get; set; }
+        /// <summary>Optional back/side-2 image for national ID multi-side OCR.</summary>
+        public string imageBase64Back { get; set; }
 
     }
 

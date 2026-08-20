@@ -117,12 +117,86 @@ function savePrecheckinProgress(completedTabIndex, allergies) {
     });
 }
 
-function activatePrecheckinStep(step) {
+/** sessionStorage key — survives bfcache / Back after Thank You OK → hotel site */
+function getPrecheckinCompleteStorageKey() {
+    var resNo = (typeof ReservationNumber !== 'undefined' && ReservationNumber) ? String(ReservationNumber) : '';
+    return 'gp_precheckin_complete_' + resNo;
+}
+
+/** True when precheckin finished (Thank You reached / CompletedTabIndex at thank-you). */
+function isPrecheckinFullyComplete() {
+    if (window.gpPrecheckinComplete === true) {
+        return true;
+    }
+    try {
+        if (sessionStorage.getItem(getPrecheckinCompleteStorageKey()) === '1') {
+            return true;
+        }
+    } catch (e) { }
+    if (typeof ServerCompletedTabIndex !== 'undefined' && ServerCompletedTabIndex >= 3) {
+        return true;
+    }
+    // Document done → resume Thank You (CompletedTabIndex 2, ResumeTabIndex 3)
+    if (typeof ServerResumeTabIndex !== 'undefined' && ServerResumeTabIndex >= 3
+        && typeof ServerCompletedTabIndex !== 'undefined' && ServerCompletedTabIndex >= 2) {
+        return true;
+    }
+    return false;
+}
+
+function markPrecheckinFullyComplete() {
+    window.gpPrecheckinComplete = true;
+    try {
+        sessionStorage.setItem(getPrecheckinCompleteStorageKey(), '1');
+    } catch (e) { }
+}
+
+/** Disable Guest Details / Policies / Document editing once Thank You is done. */
+function disablePrecheckinEarlierSteps() {
+    try {
+        $('body').addClass('gp-precheckin-complete');
+        $('#guestDetails, #policies, #document')
+            .find('input, select, textarea, button, .btn_next, .btn_cancel, .checkUpload, .moveNext, .fileUpload, .fileUpload1, .fileUpload2')
+            .prop('disabled', true)
+            .attr('aria-disabled', 'true');
+        $('#guestDetails, #policies, #document').find('.btn_cancel').hide();
+        $('.tabs').addClass('paymentdone active');
+    } catch (e) { }
+}
+
+/**
+ * Force Thank You and collapse history so browser Back cannot restore earlier wizard tabs.
+ */
+function lockPrecheckinToThankYou() {
+    markPrecheckinFullyComplete();
+    var thankYou = getPrecheckinStepByPageName('ThankYou');
+    if (thankYou) {
+        activatePrecheckinStep(thankYou, true);
+    }
+    disablePrecheckinEarlierSteps();
+    try {
+        if (window.history && history.replaceState) {
+            history.replaceState({ gpPrecheckin: 1, gpThankYouLocked: 1 }, '', window.location.href);
+        }
+    } catch (e) { }
+}
+
+/**
+ * @param {object} step
+ * @param {boolean} [allowWhenComplete] - internal: lock may re-activate Thank You
+ */
+function activatePrecheckinStep(step, allowWhenComplete) {
     if (!step) {
         return;
     }
 
     try {
+        // Completed precheckin: never reopen earlier steps for editing
+        if (!allowWhenComplete && isPrecheckinFullyComplete() && step.pageName !== 'ThankYou') {
+            lockPrecheckinToThankYou();
+            return;
+        }
+
         var $target = $('#' + step.tabId);
         if (!$target.length) {
             // Document pane can be omitted when upload already complete
@@ -146,6 +220,10 @@ function activatePrecheckinStep(step) {
             setActiveTabs(Math.max(step.tabIndex - 1, -1));
         }
         $("html, body").animate({ scrollTop: 0 }, "slow");
+
+        if (step.pageName === 'ThankYou' && isPrecheckinFullyComplete()) {
+            disablePrecheckinEarlierSteps();
+        }
     } catch (e) {
         // Never block entry UI if tab activation fails
         console && console.error && console.error('activatePrecheckinStep', e);
@@ -179,6 +257,10 @@ function resolveResumeStep(rows) {
  * @param {number} resumeTabIndex - next incomplete step index
  */
 function resumePrecheckinFromServer(resumeTabIndex) {
+    if (isPrecheckinFullyComplete() || resumeTabIndex >= 3) {
+        lockPrecheckinToThankYou();
+        return;
+    }
     var step = getPrecheckinStepByIndex(resumeTabIndex);
     if (!step) {
         step = PRECHECKIN_STEPS[0];
@@ -234,7 +316,12 @@ function resumePrecheckinProgress(handleEntry) {
             if (handleEntry) {
                 showPrecheckinWizard();
             }
-            activatePrecheckinStep(step);
+            if (step && step.pageName === 'ThankYou') {
+                markPrecheckinFullyComplete();
+                lockPrecheckinToThankYou();
+            } else {
+                activatePrecheckinStep(step);
+            }
         },
         error: function () {
             // Keep START splash already shown by layout — never leave a blank page
@@ -243,26 +330,44 @@ function resumePrecheckinProgress(handleEntry) {
 }
 
 function moveToNextTab(currentTab) {
+    if (isPrecheckinFullyComplete()) {
+        lockPrecheckinToThankYou();
+        return;
+    }
 
     var $pane = $(currentTab).parents('div.tab-pane');
     var currentStep = getPrecheckinStepByTabId($pane.attr('id'));
+    var nextTab = $pane.next();
+    var movingToThankYou = nextTab.length > 0 && nextTab.attr('id') === 'qrCode';
+
     if (currentStep) {
-        // Persist highest completed tab index for this reservation
-        savePrecheckinProgress(currentStep.tabIndex);
+        // Persist highest completed tab index; Thank You = 3 when Document → Thank You
+        var completedIdx = movingToThankYou ? 3 : currentStep.tabIndex;
+        savePrecheckinProgress(completedIdx);
+        if (movingToThankYou) {
+            markPrecheckinFullyComplete();
+        }
     }
 
     var currentTabIndex = $('.tab-pane').index($pane);
 
-    var nextTab = $pane.next();
-
     if (nextTab.length > 0) {
         $pane.removeClass('active');
-        $pane.next().addClass('active');
+        nextTab.addClass('active');
         $("html, body").animate({ scrollTop: 0 }, "slow");
         setActiveTabs(currentTabIndex);
         if (+currentTabIndex == 0) {
             initCanvas();
         }
+    }
+
+    if (movingToThankYou || isPrecheckinFullyComplete()) {
+        disablePrecheckinEarlierSteps();
+        try {
+            if (window.history && history.replaceState) {
+                history.replaceState({ gpPrecheckin: 1, gpThankYouLocked: 1 }, '', window.location.href);
+            }
+        } catch (e) { }
     }
 
     if (currentTabIndex == 2) {
@@ -273,7 +378,24 @@ function moveToNextTab(currentTab) {
 }
 
 $(document).ready(function () {
-    $('.tabs').on('click', function () {
+    // bfcache / browser Back after OK → hotel: re-lock to Thank You when complete
+    window.addEventListener('pageshow', function () {
+        if (isPrecheckinFullyComplete()) {
+            try { showPrecheckinWizard(); } catch (e) { }
+            lockPrecheckinToThankYou();
+        }
+    });
+
+    if (isPrecheckinFullyComplete()) {
+        lockPrecheckinToThankYou();
+    }
+
+    $('.tabs').on('click', function (e) {
+        if (isPrecheckinFullyComplete()) {
+            e.preventDefault();
+            lockPrecheckinToThankYou();
+            return false;
+        }
 
         return;
 
@@ -322,6 +444,10 @@ $(document).ready(function () {
 
     $('.moveNext').on('click', function (e) {
         e.preventDefault();
+        if (isPrecheckinFullyComplete()) {
+            lockPrecheckinToThankYou();
+            return;
+        }
 
         var currentTabIndex = $('.tab-pane').index($(this).parents('div.tab-pane'));
 
@@ -336,6 +462,10 @@ $(document).ready(function () {
 
     $('.btn_cancel').on('click', function (e) {
         e.preventDefault();
+        if (isPrecheckinFullyComplete()) {
+            lockPrecheckinToThankYou();
+            return false;
+        }
         var prevTab = $(this).parents('div.tab-pane').prev();
         var currentTabIndex = $('.tab-pane').index($(this).parents('div.tab-pane'));
         if (prevTab.length > 0) {

@@ -329,6 +329,31 @@ label.signlbl{font-family: 'Agenda-Light';font-size: 16px;text-transform: none;c
 .file-up-wrap{padding:10px 20px;}
 .file-up-wrap .file-wrap{margin-bottom: 20px;}
 .file-up-wrap .custom-file label{white-space: pre;overflow: hidden;}
+/* Bootstrap Browse (::after) sits above the input (z-index 3). When enabled, raise the
+   input so clicks always hit the file control; when disabled, grey Browse and block clicks. */
+.file-up-wrap .custom-file-input:not(:disabled):not([disabled]){
+  z-index:4;
+  cursor:pointer;
+}
+.file-up-wrap .custom-file-input:disabled,
+.file-up-wrap .custom-file-input[disabled]{
+  z-index:0;
+  pointer-events:none;
+}
+.file-up-wrap .custom-file-input:disabled ~ .custom-file-label,
+.file-up-wrap .custom-file-input[disabled] ~ .custom-file-label,
+.file-up-wrap .custom-file-label.doc-side-disabled{
+  pointer-events:none;
+  opacity:0.65;
+  background-color:#e9ecef;
+  cursor:not-allowed;
+}
+.file-up-wrap .custom-file-input:not(:disabled):not([disabled]) ~ .custom-file-label{
+  pointer-events:auto;
+  opacity:1;
+  background-color:#fff;
+  cursor:pointer;
+}
 .file-up-wrap .lb{display: block;padding-left:28px;position: relative;}
 .file-up-wrap .lb span{display: inline-block;background:#e5e5e5;color:#717171;padding:1px 4px;margin-right:8px;line-height: normal;
     font-family: "Inter", Arial, sans-serif;font-weight: 600;height:20px;width: 20px;border-radius: 20px;text-align: center;

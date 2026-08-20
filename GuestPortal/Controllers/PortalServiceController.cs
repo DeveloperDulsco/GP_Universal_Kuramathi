@@ -472,7 +472,13 @@ namespace CheckinPortal.Controllers
 
             try
             {
-                Helpers.LogHelper.Instance.Debug("Uploading Document Type and Size :- " + uplodedDocument.extension + " : " + uplodedDocument.imageBase64.Length, "", "ExtractDataFromMBDocument", "GuestPortal");
+                bool hasBack = !string.IsNullOrWhiteSpace(uplodedDocument.imageBase64Back);
+                Helpers.LogHelper.Instance.Debug(
+                    "Uploading Document Type and Size :- " + uplodedDocument.extension
+                    + " : frontLen=" + (uplodedDocument.imageBase64 != null ? uplodedDocument.imageBase64.Length : 0)
+                    + "; hasBack=" + hasBack
+                    + (hasBack ? ("; backLen=" + uplodedDocument.imageBase64Back.Length) : ""),
+                    "", "ExtractDataFromMBDocument", "GuestPortal");
                 string BaseURL = ConfigurationManager.AppSettings["APIBaseUrl"].ToString();
 
                 CloudAPIRequestModel validateDocRequest = new CloudAPIRequestModel()
@@ -480,6 +486,7 @@ namespace CheckinPortal.Controllers
                     RequestObject = new RegulaRequest()
                     {
                         Base64Image = uplodedDocument.imageBase64,
+                        Base64Image2 = hasBack ? uplodedDocument.imageBase64Back : null,
                         ImageFormat = uplodedDocument.extension
                     }
                 };
