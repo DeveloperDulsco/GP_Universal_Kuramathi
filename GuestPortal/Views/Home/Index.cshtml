@@ -258,7 +258,7 @@
                                     <ul>
                                         <li>
                                             <label>ROOM TYPE</label>
-                                            <span>@Model.RoomType</span>
+                                            <span>@Model.RoomTypeDescription</span>
                                         </li>
                                         <li>
                                             <label>CHECK-IN DATE</label>
@@ -437,7 +437,7 @@ new { @class = "text-danger" }
                                         <div class="form-group row">
                                             <label class="col-7 col-lg-4 col-xl-4">Room Type</label>
                                             <div class="col-5 col-lg-8 col-xl-8">
-                                                <span>@Model.RoomType</span>
+                                                <span>@Model.RoomTypeDescription</span>
                                             </div>
                                         </div>
                                         <div class="form-group row">
@@ -895,12 +895,12 @@ new { @class = "text-danger" }
                                     <div class="row">
                                         <div class="col-md-12 text-center mt-5">
                                             @*<div class="buttonwrapper">
-                                                    <ul>
-                                                        <li><a class="apple" href="#"></a></li>
-                                                        <li><a class="google" href="#"></a></li>
-                                                    </ul>
-                                                    <a href="#">Save to Photo Library</a>
-                                                </div>*@
+                        <ul>
+                            <li><a class="apple" href="#"></a></li>
+                            <li><a class="google" href="#"></a></li>
+                        </ul>
+                        <a href="#">Save to Photo Library</a>
+                    </div>*@
                                             @*<img src="data:image/jpeg;base64,@ViewBag.CalQRcode" height="200" />*@
                                             <br /><br />
                                             <iframe id="my_iframe" style="display:none;"></iframe>
@@ -921,33 +921,33 @@ new { @class = "text-danger" }
 
                                 </div>
 
-                                @*<div class="address">
-                                        <label>1 BEACH ROAD, SINGAPORE 189673</label>
-                                        <label>T +65 6337 1886</label>
-                                        <label>E <a href="mailto:singapore@raffles.com">singapore@raffles.com</a></label>
-                                    </div>*@
-                                @*<div class="social-media">
-                                    <p>Subscribe or follow us on Facebook, Instagram and TikTok for exclusive offers and updates.</p>
+                                <div class="address">
+                                    <label>Niva Kuramathi Maldives</label>
+                                    <label>T +960 6660527 </label>
+                                    <label>E <a href="mailto:info@nivakuramathi.com">nivakuramathi.com</a></label>
+                                </div>
+                                <div class="social-media">
+                                    <p>Subscribe or follow us on Facebook, Instagram  for exclusive offers and updates.</p>
                                     <ul>
-                                        <li><a target="_blank" href="https://balimandira.com"><i class="fas fa-globe"></i></a></li>
+                                        <li><a target="_blank" href="https://www.nivakuramathi.com"><i class="fas fa-globe"></i></a></li>
                                         <li>
-                                            <a target="_blank" href="https://www.facebook.com/balimandira"><i class="fab fa-facebook-square"></i></a>
+                                            <a target="_blank" href="https://www.facebook.com/NivaKuramathi/"><i class="fab fa-facebook-square"></i></a>
                                         </li>
                                         <li>
-                                            <a target="_blank" href="https://www.instagram.com/balimandira/"><i class="fab fa-instagram"></i></a>
+                                            <a target="_blank" href="https://www.instagram.com/nivakuramathimaldives/"><i class="fab fa-instagram"></i></a>
                                         </li>
-                                        <li>
-                                            <a target="_blank" href="https://www.tiktok.com/&#64;balimandira">
-                                                <img src="~/assets/images/tiktok.png"
-                                                     alt="TikTok"
-                                                     style="width: 26px; height: 26px; vertical-align: middle; position: relative; top: -3px;" />
-                                            </a>
-                                        </li>
+                                        @* <li>
+            <a target="_blank" href="https://www.tiktok.com/&#64;balimandira">
+                <img src="~/assets/images/tiktok.png"
+                     alt="TikTok"
+                     style="width: 26px; height: 26px; vertical-align: middle; position: relative; top: -3px;" />
+            </a>
+        </li>*@
                                     </ul>
-                                </div>*@
-                            </div>
+                </div>
+                                </div>
 
-                        </div>
+                            </div>
                     </div>
 
                 </div>
@@ -1107,31 +1107,49 @@ new { @class = "text-danger" }
 </div>
 
 <div class="modal fade cstm-modal" id="termsAndConditionModal" tabindex="-1" role="dialog" aria-labelledby="termsAndConditionModalLabel" aria-hidden="true">
-    <div class="modal-dialog  modal-dialog-centered privacy-model" role="document">
+    <div class="modal-dialog modal-dialog-centered modal-lg privacy-model" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="termsAndConditionModalLabel">Terms and Conditions </h5>
+                <h5 class="modal-title" id="termsAndConditionModalLabel">Terms and Conditions</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true" class="close_icon"></span>
                 </button>
             </div>
-            <div class="modal-body">
-
-                <p>-I acknowledge that the liability of Raffles Hotel Singapore is governed by Innkeepers' Act.</p>
-                <p>
-                    -I agree that I am liable for the payment of the above and if the person, company or association indicated by me as responsible for payment of the same does not do so, I will be liable for such payment.
-                </p>
-                <p>-I agree and authorize that any late charges shall be billed to my credit card as provided above.</p>
-                <p>-Check-in time 3.00 pm Check-out time 12 Noon</p>
-                <p>-All suite rates are subject to 10% service charge and prevailing 8% good and service taxes</p>
-
-                <p>
-                    -The hotel, as data controller, processes the personal data you provide in this form or during your stay for the purposes of booking management, compliance with legal obligations, and based on legitimate interest, for marketing activities and the improvement of the quality of your stays, including satisfaction enquiries. Commercial communications by electronic means are subject to your prior consent. The data is disclosed to Accor SA acting as a separate data controller, other Accor Group legal entities and all hotel's and entities' service providers. In particular, the data related to your stays, preferences, satisfaction and, if the cases may be, your loyalty program is shared between the hotels operated under one of the Accor Group hotels brands in order to improve the quality of your stays in each of these hotels. You may at any time object to the sharing of this data between the hotels of the Group by writing to data.privacy@accor.com. You have the right to request from the data controller, access to and rectification or erasure of your personal data or restriction of processing or to object to processing as well as the right to data portability. You also have the right to lodge a complaint with a supervisory authority. For more information, you can consult our website <a target="_blank" href="https://all.accor.com/india/index.en.shtml">www.all.accor.com</a> or ask for a copy of our data protection charter.
-                </p>
-                <p>
-                    -The use of the Accor Customer Digital Card (ACDC) by Accor and by hotels operating under any of the Accor Group brands involves joint processing of customers' personal data. Accordingly, a joint data controllership agreement has been established in order to determine in a transparent manner the respective responsibilities of Accor SA and the hotels for compliance with the obligations under the European General Data Protection Regulation. This agreement reflects the respective roles and relationships of the joint controllers vis-à-vis the customers. Any authorized representative of the hotel may request a copy of this agreement by writing to ACCOR.DATA.PROTECTION.OFFICER@accor.com
-                </p>
-
+            @* Source: RegCard.rdlc Textbox57/Textbox76 (CheckinPortalCloudAPI + PropertyFiles MCI Documents) *@
+            <div class="modal-body terms-conditions-body">
+                <div class="terms-conditions-content">
+                    <p class="terms-intro">I freely and voluntarily agree to the following terms and conditions to avail services of the Resort;</p>
+                    <ol class="terms-list" start="1">
+                        <li>(1) The general check-in time is 1400hrs and check-out time is 1200hrs.</li>
+                        <li>(2) I shall pay for all charges and expenses incurred by me and my accompanying guest(s) during my stay at the Resort and I shall settle all charges and expenses by cash or credit card before the check-out.</li>
+                        <li>
+                            (3) If I choose to pay the Resort by credit card, I agree that;
+                            <ul class="terms-sub">
+                                <li>(a) the Resort is entitled to make a pre-authorization of my credit card at the time of check-in and to make a reservation of funds under my credit card that is sufficient to settle my charges and expenses during my stay;</li>
+                                <li>(b) the Resort is entitled to increase that reserved amount in my credit card if required, during my stay;</li>
+                                <li>(c) the Resort is entitled to deduct all my charges and expenses from my credit card.</li>
+                            </ul>
+                        </li>
+                        <li>(4) I and my accompanying guest(s) shall engage in all recreational activities in the Resort including all types of water activies including but not limited to swimming, snorkeling, diving, kayaking, and sailing, at my/his/her/their own risk and volition. I acknowledge that the Resort does not have lifeguards in the pool and sea.</li>
+                        <li>(5) I allow the Resort's staff access to the room I am staying in at the Resort for the purposes of cleaning, maintaining, luggage handling and security.</li>
+                        <li>(6) I or my accompanying guest(s) shall not use drones, any other remote or aerial camera or recording device in the Resort.</li>
+                        <li>(7) I shall not engage in public nudity (including topless sunbathing for women) in the Resort as it is illegal in Maldives.</li>
+                        <li>(8) I am liable for any loss or damage caused to the Resort, Resort's equipment or third a party, and for any bodily injury or death to the staff or a third party caused by me or my accompanying guests.</li>
+                        <li>
+                            (9) I fully release and discharge the Resort and its owner, manager and the staff from any and all liabilities for illness, injury, death, liability, cost, damages, compensation, loss including loss of holiday, loss of enjoyment or loss of income suffered by me or my accompanying guest(s) as a result of;
+                            <ul class="terms-sub">
+                                <li>(a) loss of valuables, jewelry, money or important documents during the stay in the Resort;</li>
+                                <li>(b) any activity undertaken by me or my accompanying guest(s) during the stay in the Resort including but not limited to diving, snorkeling, swimming, kayaking, sailing, yachting.</li>
+                            </ul>
+                        </li>
+                        <li>(10) I shall indemnify and hold the Resort and its owner, manager, staff harmless against any liability arising from any third party claim based on any illness, injury, death or loss suffered by me or my accompanying guest(s).</li>
+                        <li>(11) I consent to processing of my personal data by the Resort as per its privacy policy available at www.milaidhoo.com</li>
+                        <li>(12) I shall be responsible for the custody of any accompanying guests of mine who are under the age of 18.</li>
+                        <li>(13) I agree that recreational activities and other services at the Resort shall be subject to additional terms and conditions which shall be part of these Terms and Conditions upon acceptance of those terms and conditions by me or my accompanying guest(s).</li>
+                        <li>(14) These terms and conditions are governed by the laws of the Maldives and are subject to the courts of the Republic of Maldives.</li>
+                    </ol>
+                    <p class="terms-closing">I have read, understood and freely agree to the above Terms and Conditions.</p>
+                </div>
                 <div class="mt-4 text-center">
                     <button class="btnstyle blue termscondition" data-dismiss="modal" aria-label="Close">OK</button>
                 </div>
@@ -2023,6 +2041,10 @@ new { @class = "text-danger" }
 
         function persistGuestDocumentSkips(finalize) {
             var profileIds = collectSkippedProfileDetailIds();
+            // Always POST on finalize so IsUploadComplete can roll up even when no skips remain.
+            if (!finalize && profileIds.length === 0) {
+                return $.Deferred().resolve({ result: true }).promise();
+            }
             return $.ajax({
                 url: "@Url.Action("DocumentUploadSkipped", "Home")",
                 method: "POST",
@@ -2089,26 +2111,33 @@ new { @class = "text-danger" }
         function proceedDocumentUpload($trigger) {
             $('.loader-screen').fadeIn(100);
             waitForPendingDocumentUploads().then(function () {
-                $.ajax({
-                    url: "@Url.Action("CompletedocUploadAsync", "Home")",
-                    method: "POST",
-                    type: "POST",
-                    dataType: "json",
-                    data: {
-                        ReservationNumber: @Model.ReservationNumber,
-                        ReservationNameID: @Model.ReservationNameID,
-                    },
-                    success: function (data) {
-                        documentupload = true;
-                        $('.loader-screen').fadeOut(500);
-                        moveToNextTab($trigger);
-                    },
-                    error: function (data) {
-                        // Still advance so guest is not stuck; server may have partially completed.
-                        documentupload = true;
-                        $('.loader-screen').fadeOut(500);
-                        moveToNextTab($trigger);
-                    }
+                // Persist per-profile skips BEFORE Thank You / PreCheckinComplete so FO report updates on redirect.
+                var skipPromise = (typeof hasAnySkippedDocument === 'function' && hasAnySkippedDocument())
+                    ? persistGuestDocumentSkips(true)
+                    : $.Deferred().resolve({ result: true }).promise();
+
+                return $.when(skipPromise).always(function () {
+                    $.ajax({
+                        url: "@Url.Action("CompletedocUploadAsync", "Home")",
+                        method: "POST",
+                        type: "POST",
+                        dataType: "json",
+                        data: {
+                            ReservationNumber: @Model.ReservationNumber,
+                            ReservationNameID: @Model.ReservationNameID,
+                        },
+                        success: function (data) {
+                            documentupload = true;
+                            $('.loader-screen').fadeOut(500);
+                            moveToNextTab($trigger);
+                        },
+                        error: function (data) {
+                            // Still advance so guest is not stuck; server may have partially completed.
+                            documentupload = true;
+                            $('.loader-screen').fadeOut(500);
+                            moveToNextTab($trigger);
+                        }
+                    });
                 });
             });
         }
@@ -2986,7 +3015,7 @@ new { @class = "text-danger" }
                     '<div id="gpTabLockOverlay" style="position:fixed;inset:0;z-index:20000;background:rgba(0,0,0,0.55);display:flex;align-items:center;justify-content:center;padding:24px;">' +
                     '<div style="max-width:480px;width:100%;background:#fff;padding:28px 24px;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,.25);">' +
                     '<h5 style="margin:0 0 16px;">Message</h5>' +
-                    '<p style="margin:0;font-size:16px;line-height:1.45;">' + BLOCK_MSG + '</p>' +
+                    '<p style="margin:0;font-size:13px;line-height:1.45;">' + BLOCK_MSG + '</p>' +
                     '</div></div>'
                 );
             }
@@ -3392,9 +3421,7 @@ new { @class = "text-danger" }
               $('#customMessageModal').modal('show');
               return;
           }
-          if (typeof hasAnySkippedDocument === 'function' && hasAnySkippedDocument()) {
-              persistGuestDocumentSkips(true);
-          }
+          // Skip persist is awaited inside proceedDocumentUpload before Thank You completion.
           proceedDocumentUpload($btn);
       }
 
@@ -3452,7 +3479,7 @@ new { @class = "text-danger" }
                             }
                         });
 
-                        persistGuestDocumentSkips(true);
+                        // Persist is awaited inside proceedDocumentUpload (Thank You redirect, not OK click).
                         proceedDocumentUpload($(this));
                     });
 
@@ -3791,22 +3818,11 @@ new { @class = "text-danger" }
 
             var filext = "." + filextension.slice(-1)[0];
             var valid = [".jpg", ".png", ".jpeg"];
-            var selectedFile = files && files.length ? files[0] : null;
 
             if (valid.indexOf(filext.toLowerCase()) == -1) {
                 hideDocumentLoader();
                 showAlert(alertId, "File type not supported. Please upload a JPG or PNG image (max 2MB).", "warning");
                 logDocumentAction('DocumentUploadInvalidFile');
-                $(fileControl).val('');
-                $(fileControl).siblings(".custom-file-label").removeClass("selected").html('Choose file');
-                $(fileControl).parent('div').find('img').attr('src', '');
-                $(fileControl).parent('div').find('img').hide();
-                return;
-            }
-            if (selectedFile && selectedFile.size > DOCUMENT_MAX_BYTES) {
-                hideDocumentLoader();
-                showAlert(alertId, "File is too large. Maximum size is 2MB.", "warning");
-                logDocumentAction('DocumentUploadOversized');
                 $(fileControl).val('');
                 $(fileControl).siblings(".custom-file-label").removeClass("selected").html('Choose file');
                 $(fileControl).parent('div').find('img').attr('src', '');
@@ -3823,6 +3839,7 @@ new { @class = "text-danger" }
                 $('.loader-screen').fadeIn(100);
                 logDocumentAction('DocumentUploadAttempt');
                 var ocrGeneration = documentUploadOcrGeneration;
+                    // Compress first (mobile camera captures are often >2MB raw), then enforce max size on result.
                     compress.compress(files, {
                         size: 2,
                         quality: 0.75,
@@ -3834,6 +3851,22 @@ new { @class = "text-danger" }
                             return;
                         }
                         const imgout = images[0]
+                        var compressedBytes = (typeof imgout.endSizeInMb === 'number')
+                            ? (imgout.endSizeInMb * 1024 * 1024)
+                            : (imgout.data ? (imgout.data.length * 0.75) : 0);
+                        if (compressedBytes > DOCUMENT_MAX_BYTES) {
+                            hideDocumentLoader();
+                            showAlert(alertId, "File is too large. Maximum size is 2MB.", "warning");
+                            logDocumentAction('DocumentUploadOversized');
+                            $(fileControl).val('');
+                            $(fileControl).siblings(".custom-file-label").removeClass("selected").html('Choose file');
+                            $(fileControl).parent('div').find('img').attr('src', '');
+                            $(fileControl).parent('div').find('img').hide();
+                            if (filecontrolID === "primaryDoc1") {
+                                setPrimaryDoc2Enabled(false);
+                            }
+                            return;
+                        }
                         var imageBase64 = imgout.data;
                         validateDocumentDirect({
                             imageBase64: imageBase64,

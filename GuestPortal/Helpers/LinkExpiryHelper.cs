@@ -16,6 +16,8 @@ namespace CheckinPortal.Helpers
         public const string ReservationNotFound = "ReservationNotFound";
         public const string InvalidStatus = "InvalidStatus";
         public const string NotEligible = "NotEligible";
+        /// <summary>Sharer / adult count zero — not eligible for online precheck-in or precheckout.</summary>
+        public const string ZeroAdults = "ZeroAdults";
 
         /// <summary>
         /// Default generic consumed/expired copy (two sentences).
@@ -56,6 +58,10 @@ namespace CheckinPortal.Helpers
                     return "This reservation is not available for online pre check-in or pre check-out.\n" +
                            "Please contact the hotel's Guest Reservations team for assistance.";
 
+                case ZeroAdults:
+                    return "This reservation has 0 adult count and is not available for online pre check-in or pre check-out.\n" +
+                           "Please contact the hotel's Front Office for assistance.";
+
                 case MissingLink:
                 case InvalidLink:
                     return "This link is invalid or incomplete.\n" +
@@ -69,6 +75,22 @@ namespace CheckinPortal.Helpers
                 default:
                     return DefaultMessage;
             }
+        }
+
+        /// <summary>
+        /// Prefer Opera Adults; fall back to cloud Adultcount when Opera did not return a value.
+        /// </summary>
+        public static int? ResolveAdultCount(int? operaAdults, int? cloudAdultCount)
+        {
+            if (operaAdults.HasValue)
+                return operaAdults;
+            return cloudAdultCount;
+        }
+
+        /// <summary>True when adult count is present and greater than zero (primary guest, not sharer).</summary>
+        public static bool HasEligibleAdultCount(int? adultCount)
+        {
+            return adultCount.HasValue && adultCount.Value > 0;
         }
     }
 }

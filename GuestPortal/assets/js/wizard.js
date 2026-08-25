@@ -485,19 +485,47 @@ function validateTermsAndConditions() {
 }
 
 
+var _policiesSigResizeBound = false;
+
 var initCanvas = function () {
     var wrapper = document.getElementById("signature-pad");
+    if (!wrapper) {
+        return;
+    }
     var clearButton = wrapper.querySelector("[data-action=clear]");
-    var changeColorButton = wrapper.querySelector("[data-action=change-color]");
     var canvas = wrapper.querySelector("canvas");
+    if (!canvas) {
+        return;
+    }
 
     signaturePad = new SignaturePad(canvas, {
         backgroundColor: 'rgb(255, 255, 255)'
     });
 
-    clearButton.addEventListener("click", function (event) {
+    // Match bitmap to CSS box (body padding inset) so strokes aren't cropped at edges
+    function resizePoliciesSignatureCanvas() {
+        var padCanvas = document.querySelector("#signature-pad canvas");
+        if (!padCanvas || padCanvas.offsetWidth === 0 || padCanvas.offsetHeight === 0 || !signaturePad) {
+            return;
+        }
+        var ratio = Math.max(window.devicePixelRatio || 1, 1);
+        padCanvas.width = padCanvas.offsetWidth * ratio;
+        padCanvas.height = padCanvas.offsetHeight * ratio;
+        padCanvas.getContext("2d").scale(ratio, ratio);
         signaturePad.clear();
-    });
+    }
+    resizePoliciesSignatureCanvas();
+    if (!_policiesSigResizeBound) {
+        window.addEventListener("resize", resizePoliciesSignatureCanvas);
+        _policiesSigResizeBound = true;
+    }
+
+    if (clearButton && !clearButton.getAttribute("data-sig-clear-bound")) {
+        clearButton.setAttribute("data-sig-clear-bound", "1");
+        clearButton.addEventListener("click", function (event) {
+            signaturePad.clear();
+        });
+    }
 }
 
 var setActiveTabs = function (currentTabIndex) {

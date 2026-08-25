@@ -14,11 +14,13 @@ using Microsoft.Reporting.WebForms;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.Globalization;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
+using System.Web;
 using System.Web.Http;
 using WebGrease.Configuration;
 
@@ -258,18 +260,108 @@ namespace CheckinPortal.Controllers
         [HttpPost]
         [ActionName("SendEmail")]
         [Route("api/portalservice/SendEmail")]
-        public IHttpActionResult SendEmail(SendEmailModel sendEmail)
+        public async Task<IHttpActionResult> SendEmail(SendEmailModel sendEmail)
         {
+            const string actionName = "SendEmail";
+            const string actionGroup = "Pre-Checkout";
+
             try
             {
-                ReservationLogics reservationLogics = new ReservationLogics();
-                var reservationsDt = reservationLogics.UpdatePrimaryGuestEmail(sendEmail.emailID, sendEmail.reservationID);
+                // Accept both JSON and multipart form (legacy JS used email / reservationId)
+                string emailID = sendEmail?.emailID;
+                string reservationID = sendEmail?.reservationID;
+                if (string.IsNullOrWhiteSpace(emailID) || string.IsNullOrWhiteSpace(reservationID))
+                {
+                    var form = HttpContext.Current?.Request?.Form;
+                    if (form != null)
+                    {
+                        if (string.IsNullOrWhiteSpace(emailID))
+                            emailID = form["emailID"] ?? form["email"];
+                        if (string.IsNullOrWhiteSpace(reservationID))
+                            reservationID = form["reservationID"] ?? form["reservationId"] ?? form["ReservationID"];
+                    }
+                }
+
+                emailID = (emailID ?? string.Empty).Trim();
+                if (string.IsNullOrWhiteSpace(emailID))
+                {
+                    return Ok(new { result = false, responseMessage = "Please enter email address" });
+                }
+
+                if (string.IsNullOrWhiteSpace(SessionData.FolioBase64))
+                {
+                    new LogHelper().Warn("Cannot send guest folio email — FolioBase64 is empty", reservationID ?? "", actionName, actionGroup);
+                    return Ok(new { result = false, responseMessage = "Invoice is not available to email. Please contact the front desk." });
+                }
+
+                if (SessionData.OperaReservation == null)
+                {
+                    new LogHelper().Warn("Cannot send guest folio email — OperaReservation session is empty", reservationID ?? "", actionName, actionGroup);
+                    return Ok(new { result = false, responseMessage = "Session expired. Please reopen your checkout link and try again." });
+                }
+
+                var profile = (SessionData.OperaReservation.GuestProfiles != null && SessionData.OperaReservation.GuestProfiles.Count > 0)
+                    ? SessionData.OperaReservation.GuestProfiles[0]
+                    : null;
+                TextInfo textInfo = new CultureInfo("en-US", false).TextInfo;
+                string guestName = "";
+                if (profile != null)
+                {
+                    guestName = ""
+                        + (!string.IsNullOrEmpty(profile.FirstName) ? textInfo.ToTitleCase(profile.FirstName) + " " : "")
+                        + (!string.IsNullOrEmpty(profile.MiddleName) ? textInfo.ToTitleCase(profile.MiddleName) + " " : "")
+                        + (!string.IsNullOrEmpty(profile.LastName) ? textInfo.ToTitleCase(profile.LastName) : "");
+                }
+
+                string reservationNameID = SessionData.OperaReservation.ReservationNameID ?? reservationID ?? "";
+                string apiBaseUrl = ConfigurationManager.AppSettings["APIBaseUrl"]?.ToString()
+                    ?? "";
+
+                new LogHelper().Log("Sending guest folio email to " + emailID, reservationNameID, actionName, actionGroup);
+
+                Models.Emails.EmailResponse emailResponse = await new CloudHelper().SendEmail(reservationNameID, new Models.Emails.EmailRequest()
+                {
+                    FromEmail = ConfigurationManager.AppSettings["PreCheckoutFolioEmail"]?.ToString(),
+                    ToEmail = emailID,
+                    GuestName = guestName,
+                    Subject = ConfigurationManager.AppSettings["PreCheckoutFolioEmailSubject"]?.ToString(),
+                    confirmationNumber = SessionData.OperaReservation.ReservationNumber,
+                    displayFromEmail = ConfigurationManager.AppSettings["EmailDisplayName"]?.ToString(),
+                    EmailType = Models.Emails.EmailType.GuestFolio,
+                    AttchmentBase64 = SessionData.FolioBase64,
+                    AttachmentFileName = "Folio.pdf"
+                }, actionGroup, apiBaseUrl);
+
+                if (emailResponse == null || !emailResponse.result)
+                {
+                    string reason = emailResponse?.responseMessage ?? "Unknown email API failure";
+                    new LogHelper().Log("Failed to send guest folio email with reason :- " + reason, reservationNameID, actionName, actionGroup);
+                    new LogHelper().Warn("Failed to send guest folio email with reason :- " + reason, reservationNameID, actionName, actionGroup);
+                    return Ok(new { result = false, responseMessage = "Unable to send the invoice email. Please try again or contact the front desk." });
+                }
+
+                new LogHelper().Log("Guest folio email sent successfully to " + emailID, reservationNameID, actionName, actionGroup);
+
+                // Best-effort: persist the address used for this send
+                try
+                {
+                    if (!string.IsNullOrWhiteSpace(reservationID))
+                    {
+                        new ReservationLogics().UpdatePrimaryGuestEmail(emailID, reservationID);
+                    }
+                }
+                catch (Exception updateEx)
+                {
+                    new LogHelper().Error(updateEx, reservationNameID, actionName, actionGroup);
+                }
+
+                return Ok(new { result = true });
             }
-            catch
+            catch (Exception ex)
             {
+                new LogHelper().Error(ex, sendEmail?.reservationID ?? "", actionName, actionGroup);
+                return Ok(new { result = false, responseMessage = "Unable to send the invoice email. Please try again or contact the front desk." });
             }
-           
-            return Ok(new { result = true });
         }
 
 

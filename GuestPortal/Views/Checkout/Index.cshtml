@@ -70,7 +70,9 @@
                         {
                             <div class="tab-pane cstm-form active" id="folio">
                                 @* <iframe src="~/temp/@(Model.ReservationNumber).pdf&embedded=true" style="width:100%; height:550px;" frameborder="0"></iframe>*@
-                                <iframe src="~/temp/@(Model.ReservationNumber).pdf" style="width:100%; height:550px;" frameborder="0"></iframe>
+                                <div class="folio-scroll-wrap">
+                                    <iframe class="folio-iframe" src="~/temp/@(Model.ReservationNumber).pdf" frameborder="0" title="Tax Invoice"></iframe>
+                                </div>
                                 @*<iframe src="https://docs.google.com/viewer?url=@(HttpContext.Current.Request.Url.GetLeftPart(UriPartial.Authority))/temp/@(Model.ReservationNumber).pdf&embedded=true" style="width:100%; height:550px;" frameborder="0"></iframe>*@
 
                                 <div class="form-check text-center">
@@ -173,7 +175,7 @@
                                     <label>Thank You!</label>
                                     <p>We have successfully processed your check-out request. </p>
                                     <p>The room key will now be disabled.</p>
-                                    <p>Please drop your room key in the express check-out box located at our lobby on departure.</p>
+                                    <p>Please drop your room key in the box located at our lobby on departure.</p>
                                     <p>Thank you once again for choosing Niva Kuramathi. We look forward to welcoming you back soon.</p>
                                     <div class="row">
                                         <div class="col-md-12 text-center thank-you-actions mt-5">
@@ -196,7 +198,18 @@
                                     </div>
 
                                 </div>
-                                @* Social footer omitted to match precheckin thank you (no Raffles / Accor links). *@
+                                <div class="social-media">
+                                    <p>Subscribe to our mailing list or follow us on Facebook and Instagram for exclusive offers and updates.</p>
+                                    <ul>
+                                        <li><a target="_blank" href="mailto:info@nivakuramathi.com"><i class="fas fa-envelope-square"></i></a></li>
+                                        <li>
+                                            <a target="_blank" href="https://www.facebook.com/NivaKuramathi/"><i class="fab fa-facebook-square"></i></a>
+                                        </li>
+                                        <li>
+                                            <a target="_blank" href="https://www.instagram.com/nivakuramathimaldives/"><i class="fab fa-instagram"></i></a>
+                                        </li>
+                                    </ul>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -237,7 +250,7 @@
                 </div>
 
                 <div class="button-wrapper1">
-                    <button class="" data-dismiss="modal" aria-label="Close">OK</button>
+                    <button class="btn_ok" data-dismiss="modal" aria-label="Close">OK</button>
                 </div>
 
             </div>
@@ -339,13 +352,13 @@
             <div class="modal-body">
                 <div class="quest">
                     <h5>Please contact front desk for assistance.</h5>
-                    <p class="mb-0" style="font-size:14px;">Your folio balance is not zero. Online pre check-out cannot be completed until the balance is settled at the Front Desk.</p>
+                    <p class="mb-0">Your folio balance is not zero. Online pre check-out cannot be completed until the balance is settled at the Front Desk.</p>
                     <br />
                 </div>
                 <br />
                 <br />
                 <div class="button-wrapper1">
-                    <button class="" data-dismiss="modal" aria-label="Close">OK</button>
+                    <button class="btn_ok" data-dismiss="modal" aria-label="Close">OK</button>
                 </div>
             </div>
         </div>
@@ -366,7 +379,7 @@
                 <br />
                 <br />
                 <div class="button-wrapper1">
-                    <button class="" data-dismiss="modal" aria-label="Close">OK</button>
+                    <button class="btn_ok" data-dismiss="modal" aria-label="Close">OK</button>
                 </div>
             </div>
         </div>
@@ -501,6 +514,18 @@
             backgroundColor: 'rgb(255, 255, 255)'
         });
 
+        // Match canvas bitmap to CSS size (incl. body padding inset) so strokes aren't cropped
+        function resizeCheckoutSignatureCanvas() {
+            if (!canvas || canvas.offsetWidth === 0 || canvas.offsetHeight === 0) {
+                return;
+            }
+            var ratio = Math.max(window.devicePixelRatio || 1, 1);
+            canvas.width = canvas.offsetWidth * ratio;
+            canvas.height = canvas.offsetHeight * ratio;
+            canvas.getContext("2d").scale(ratio, ratio);
+            signaturePad.clear();
+        }
+
         clearButton.addEventListener("click", function (event) {
             signaturePad.clear();
         });
@@ -512,6 +537,8 @@
 
                 if ($(this).is(":checked")) {
                     $("#signbox").show();
+                    // Pad was display:none at init — size bitmap after it becomes visible
+                    setTimeout(resizeCheckoutSignatureCanvas, 0);
                 } else {
                     $("#signbox").hide();
                 }
@@ -678,17 +705,27 @@
 
 
         function sendEmail() {
-            var email = $('#emailID').val();
+            var email = ($('#emailID').val() || '').trim();
 
             if (email) {
-                var formdata = new FormData();
-                formdata.append('email', email);
-                formdata.append('reservationId', $('#ReservationID').val())
                 fetch(BaseURL + '/api/portalservice/SendEmail', {
                     method: "POST",
-                    body: formdata,
-                }).then(response => response = response.json()).then(response => {
-                    $('#messageContentFolio').html('We have sent your invoice to the email provided. You will receive it within 15 minutes.');
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        emailID: email,
+                        reservationID: $('#ReservationID').val()
+                    }),
+                }).then(function (response) { return response.json(); }).then(function (response) {
+                    if (response && response.result) {
+                        $('#messageContentFolio').html('We have sent your invoice to the email provided. You will receive it within 15 minutes.');
+                    } else {
+                        $('#messageContentFolio').html((response && response.responseMessage)
+                            ? response.responseMessage
+                            : 'Unable to send the invoice email. Please try again or contact the front desk.');
+                    }
+                    $('#exampleModal2').modal('show');
+                }).catch(function () {
+                    $('#messageContentFolio').html('Unable to send the invoice email. Please try again or contact the front desk.');
                     $('#exampleModal2').modal('show');
                 });
             }
@@ -772,7 +809,7 @@
                         '<div id="gpTabLockOverlay" style="position:fixed;inset:0;z-index:20000;background:rgba(0,0,0,0.55);display:flex;align-items:center;justify-content:center;padding:24px;">' +
                         '<div style="max-width:480px;width:100%;background:#fff;padding:28px 24px;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,.25);">' +
                         '<h5 style="margin:0 0 16px;">Message</h5>' +
-                        '<p style="margin:0;font-size:16px;line-height:1.45;">' + BLOCK_MSG + '</p>' +
+                        '<p style="margin:0;font-size:13px;line-height:1.45;">' + BLOCK_MSG + '</p>' +
                         '</div></div>'
                     );
                 }

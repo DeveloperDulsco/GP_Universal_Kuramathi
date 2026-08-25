@@ -1,4 +1,4 @@
-﻿using CheckinPortal.BusinessLayer;
+using CheckinPortal.BusinessLayer;
 using CheckinPortal.DataAccess;
 using CheckinPortal.Helpers;
 using CheckinPortal.Models;
@@ -124,9 +124,17 @@ namespace CheckinPortal.Controllers
 
                 if (reservationfromopera != null && reservationfromopera.Count > 0)
                 {
+                    var operaFirst = reservationfromopera.First();
+                    int? adultCount = LinkExpiryHelper.ResolveAdultCount(operaFirst.Adults, reservations.Adultcount);
+                    if (!LinkExpiryHelper.HasEligibleAdultCount(adultCount))
+                    {
+                        Helpers.LogHelper.Instance.Warn(
+                            $"Blocked precheckin — adult count is zero or missing (sharer). Adults={adultCount}. Res#={confirmationNo}",
+                            reservations.ReservationNameID ?? confirmationNo, ActionName, ActionGroup);
+                        return ShowLinkExpiry(LinkExpiryHelper.ZeroAdults, confirmationNo, ActionName, ActionGroup);
+                    }
 
-                    if (reservationfromopera.First().Adults != null && reservationfromopera.First().Adults.Value > 0)
-                        operaReservation = reservationfromopera.FirstOrDefault();
+                    operaReservation = operaFirst;
                     Helpers.LogHelper.Instance.Log($"Reservation details fetched from opera {JsonConvert.SerializeObject(operaReservation, Formatting.Indented)} ", $"{reservations.ReservationNameID}", ActionName, ActionGroup);
 
 
@@ -1147,23 +1155,12 @@ namespace CheckinPortal.Controllers
                             string addressFailReason = owsResponse.responseMessage ?? "unknown";
                             new LogHelper().Log("Opera address update: Failed - " + addressFailReason, reservationModel.ReservationNameID, ActionName, ActionGroup);
                             new LogHelper().Warn("Opera address update: Failed - " + addressFailReason, reservationModel.ReservationNameID, ActionName, ActionGroup);
-                            //AuditProgressHelper.Log(
-                            //    AuditProgressHelper.ModulePreCheckin,
-                            //    AuditProgressHelper.Actions.OperaAddressUpdateFailed,
-                            //    reservationModel.ReservationID,
-                            //    reservationModel.ReservationNameID,
-                            //    extraDetail: addressFailReason,
-                            //    guestName: auditGuestName);
+                            
                         }
                         else
                         {
                             new LogHelper().Log("Opera address update: Success", reservationModel.ReservationNameID, ActionName, ActionGroup);
-                            //AuditProgressHelper.Log(
-                            //    AuditProgressHelper.ModulePreCheckin,
-                            //    AuditProgressHelper.Actions.OperaAddressUpdateSuccess,
-                            //    reservationModel.ReservationID,
-                            //    reservationModel.ReservationNameID,
-                            //    guestName: auditGuestName);
+                            
                         }
                         #endregion
 
@@ -1550,44 +1547,46 @@ namespace CheckinPortal.Controllers
                 }
                 else
                 {
-                    otherAllergies = "NO ALLERGIES DECLARED";
+                    otherAllergies = "";
                 }
-
-                try
+                if (allergyList.Count > 0 || !string.IsNullOrEmpty(otherAllergies))
                 {
-                    var allergyUdfResponse = await new CloudHelper().UpdateProfileAllergy(
-                        policiesModel.ReservationNameID,
-                        new Models.OWS.OwsRequestModel()
-                        {
-                            ChainCode = ConfigurationManager.AppSettings["ChainCode"].ToString(),
-                            DestinationEntityID = ConfigurationManager.AppSettings["DestinationEntityID"].ToString(),
-                            DestinationSystemType = ConfigurationManager.AppSettings["DestinationSystemType"].ToString(),
-                            HotelDomain = ConfigurationManager.AppSettings["HotelDomain"].ToString(),
-                            KioskID = ConfigurationManager.AppSettings["KioskID"].ToString(),
-                            LegNumber = "1",
-                            Language = ConfigurationManager.AppSettings["Language"].ToString(),
-                            Password = ConfigurationManager.AppSettings["Password"].ToString(),
-                            Username = ConfigurationManager.AppSettings["Username"].ToString(),
-                            SystemType = ConfigurationManager.AppSettings["SystemType"].ToString(),
-                            UpdateProfileAllergyRequest = new Models.OWS.UpdateProfileAllergyRequest()
+                    try
+                    {
+                        var allergyUdfResponse = await new CloudHelper().UpdateProfileAllergy(
+                            policiesModel.ReservationNameID,
+                            new Models.OWS.OwsRequestModel()
                             {
-                                NameID = policiesModel.ProfileID,
-                                Allergies = allergyList,
-                                OtherAllergies = otherAllergies
-                            }
-                        },
-                        ActionGroup,
-                        ConfigurationManager.AppSettings["APIBaseUrl"].ToString());
-                    new LogHelper().Log(
-                        "Opera allergy UDF result=" + (allergyUdfResponse != null && allergyUdfResponse.result)
-                        + " msg=" + (allergyUdfResponse != null ? allergyUdfResponse.responseMessage : "null")
-                        + " allergens=" + string.Join(",", allergyList)
-                        + " other=" + otherAllergies,
-                        policiesModel?.ReservationNameID, ActionName, ActionGroup);
-                }
-                catch (Exception allergyUdfEx)
-                {
-                    new LogHelper().Error(allergyUdfEx, policiesModel?.ReservationNameID, ActionName, ActionGroup);
+                                ChainCode = ConfigurationManager.AppSettings["ChainCode"].ToString(),
+                                DestinationEntityID = ConfigurationManager.AppSettings["DestinationEntityID"].ToString(),
+                                DestinationSystemType = ConfigurationManager.AppSettings["DestinationSystemType"].ToString(),
+                                HotelDomain = ConfigurationManager.AppSettings["HotelDomain"].ToString(),
+                                KioskID = ConfigurationManager.AppSettings["KioskID"].ToString(),
+                                LegNumber = "1",
+                                Language = ConfigurationManager.AppSettings["Language"].ToString(),
+                                Password = ConfigurationManager.AppSettings["Password"].ToString(),
+                                Username = ConfigurationManager.AppSettings["Username"].ToString(),
+                                SystemType = ConfigurationManager.AppSettings["SystemType"].ToString(),
+                                UpdateProfileAllergyRequest = new Models.OWS.UpdateProfileAllergyRequest()
+                                {
+                                    NameID = policiesModel.ProfileID,
+                                    Allergies = allergyList,
+                                    OtherAllergies = otherAllergies
+                                }
+                            },
+                            ActionGroup,
+                            ConfigurationManager.AppSettings["APIBaseUrl"].ToString());
+                        new LogHelper().Log(
+                            "Opera allergy UDF result=" + (allergyUdfResponse != null && allergyUdfResponse.result)
+                            + " msg=" + (allergyUdfResponse != null ? allergyUdfResponse.responseMessage : "null")
+                            + " allergens=" + string.Join(",", allergyList)
+                            + " other=" + otherAllergies,
+                            policiesModel?.ReservationNameID, ActionName, ActionGroup);
+                    }
+                    catch (Exception allergyUdfEx)
+                    {
+                        new LogHelper().Error(allergyUdfEx, policiesModel?.ReservationNameID, ActionName, ActionGroup);
+                    }
                 }
             }
             else
@@ -1722,7 +1721,7 @@ namespace CheckinPortal.Controllers
                             reservationLogics.InsertEvent(uploadGuestDocumentModel.ReservationID, "DocumentUploadExpiryFail");
                             return Json(new { result = false, message = "Document is expired. Please upload a valid one." });
                         }
-                        if (!DateTime.TryParseExact(docInfo.birthDate, "yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out birthDate))
+                        if (!TryParseDocumentDate(docInfo.birthDate, out birthDate))
                         {
                             birthDate = new DateTime(1900, 01, 01);
                         }
@@ -1733,7 +1732,7 @@ namespace CheckinPortal.Controllers
                         documentModel.IssueDate = issueDate;
                         documentModel.DocumentType = docInfo.documentType;
                         documentModel.DocumentNumber = docInfo.documentNumber;
-                        documentModel.BirthDate = birthDate;
+                        documentModel.BirthDate = birthDate.Year > 1900 ? (DateTime?)birthDate.Date : null;
                         documentModel.Nationality = ResolveDocumentNationalityForUpload(docInfo);
                         if (string.IsNullOrWhiteSpace(documentModel.Nationality))
                         {
@@ -1883,10 +1882,21 @@ namespace CheckinPortal.Controllers
                 if (!string.IsNullOrEmpty(uploadGuestDocumentModel.ProfileID))
                 {
                     new LogHelper().Log("Updating guest profile in opera  - (Last name - +" + documentModel.LastName + ")", session.ReservationNameID, ActionName, ActionGroup);
+                    string operaDocumentType = !string.IsNullOrWhiteSpace(documentModel?.DocumentType)
+                        ? await GetDocumentByCode(documentModel.DocumentType) : null;
+                    if (string.IsNullOrWhiteSpace(operaDocumentType))
+                        operaDocumentType = null;
+
+                    bool hasDobForOpera = documentModel.BirthDate.HasValue && documentModel.BirthDate.Value.Year > 1900;
+                    new LogHelper().Log(
+                        "UpdateGuestProfile DOB present=" + hasDobForOpera + "; DocumentTypeMapped=" + (operaDocumentType != null),
+                        session.ReservationNameID, ActionName, ActionGroup);
+
                     Models.OWS.OwsResponseModel owsResponse = await new CloudHelper().UpdateGuestProfile(session.ReservationNameID, new Models.OWS.OwsRequestModel()
                     {
                         ChainCode = ConfigurationManager.AppSettings["ChainCode"].ToString(),
                         DestinationEntityID = ConfigurationManager.AppSettings["DestinationEntityID"].ToString(),
+                        DestinationSystemType = ConfigurationManager.AppSettings["DestinationSystemType"].ToString(),
                         HotelDomain = ConfigurationManager.AppSettings["HotelDomain"].ToString(),
                         KioskID = ConfigurationManager.AppSettings["KioskID"].ToString(),
                         Language = ConfigurationManager.AppSettings["Language"].ToString(),
@@ -1897,14 +1907,13 @@ namespace CheckinPortal.Controllers
                         UpdateProileRequest = new Models.OWS.UpdateProfile()
                         {
                             ProfileID = uploadGuestDocumentModel.ProfileID,
-                            DOB = documentModel.BirthDate.Value,
+                            DOB = hasDobForOpera ? documentModel.BirthDate.Value.Date : (DateTime?)null,
 
                             DocumentNumber = documentModel.DocumentNumber,
-                            DocumentType = !string.IsNullOrWhiteSpace(documentModel?.DocumentType)
-                 ? await GetDocumentByCode(documentModel.DocumentType) : null,
-                            Gender = !string.IsNullOrEmpty(documentModel.Gender) ? (documentModel.Gender.ToUpper().Equals("MALE") ? "Male" : (documentModel.Gender.ToUpper().Equals("FEMALE") ? "Female" : null)) : null,
+                            DocumentType = operaDocumentType,
+                            Gender = !string.IsNullOrEmpty(documentModel.Gender) ? (documentModel.Gender.ToUpper().Equals("MALE") || documentModel.Gender.ToUpper().Equals("M") ? "Male" : (documentModel.Gender.ToUpper().Equals("FEMALE") || documentModel.Gender.ToUpper().Equals("F") ? "Female" : null)) : null,
                             IssueCountry = !string.IsNullOrWhiteSpace(documentModel?.IssueCountry) ? await GetCountryByCode(documentModel.IssueCountry) : null,
-                            IssueDate = documentModel.IssueDate.Value,
+                            IssueDate = documentModel.IssueDate.HasValue && documentModel.IssueDate.Value.Year > 1900 ? documentModel.IssueDate : null,
                             Nationality = !string.IsNullOrWhiteSpace(documentModel?.Nationality) ? await GetCountryByCode(documentModel.Nationality) : null
 
                         }
@@ -1925,10 +1934,16 @@ namespace CheckinPortal.Controllers
                 {
                     documentModel.ProfileID = uploadGuestDocumentModel.ProfileID;
                     new LogHelper().Log("Updating passport info in opera  - (Last name - +" + documentModel.LastName + ") DocumentType : "+documentModel.DocumentType, session.ReservationNameID, ActionName, ActionGroup);
+                    string operaPassportDocumentType = !string.IsNullOrWhiteSpace(documentModel?.DocumentType)
+                        ? await GetDocumentByCode(documentModel.DocumentType) : null;
+                    if (string.IsNullOrWhiteSpace(operaPassportDocumentType))
+                        operaPassportDocumentType = null;
+
                     Models.OWS.OwsResponseModel owsResponse = await new CloudHelper().UpdateGuestPassport(session.ReservationNameID, new Models.OWS.OwsRequestModel()
                     {
                         ChainCode = ConfigurationManager.AppSettings["ChainCode"].ToString(),
                         DestinationEntityID = ConfigurationManager.AppSettings["DestinationEntityID"].ToString(),
+                        DestinationSystemType = ConfigurationManager.AppSettings["DestinationSystemType"].ToString(),
                         HotelDomain = ConfigurationManager.AppSettings["HotelDomain"].ToString(),
                         KioskID = ConfigurationManager.AppSettings["KioskID"].ToString(),
                         Language = ConfigurationManager.AppSettings["Language"].ToString(),
@@ -1939,14 +1954,14 @@ namespace CheckinPortal.Controllers
                         UpdateProileRequest = new Models.OWS.UpdateProfile()
                         {
                             ProfileID = uploadGuestDocumentModel.ProfileID,
-                            DOB = documentModel.BirthDate.Value,
+                            DOB = (documentModel.BirthDate.HasValue && documentModel.BirthDate.Value.Year > 1900)
+                                ? documentModel.BirthDate.Value.Date : (DateTime?)null,
 
                             DocumentNumber = documentModel.DocumentNumber,
-                            DocumentType = !string.IsNullOrWhiteSpace(documentModel?.DocumentType)
-                 ? await GetDocumentByCode(documentModel.DocumentType) : null,
-                            Gender = !string.IsNullOrEmpty(documentModel.Gender) ? (documentModel.Gender.ToUpper().Equals("MALE") ? "Male" : (documentModel.Gender.ToUpper().Equals("FEMALE") ? "Female" : null)) : null,
+                            DocumentType = operaPassportDocumentType,
+                            Gender = !string.IsNullOrEmpty(documentModel.Gender) ? (documentModel.Gender.ToUpper().Equals("MALE") || documentModel.Gender.ToUpper().Equals("M") ? "Male" : (documentModel.Gender.ToUpper().Equals("FEMALE") || documentModel.Gender.ToUpper().Equals("F") ? "Female" : null)) : null,
                             IssueCountry = !string.IsNullOrWhiteSpace(documentModel?.IssueCountry) ? await GetCountryByCode(documentModel.IssueCountry) : null,
-                            IssueDate = documentModel.IssueDate,
+                            IssueDate = documentModel.IssueDate.HasValue && documentModel.IssueDate.Value.Year > 1900 ? documentModel.IssueDate : null,
                             Nationality = !string.IsNullOrWhiteSpace(documentModel?.Nationality) ? await GetCountryByCode(documentModel.Nationality) : null
 
 
@@ -2118,6 +2133,7 @@ namespace CheckinPortal.Controllers
                     + "; Nationality=" + (documentModel.Nationality ?? "")
                     + "; AddressPresent=" + !string.IsNullOrWhiteSpace(documentModel.AddressLine1)
                     + "; ExpiryPresent=" + (documentModel.ExpiryDate.HasValue && documentModel.ExpiryDate.Value.Year > 1900)
+                    + "; DobPresent=" + (documentModel.BirthDate.HasValue && documentModel.BirthDate.Value.Year > 1900)
                     + "; DocNumberTail=" + RedactDocumentNumberTail(documentModel.DocumentNumber)
                     + "; ProfileDetailID=" + uploadGuestDocumentModel.ProfileDetailID,
                     $"{uploadGuestDocumentModel.ReservationID}", ActionName, ActionGroup);
@@ -3957,6 +3973,28 @@ namespace CheckinPortal.Controllers
             return "";
         }
 
+        /// <summary>
+        /// Parse OCR/document DOB strings. Accepts yyyy-MM-dd and common dd/MM/yyyy variants.
+        /// </summary>
+        private static bool TryParseDocumentDate(string dateText, out DateTime date)
+        {
+            date = new DateTime(1900, 01, 01);
+            if (string.IsNullOrWhiteSpace(dateText))
+                return false;
+
+            string[] formats = { "yyyy-MM-dd", "dd/MM/yyyy", "d/M/yyyy", "dd-MM-yyyy", "d-M-yyyy", "MM/dd/yyyy" };
+            if (DateTime.TryParseExact(dateText.Trim(), formats,
+                System.Globalization.CultureInfo.InvariantCulture,
+                System.Globalization.DateTimeStyles.None, out date)
+                && date.Year > 1900)
+            {
+                return true;
+            }
+
+            return DateTime.TryParse(dateText.Trim(), System.Globalization.CultureInfo.InvariantCulture,
+                System.Globalization.DateTimeStyles.None, out date) && date.Year > 1900;
+        }
+
         public async Task<string> GetStateById(int Id)
         {
             var StateList = await new MastersLogics().GetStateList();
@@ -4042,11 +4080,11 @@ namespace CheckinPortal.Controllers
 
 
 
-                session.GuestSignedSignature = await 
+                session.GuestSignedSignature = await
                     GetReservationDocumentById(
                         session.ReservationNumber,
                         "Signature");
-               // DataTable dtres = await new CloudHelper().FetchReservationDetailsByReferenceNumber(""session.ReservationNumber);
+                // DataTable dtres = await new CloudHelper().FetchReservationDetailsByReferenceNumber(""session.ReservationNumber);
                 var reservationsDt = await new CloudHelper().FetchReservationDetailsByReferenceNumber(session.ReservationNumber, new APIRequestModel { RequestObject = session.ReservationNumber }, ActionGroup, ConfigurationManager.AppSettings
                     ["APIBaseUrl"].ToString());
                 if (reservationsDt?.responseData != null)
@@ -4060,14 +4098,127 @@ namespace CheckinPortal.Controllers
                     //var row = dtres.Rows[0];
 
                     operaReservation.VisitPurposeCode = string.IsNullOrEmpty(reservation.VisitPurposeCode) ? null : reservation.VisitPurposeCode;
-                   
+
 
                     operaReservation.ExpectedArrivalTime = reservation.ETA;
                     if (!string.IsNullOrWhiteSpace(reservation.FlightNo))
                         operaReservation.FlightNo = reservation.FlightNo;
                 }
+                #region modify flight no in opera
+                Models.OWS.OwsResponseModel owsResponse = await new CloudHelper().ModifyBooking(reservation.ReservationNameID, new Models.OWS.OwsRequestModel()
+                {
+                    ChainCode = ConfigurationManager.AppSettings["ChainCode"].ToString(),
+                    DestinationEntityID = ConfigurationManager.AppSettings["DestinationEntityID"].ToString(),
+                    DestinationSystemType = ConfigurationManager.AppSettings["DestinationSystemType"].ToString(),
+                    HotelDomain = ConfigurationManager.AppSettings["HotelDomain"].ToString(),
+                    KioskID = ConfigurationManager.AppSettings
+  ["KioskID"].ToString(),
+                    LegNumber = "1",
+                    Language = ConfigurationManager.AppSettings
+  ["Language"].ToString(),
+                    Password = ConfigurationManager.AppSettings
+  ["Password"].ToString(),
+                    Username = ConfigurationManager.AppSettings
+  ["Username"].ToString(),
+                    SystemType = ConfigurationManager.AppSettings
+  ["SystemType"].ToString(),
+                    modifyBookingRequest = new Models.OWS.ModifyBookingRequest()
+                    {
+                        ReservationNumber = reservation.ReservationNumber,
+                        ReservationNameID = reservation.ReservationNameID,
+                        isTransportInfoSpecified = true,
+                        ArrivalTransport = new TransportInfo
+                        {
+                            TransportRequired = true,
+                            // Flight number → OWS TransportInfo.id (Opera Transportation Number), not carrierCode
+                            TransportNumber = reservation.FlightNo
+                        }
+                    },
+                    FetchBookingRequest = new Models.OWS.FetchBookingRequestModel()
+                    {
+                        ReservationNumber = reservation.ReservationNumber,
+                        ReservationNameID = reservation.ReservationNameID
+                    }
+                }, "pre checked-in fetch", ConfigurationManager.AppSettings
+  ["APIBaseUrl"].ToString());
+                if (!owsResponse.result)
+                {
+                    new LogHelper().Log("Updating Arrival Transport failed with reason : - " + owsResponse.responseMessage, session.ReservationNameID, ActionName, ActionGroup);
+                    new LogHelper().Warn("Updating Arrival Transport failed with reason : - " + owsResponse.responseMessage, session.ReservationNameID, ActionName, ActionGroup);
+                }
+                else
+                { 
+                    new LogHelper().Log("Updating Arrival Transport succeeded ", "", ActionName, ActionGroup);
 
-                operaReservation.GuestSignature = session.GuestSignedSignature;
+                    new LogHelper().Log("Updating Arrival Transport in the reservation succeeded", session.ReservationNameID, ActionName, ActionGroup);
+                    new LogHelper().Warn("Updating Arrival Transport in the reservation succeeded", session.ReservationNameID, ActionName, ActionGroup);
+                   
+                }
+            #endregion
+                #region modify ETA in opera (ResGuest.arrivalTime via ModifyBooking isETASpecified)
+                // Separate ModifyBooking call: OperaServiceLib returns early after ETA success, so ETA must not share the transport request.
+                bool etaPresent = reservation != null
+                    && reservation.ETA.HasValue
+                    && reservation.ETA.Value.ToString("HH:mm") != "00:00";
+                new LogHelper().Log(
+                    etaPresent ? "ETA present for Opera update: true" : "ETA present for Opera update: false",
+                    session.ReservationNameID, ActionName, ActionGroup);
+                if (etaPresent)
+                {
+                    // Local ETA is time-only (often stored/serialized as 1900-01-01T HH:mm).
+                    // Combine with reservation ArrivalDate for a stable DateTime; Cloud writes time to ResGuest.arrivalTime.
+                    DateTime etaForOpera = reservation.ETA.Value;
+                    if (etaForOpera.Year <= 1900
+                        && reservation.ArrivalDate.HasValue
+                        && reservation.ArrivalDate.Value.Year > 1900)
+                    {
+                        DateTime arrival = reservation.ArrivalDate.Value;
+                        etaForOpera = new DateTime(
+                            arrival.Year, arrival.Month, arrival.Day,
+                            etaForOpera.Hour, etaForOpera.Minute, etaForOpera.Second);
+                    }
+                    new LogHelper().Log(
+                        "ETA for Opera ResGuest.arrivalTime: " + etaForOpera.ToString("yyyy-MM-dd HH:mm:ss"),
+                        session.ReservationNameID, ActionName, ActionGroup);
+                    Models.OWS.OwsResponseModel etaOwsResponse = await new CloudHelper().ModifyBooking(reservation.ReservationNameID, new Models.OWS.OwsRequestModel()
+                    {
+                        ChainCode = ConfigurationManager.AppSettings["ChainCode"].ToString(),
+                        DestinationEntityID = ConfigurationManager.AppSettings["DestinationEntityID"].ToString(),
+                        DestinationSystemType = ConfigurationManager.AppSettings["DestinationSystemType"].ToString(),
+                        HotelDomain = ConfigurationManager.AppSettings["HotelDomain"].ToString(),
+                        KioskID = ConfigurationManager.AppSettings["KioskID"].ToString(),
+                        LegNumber = "1",
+                        Language = ConfigurationManager.AppSettings["Language"].ToString(),
+                        Password = ConfigurationManager.AppSettings["Password"].ToString(),
+                        Username = ConfigurationManager.AppSettings["Username"].ToString(),
+                        SystemType = ConfigurationManager.AppSettings["SystemType"].ToString(),
+                        modifyBookingRequest = new Models.OWS.ModifyBookingRequest()
+                        {
+                            ReservationNumber = reservation.ReservationNumber,
+                            ReservationNameID = reservation.ReservationNameID,
+                            isETASpecified = true,
+                            ETA = etaForOpera
+                        },
+                        FetchBookingRequest = new Models.OWS.FetchBookingRequestModel()
+                        {
+                            ReservationNumber = reservation.ReservationNumber,
+                            ReservationNameID = reservation.ReservationNameID
+                        }
+                    }, "pre checked-in fetch", ConfigurationManager.AppSettings["APIBaseUrl"].ToString());
+                    if (etaOwsResponse == null || !etaOwsResponse.result)
+                    {
+                        string etaFailReason = etaOwsResponse != null ? etaOwsResponse.responseMessage : "null response";
+                        new LogHelper().Log("Updating ETA (arrivalTime) failed - " + etaFailReason, session.ReservationNameID, ActionName, ActionGroup);
+                        new LogHelper().Warn("Updating ETA (arrivalTime) failed - " + etaFailReason, session.ReservationNameID, ActionName, ActionGroup);
+                    }
+                    else
+                    {
+                        new LogHelper().Log("Updating ETA (arrivalTime) sent: true", session.ReservationNameID, ActionName, ActionGroup);
+                        new LogHelper().Log("Updating ETA in the reservation succeeded", session.ReservationNameID, ActionName, ActionGroup);
+                    }
+                }
+                #endregion
+            operaReservation.GuestSignature = session.GuestSignedSignature;
                 new LogHelper().Log("VisitPurposeCode :- " + operaReservation.VisitPurposeCode+ " GuestSignature :- " + operaReservation.GuestSignature, session.ReservationNameID, ActionName, ActionGroup);
                 Models.OWS.OwsResponseModel regcardResponse = await new CloudHelper().GetRegistrationCard(session.ReservationNameID, new Models.OWS.OwsRequestModel()
                 {
@@ -4166,6 +4317,7 @@ namespace CheckinPortal.Controllers
                 RequestObject = new ReservationStatusRequestModel
                 {
                     ReservationID = session.ReservationNameID,
+                    ReservationNameID = session.ReservationNameID,
                     Type = "uploadComplete"
                 }
             }, "Pre-Checkin", ConfigurationManager.AppSettings["APIBaseUrl"].ToString());
@@ -4212,6 +4364,7 @@ namespace CheckinPortal.Controllers
                     RequestObject = new ReservationStatusRequestModel
                     {
                         ReservationID = session.ReservationNameID,
+                        ReservationNameID = session.ReservationNameID,
                         Type = "PreCheckinComplete"
                     }
                 }, "Pre-Checkin", ConfigurationManager.AppSettings["APIBaseUrl"].ToString());
@@ -4561,9 +4714,17 @@ namespace CheckinPortal.Controllers
 
                 if (reservationfromopera != null && reservationfromopera.Count > 0)
                 {
+                    var operaFirst = reservationfromopera.First();
+                    int? adultCount = LinkExpiryHelper.ResolveAdultCount(operaFirst.Adults, reservations.Adultcount);
+                    if (!LinkExpiryHelper.HasEligibleAdultCount(adultCount))
+                    {
+                        Helpers.LogHelper.Instance.Warn(
+                            $"Blocked precheckin (IndexPayments) — adult count is zero or missing (sharer). Adults={adultCount}. Res#={confirmationNo}",
+                            reservations.ReservationNameID ?? confirmationNo, ActionName, ActionGroup);
+                        return ShowLinkExpiry(LinkExpiryHelper.ZeroAdults, confirmationNo, ActionName, ActionGroup);
+                    }
 
-                    if (reservationfromopera.First().Adults != null && reservationfromopera.First().Adults.Value > 0)
-                        operaReservation = reservationfromopera.FirstOrDefault();
+                    operaReservation = operaFirst;
                     Helpers.LogHelper.Instance.Log($"Reservation details fetched from opera {JsonConvert.SerializeObject(operaReservation, Formatting.Indented)} ", $"{reservations.ReservationNameID}", ActionName, ActionGroup);
 
 
@@ -5432,6 +5593,22 @@ namespace CheckinPortal.Controllers
                     });
                 }
 
+                // Sharer / adult count 0 — block before push or redirect to precheckin/precheckout
+                int? adultCount = LinkExpiryHelper.ResolveAdultCount(operaRes?.Adults, cloudRes?.Adultcount);
+                if (!LinkExpiryHelper.HasEligibleAdultCount(adultCount))
+                {
+                    string zeroAdultsMsg = LinkExpiryHelper.GetGuestMessage(LinkExpiryHelper.ZeroAdults).Replace("\n", " ");
+                    Helpers.LogHelper.Instance.Warn(
+                        $"Search reservation blocked. Reason=ZeroAdults (sharer). Adults={adultCount}. Res#={reservationNumber}",
+                        reservationNumber, ActionName, ActionGroup);
+                    return Json(new
+                    {
+                        result = false,
+                        redirectUrl = string.Empty,
+                        errorMessage = zeroAdultsMsg
+                    });
+                }
+
                 // Secondary signal: tbProcessTracking (email/completion history) — does not override clear Opera status
                 string trackingHint = await ResolveProcessTrackingFlowHintAsync(reservationNumber, ActionName, ActionGroup, apiBaseUrl);
                 string flow = ResolveSearchFlow(status, trackingHint);
@@ -5874,16 +6051,28 @@ namespace CheckinPortal.Controllers
             }
             #region Sending Email
             new LogHelper().Log("Sending confirmation email", SessionData.OperaReservation.ReservationNameID, "FetchPreCheckedInReservation", "pre checked-in fetch");
-            if (!string.IsNullOrEmpty(SessionData.OperaReservation.GuestProfiles[0].Email[0].email))
+            string toEmail = null;
+            if (SessionData.OperaReservation.GuestProfiles != null && SessionData.OperaReservation.GuestProfiles.Count > 0
+                && SessionData.OperaReservation.GuestProfiles[0].Email != null && SessionData.OperaReservation.GuestProfiles[0].Email.Count > 0)
+            {
+                var emails = SessionData.OperaReservation.GuestProfiles[0].Email;
+                var primary = emails.FirstOrDefault(e => e.primary != null && e.primary.Value && !string.IsNullOrWhiteSpace(e.email));
+                toEmail = primary != null
+                    ? primary.email
+                    : emails.FirstOrDefault(e => !string.IsNullOrWhiteSpace(e.email))?.email;
+            }
+
+            if (!string.IsNullOrWhiteSpace(toEmail))
             {
                 TextInfo textInfo = new CultureInfo("en-US", false).TextInfo;
+                var guestProfile = SessionData.OperaReservation.GuestProfiles[0];
                 Models.Emails.EmailResponse emailResponse = await new CloudHelper().SendEmail(SessionData.OperaReservation.ReservationNameID, new Models.Emails.EmailRequest()
                 {
                     FromEmail = ConfigurationManager.AppSettings["PreArrivalConfirmationEmail"].ToString(),
-                    ToEmail = SessionData.OperaReservation.GuestProfiles[0].Email[0].email,
-                    GuestName = "" + (!string.IsNullOrEmpty(SessionData.OperaReservation.GuestProfiles[0].FirstName) ? textInfo.ToTitleCase(SessionData.OperaReservation.GuestProfiles[0].FirstName) + " " : "")
-                                    + (!string.IsNullOrEmpty(SessionData.OperaReservation.GuestProfiles[0].MiddleName) ? textInfo.ToTitleCase(SessionData.OperaReservation.GuestProfiles[0].MiddleName) + " " : "")
-                                    + (!string.IsNullOrEmpty(SessionData.OperaReservation.GuestProfiles[0].LastName) ? textInfo.ToTitleCase(SessionData.OperaReservation.GuestProfiles[0].LastName) : ""),
+                    ToEmail = toEmail,
+                    GuestName = "" + (!string.IsNullOrEmpty(guestProfile.FirstName) ? textInfo.ToTitleCase(guestProfile.FirstName) + " " : "")
+                                    + (!string.IsNullOrEmpty(guestProfile.MiddleName) ? textInfo.ToTitleCase(guestProfile.MiddleName) + " " : "")
+                                    + (!string.IsNullOrEmpty(guestProfile.LastName) ? textInfo.ToTitleCase(guestProfile.LastName) : ""),
 
                     Subject = ConfigurationManager.AppSettings["PreArrivalConfirmationEmailSubject"].ToString(),
                     confirmationNumber = SessionData.OperaReservation.ReservationNumber,
@@ -5900,7 +6089,7 @@ namespace CheckinPortal.Controllers
                     new LogHelper().Warn("Failed to send confirmation email with reason :- " + emailResponse.responseMessage, SessionData.OperaReservation.ReservationNameID, "FetchPreCheckedInReservation", "pre checked-in fetch");
                 }
                 else
-                    new LogHelper().Log("Email send successfully", SessionData.OperaReservation.ReservationNameID, "FetchPreCheckedInReservation", "pre checked-in fetch");
+                    new LogHelper().Log("Email send successfully to " + toEmail, SessionData.OperaReservation.ReservationNameID, "FetchPreCheckedInReservation", "pre checked-in fetch");
             }
             else
             {

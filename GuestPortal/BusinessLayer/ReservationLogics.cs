@@ -620,37 +620,43 @@ ActionGroup);
             {
                 try
                 {
-                    APIRequestModel _APIRequestModel = new APIRequestModel();
-                var sendGuestRequest = new APIRequestModel()
-                {
-                    RequestObject = new
+                    int reservationDetailId;
+                    if (!int.TryParse(ReservationID, out reservationDetailId) || reservationDetailId <= 0)
                     {
-                        ReservationID = ReservationID,
-                        EmailAddress = emailID
+                        new LogHelper().Debug("UpdatePrimaryGuestEmail skipped — invalid ReservationID: " + ReservationID, ReservationID ?? "", "UpdatePrimaryGuestEmail", ActionGroup);
+                        return false;
+                    }
 
-                    },
-                };
-                _APIRequestModel = sendGuestRequest;
-                var localResponse = await new CloudHelper().UpdateCheckoutFlag("", _APIRequestModel, ActionGroup, AppSettingsManager.GetDecryptedSetting("APIBaseUrl"));
-                if (!localResponse)
-                {
-                    new LogHelper().Debug("Failed to InsertFeedback using web api due to HTTP error : " + localResponse, ReservationID.ToString(), "InsertFeedback", ActionGroup);
-                    //return null;
-
+                    var sendGuestRequest = new APIRequestModel()
+                    {
+                        RequestObject = new
+                        {
+                            ReservationID = reservationDetailId,
+                            EmailAddress = emailID
+                        },
+                    };
+                    var localResponse = await new CloudHelper().UpdatePrimaryGuestEmail(
+                        reservationDetailId.ToString(),
+                        sendGuestRequest,
+                        ActionGroup,
+                        AppSettingsManager.GetDecryptedSetting("APIBaseUrl"));
+                    if (!localResponse)
+                    {
+                        new LogHelper().Debug("Failed UpdatePrimaryGuestEmail using web api", ReservationID, "UpdatePrimaryGuestEmail", ActionGroup);
+                    }
+                    else
+                    {
+                        new LogHelper().Debug("Successfully UpdatePrimaryGuestEmail", ReservationID, "UpdatePrimaryGuestEmail", ActionGroup);
+                    }
+                    return localResponse;
                 }
-                else
+                catch (Exception ex)
                 {
-                    new LogHelper().Debug("Successfully Inserted Feedback : " + localResponse, ReservationID.ToString(), "InsertFeedback", ActionGroup);
-                }
-                return localResponse;
-                }
-                catch
-                {
+                    new LogHelper().Error(ex, ReservationID ?? "", "UpdatePrimaryGuestEmail", ActionGroup);
                     return false;
                 }
             });
-            return false;
-
+            return true;
         }
 
         public async Task<List<ReservationPackageModel>> GetReservationPackages(int ReservationDetailID)
@@ -869,8 +875,8 @@ ActionGroup);
                 var localResponse = await new CloudHelper().PushSearchedReservation("", _APIRequestModel, ActionGroup, AppSettingsManager.GetDecryptedSetting("APIBaseUrl"));
                 if (!localResponse.result)
                 {
-                    new LogHelper().Log("Failed to pushing Searched Reservation with reason :- " + localResponse.responseMessage, SessionData.OperaReservation.ReservationNameID, "FetchPreCheckedInReservation", "pre checked-in fetch");
-                    new LogHelper().Warn("Failed to pushing Searched Reservation with reason :- " + localResponse.responseMessage, SessionData.OperaReservation.ReservationNameID, "", ActionGroup);
+                    new LogHelper().Log("Failed to pushing Searched Reservation with reason :- " + localResponse.responseMessage, ConfirmationNo, "FetchPreCheckedInReservation", "pre checked-in fetch");
+                    new LogHelper().Warn("Failed to pushing Searched Reservation with reason :- " + localResponse.responseMessage, ConfirmationNo, "", ActionGroup);
                     return false;
                 }
 

@@ -23,6 +23,24 @@
   font-weight: bold;
   font-style: normal;
 }
+@font-face {
+  font-family: 'GT Super Display';
+  src: url('../fonts/GT-Super-Display-Regular.woff2') format('woff2'),
+      url('../fonts/GT-Super-Display-Regular.woff') format('woff'),
+      url('../fonts/GT-Super-Display-Regular.ttf') format('truetype'),
+      url('../fonts/GT-Super-Display-Regular.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'GT Super Display';
+  src: url('../fonts/GT-Super-Display-Bold.woff2') format('woff2'),
+      url('../fonts/GT-Super-Display-Bold.woff') format('woff'),
+      url('../fonts/GT-Super-Display-Bold.ttf') format('truetype'),
+      url('../fonts/GT-Super-Display-Bold.otf') format('opentype');
+  font-weight: 700;
+  font-style: normal;
+}
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 * {
   box-sizing: border-box;
@@ -120,12 +138,27 @@ position: fixed;width: 100%;z-index:5;height: 110px;
   font-size: 13px;
   color: #5f6062;
 }
+/* Light hover/active/selected — dark text stays readable (residence, state, nationality) */
+.bootstrap-select .dropdown-menu .dropdown-item:hover,
+.bootstrap-select .dropdown-menu .dropdown-item:focus,
+.bootstrap-select .dropdown-menu .dropdown-item.active,
+.bootstrap-select .dropdown-menu .dropdown-item:active,
+.bootstrap-select .dropdown-menu li.selected .dropdown-item,
+.bootstrap-select .dropdown-menu li a:hover,
+.bootstrap-select .dropdown-menu li a:focus,
+.bootstrap-select .dropdown-menu li.selected a,
+.dropdown-item.active,
+.dropdown-item:active,
+.dropdown-item:hover,
+.dropdown-item:focus{
+  background: #eaf0f5;
+  color: #1e3d4c;
+}
 .chk-cu{margin-top:35px;}
 .chk-cu label{font-size: 14px;color: #000000;}
 .form-sep{border-bottom: 2px dotted #5f7992;position: relative;margin: 20px 0;}
 .form-sep img{position: absolute;right: 0;top:-17px;}
 .info{background:url("../images/info_icon.png") no-repeat ;width: 20px;height: 20px;display: inline-block;position: relative;bottom: -5px;left: 6px;}
-.dropdown-item.active, .dropdown-item:active{background: #737271;color: #ffffff;}
 
 .btn-grp{margin-top:25px;}
 .btn-grp button{font-size: 14px;text-transform: uppercase;font-family: "Inter", Arial, sans-serif;font-weight: 600;border: 0 none;padding:10px 0;width:148px;}
@@ -191,11 +224,13 @@ label.signlbl{font-family: 'Agenda-Light';font-size: 16px;text-transform: none;c
 .signature-pad--actions .buttons button{background:#37697A;color: #ffffff;border: 0 none;padding: 5px 10px;border-radius: 20px;text-transform: uppercase;}
 .signature-pad--actions .buttons button:hover{background:#1d4050;}
 .signature-pad--footer{color:#606060;}
-/* Policies signature pad: outer padding already on .signature-pad; remove inner border/trace artifact */
+/* Signature pads: outer + body inset (see signature-pad.css); no inner border/trace */
 .signature-pad--body{
     border: none;
     background: #fff;
     border-radius: 4px;
+    padding: 12px;
+    box-sizing: border-box;
     overflow: hidden;
 }
 .signature-pad--body canvas{
@@ -203,6 +238,7 @@ label.signlbl{font-family: 'Agenda-Light';font-size: 16px;text-transform: none;c
     outline: none;
     border: none;
     display: block;
+    box-sizing: border-box;
 }
 /* Excursion disclaimer participant signature pads */
 .excursion-sig-pad{
@@ -215,6 +251,8 @@ label.signlbl{font-family: 'Agenda-Light';font-size: 16px;text-transform: none;c
 }
 .excursion-sig-pad-body{
     height: 90px;
+    padding: 8px;
+    box-sizing: border-box;
     background: #fff;
     border: none;
     border-radius: 2px;
@@ -223,12 +261,13 @@ label.signlbl{font-family: 'Agenda-Light';font-size: 16px;text-transform: none;c
 .excursion-sig-pad-body canvas.excursion-part-sig{
     display: block;
     width: 100%;
-    height: 90px;
+    height: 100%;
     touch-action: none;
     border: none;
     outline: none;
     box-shadow: none;
     background: #fff;
+    box-sizing: border-box;
 }
 
 
@@ -370,15 +409,18 @@ label.signlbl{font-family: 'Agenda-Light';font-size: 16px;text-transform: none;c
 
 .user-list{text-align: center;}
 .user-list ul{margin:0;padding: 0;display: flex;flex-wrap: wrap;justify-content: center;align-items: stretch;}
-.user-list ul li{display: inline-flex;flex-direction: column;align-items: center;background: #f3f5f3;border-radius:20px;padding:30px 25px;font-family: "Inter", Arial, sans-serif;font-weight: 600;margin: 20px;width:215px;min-height: 280px;vertical-align: top;box-sizing: border-box;
+.user-list ul li{display: inline-flex;flex-direction: column;align-items: center;background: #f3f5f3;border-radius:20px;padding:30px 25px;font-family: "Inter", Arial, sans-serif;font-weight: 600;margin: 20px;width:215px;min-height: 300px;vertical-align: top;box-sizing: border-box;
   border: 1px solid #e3e3e3;
   -webkit-box-shadow: -3px 12px 15px -10px rgba(0,0,0,0.43);
   -moz-box-shadow: -3px 12px 15px -10px rgba(0,0,0,0.43);
   box-shadow: -3px 12px 15px -10px rgba(0,0,0,0.43);
 }
-.user-list ul li label{display: block;text-transform: uppercase;font-size: 16px; font-family: "Inter", Arial, sans-serif;font-weight: 500;min-height: 52px;line-height: 1.3;margin-bottom: 10px;}
+/* Fixed title block so avatars stay vertically aligned across cards (long names wrap/clamp). */
+.user-list ul li label{display: block;width: 100%;box-sizing: border-box;text-transform: uppercase;font-size: 14px; font-family: "Inter", Arial, sans-serif;font-weight: 500;height: 88px;min-height: 88px;max-height: 88px;line-height: 1.3;margin-bottom: 10px;overflow: hidden;word-break: break-word;overflow-wrap: anywhere;}
+.user-list ul li label small{font-size: 12px;line-height: 1.3;}
 .user-list ul li .pic{margin-bottom:15px;flex-shrink: 0;}
-.user-list ul li a{background:#37697A;display: flex;align-items: center;justify-content: center;color: #fff;padding:12px 20px;font-size: 12px;border-radius:20px;width: 100%;min-height: 44px;margin-top: auto;box-sizing: border-box;}
+.user-list ul li a{background:#37697A;display: flex;align-items: center;justify-content: center;gap: 8px;color: #fff;padding:12px 20px;font-size: 12px;border-radius:20px;width: 100%;min-height: 44px;margin-top: auto;box-sizing: border-box;}
+.user-list ul li a i{flex-shrink: 0;line-height: 1;margin: 0;}
 .user-list ul li a:hover{text-decoration: none;background:#19333f;}
 .user-list ul li.sucess{background: #f0fff2;}
 .user-list ul li.sucess a {
@@ -429,15 +471,54 @@ width:150px;padding:58px 0;margin: 0 auto;content:''!important;word-break: break
 .thank-you-actions .thank-you-btn:hover{text-decoration:none;color:#ffffff;}
 
 
-/*modal*/
-.cstm-modal .modal-content{border-radius:20px;}
+/*modal — typography aligned with portal form/body UI (labels/body ~13px, titles ~14px) */
+.cstm-modal .modal-content{border-radius:20px;font-size: 13px;line-height: 1.45;}
 .cstm-modal .modal-header{background: none;color:#000000;border-radius: 0;font-family: "Inter", Arial, sans-serif;font-weight: 600;text-transform: uppercase;}
-.cstm-modal .modal-header h5{font-size: 16px;}
+.cstm-modal .modal-header h5,
+.cstm-modal .modal-title{
+  font-size: 14px !important;
+  line-height: 1.35;
+  font-weight: 600;
+}
 .cstm-modal .close{opacity:1;}
 .cstm-modal .close_icon{background:url("../images/close_icon.png");height:23px;width: 23px;display: block;}
-.cstm-modal .modal-body p{font-size: 14px;color: #5f6062;}
+/*
+  Alert/confirm bodies often use Bootstrap headings (h5 ~1.25rem / ~20px + semi-bold).
+  Covers #exampleModal2 #messageContentFolio (invoice MESSAGE), #customMessageModalMessage,
+  #paymentStatusMessage, paymentStatusPopup, contactFO, etc.
+*/
+.cstm-modal .modal-body,
+.cstm-modal .modal-body p,
+.cstm-modal .modal-body label,
+.cstm-modal .modal-body li,
+.cstm-modal .modal-body h1,
+.cstm-modal .modal-body h2,
+.cstm-modal .modal-body h3,
+.cstm-modal .modal-body h4,
+.cstm-modal .modal-body h5,
+.cstm-modal .modal-body h6,
+.cstm-modal .modal-body .h5,
+.cstm-modal .quest h1,
+.cstm-modal .quest h2,
+.cstm-modal .quest h3,
+.cstm-modal .quest h4,
+.cstm-modal .quest h5,
+.cstm-modal .quest h6,
+#messageContentFolio,
+#customMessageModalMessage,
+#paymentStatusMessage,
+#exampleModal2 .quest h5,
+#paymentStatusPopup .quest h5,
+#contactFOModal .quest h5,
+#customMessageModal .quest h5 {
+  font-size: 13px !important;
+  line-height: 1.45 !important;
+  color: #5f6062 !important;
+  font-weight: 400 !important;
+  text-transform: none !important;
+}
 .cstm-modal .modal-body p a{font-weight: 600;color: #000;}
-/* Modal / confirm OK · Continue · Yes · No · Cancel — match UPLOAD/NEXT (body text stays sentence case) */
+/* Modal / confirm OK · Continue · Yes · No · Cancel — match portal control size */
 .cstm-modal .btns button,
 .cstm-modal .modal-footer button,
 .cstm-modal .button-wrapper1 button,
@@ -457,6 +538,102 @@ button.btn_cancel,
   text-transform: uppercase;
   font-family: "Inter", Arial, sans-serif;
   font-weight: 600;
+  font-size: 13px !important;
+}
+/* SweetAlert2 — default title 1.875em / content 1.125em reads oversized vs portal UI */
+.swal2-popup {
+  font-size: 13px !important;
+}
+.swal2-popup .swal2-title {
+  font-size: 14px !important;
+  font-weight: 600;
+}
+.swal2-popup .swal2-content,
+.swal2-popup #swal2-content,
+.swal2-popup .swal2-html-container {
+  font-size: 13px !important;
+}
+.swal2-popup .swal2-styled.swal2-confirm,
+.swal2-popup .swal2-styled.swal2-cancel,
+.swal2-popup .swal2-styled.swal2-deny {
+  font-size: 13px !important;
+}
+/* Multi-tab lock overlay (inline markup; keep in sync with cstm-modal) */
+#gpTabLockOverlay h5 {
+  font-size: 14px;
+  font-weight: 600;
+  font-family: "Inter", Arial, sans-serif;
+  text-transform: uppercase;
+  color: #000;
+}
+#gpTabLockOverlay p {
+  font-size: 13px !important;
+  line-height: 1.45;
+  color: #5f6062;
+}
+
+/* Confirmation / validation OK — brand teal pill (match NEXT / SEND / thank-you OK) */
+.cstm-modal .button-wrapper1 button.btn_ok,
+.cstm-modal .button-wrapper1 button.yes,
+.cstm-modal .btns button.yes,
+.cstm-modal .btns button.btn_ok,
+.cstm-modal .modal-footer button.btn_ok,
+.cstm-modal .modal-footer button.yes,
+.cstm-modal button.btn_ok,
+.cstm-modal button.yes,
+.cstm-modal button.btnstyle.blue {
+  background: #37697A;
+  color: #ffffff;
+  border: 1px solid #37697A;
+  border-radius: 24px;
+  min-width: 100px;
+  padding: 8px 20px;
+}
+.cstm-modal .button-wrapper1 button.btn_ok:hover,
+.cstm-modal .button-wrapper1 button.yes:hover,
+.cstm-modal .btns button.yes:hover,
+.cstm-modal .btns button.btn_ok:hover,
+.cstm-modal .modal-footer button.btn_ok:hover,
+.cstm-modal .modal-footer button.yes:hover,
+.cstm-modal button.btn_ok:hover,
+.cstm-modal button.yes:hover,
+.cstm-modal button.btnstyle.blue:hover {
+  background: #1e3d4c;
+  color: #ffffff;
+  border-color: #1e3d4c;
+}
+
+/* Secondary Cancel / No — keep grey */
+.cstm-modal .button-wrapper1 button.btn_cancel,
+.cstm-modal .button-wrapper1 button.no,
+.cstm-modal .button-wrapper1 button.style2,
+.cstm-modal .btns button.no,
+.cstm-modal .btns button.btn_cancel,
+.cstm-modal .modal-footer button.btn_cancel,
+.cstm-modal .modal-footer button.no,
+.cstm-modal button.btn_cancel,
+.cstm-modal button.no,
+.cstm-modal button.btnstyle.grey {
+  background: #acacac;
+  color: #ffffff;
+  border: 1px solid #acacac;
+  border-radius: 24px;
+  min-width: 100px;
+  padding: 8px 20px;
+}
+.cstm-modal .button-wrapper1 button.btn_cancel:hover,
+.cstm-modal .button-wrapper1 button.no:hover,
+.cstm-modal .button-wrapper1 button.style2:hover,
+.cstm-modal .btns button.no:hover,
+.cstm-modal .btns button.btn_cancel:hover,
+.cstm-modal .modal-footer button.btn_cancel:hover,
+.cstm-modal .modal-footer button.no:hover,
+.cstm-modal button.btn_cancel:hover,
+.cstm-modal button.no:hover,
+.cstm-modal button.btnstyle.grey:hover {
+  background: #969696;
+  border-color: #969696;
+  color: #ffffff;
 }
 
 
@@ -466,16 +643,86 @@ button.btn_cancel,
 .bill-view{max-width:400px;}
 .bill-view .modal-content{border-radius: 0;}
 .bill-view  .modal-body{padding: 0;}
-.bill-view .modal-header h5{font-size: 18px;}
+.bill-view .modal-header h5{font-size: 14px;}
 .bill-view .button-wrapper button{margin: 0 10px;}
  
 .privacy-model{max-width: 640px;}
+
+/* Policies Terms & Conditions modal — Kuramathi brand fonts (GT Super + Inter) */
+#termsAndConditionModal .modal-dialog.privacy-model{
+  max-width: 720px;
+}
+#termsAndConditionModal .modal-title{
+  font-family: "GT Super Display", "Inter", Arial, sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  text-transform: none;
+  letter-spacing: 0.01em;
+}
+#termsAndConditionModal .modal-body.terms-conditions-body,
+#termsAndConditionModal .terms-conditions-content{
+  font-family: "Inter", Arial, sans-serif;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #5f6062;
+}
+#termsAndConditionModal .modal-body.terms-conditions-body{
+  max-height: 70vh;
+  overflow-y: auto;
+}
+#termsAndConditionModal .terms-conditions-content{
+  overflow: visible;
+}
+#termsAndConditionModal .terms-conditions-content .terms-intro{
+  font-weight: 600;
+  color: #000000;
+  margin-bottom: 12px;
+}
+#termsAndConditionModal .terms-conditions-content .terms-list{
+  list-style: none;
+  padding-left: 0;
+  margin: 0 0 12px 0;
+}
+#termsAndConditionModal .terms-conditions-content .terms-list > li{
+  margin-bottom: 10px;
+}
+#termsAndConditionModal .terms-conditions-content .terms-sub{
+  list-style: none;
+  padding-left: 1.25em;
+  margin: 4px 0 0 0;
+}
+#termsAndConditionModal .terms-conditions-content .terms-closing{
+  font-weight: 600;
+  color: #000000;
+  margin-top: 14px;
+}
 .upload-model{max-width:540px;}
 
 body.modal-open {
-    overflow: inherit;
+    overflow: hidden;
     padding-right: 0 !important;
   }
+
+/* Allow confirmation modals to scroll on small screens (Bootstrap .modal defaults to overflow:hidden) */
+.cstm-modal.modal {
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Folio PDF viewer — desktop baseline; mobile scroll overrides below */
+.folio-scroll-wrap {
+  width: 100%;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.folio-scroll-wrap .folio-iframe,
+#folio iframe.folio-iframe {
+  width: 100%;
+  height: 550px;
+  border: 0;
+  display: block;
+}
 
 /*timepicker*/
 .gj-picker-md [role="header"]{background:#28476f;}
@@ -998,6 +1245,43 @@ box-shadow: -1px 13px 13px -10px rgba(0,0,0,0.35);
       min-height:48px;
     }
     .search-reservation-footer{font-size:11px;padding:10px 12px;}
+
+    /* Checkout folio: allow page vertical scroll + PDF horizontal/vertical pan */
+    html, body {
+      overflow-x: auto;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      height: auto;
+      min-height: 100%;
+    }
+    body.modal-open {
+      overflow: hidden;
+    }
+    #mainDiv.h100,
+    #mainDiv .row.h100,
+    .room-bg.h100,
+    .left-menu.h100 {
+      height: auto !important;
+      min-height: 0 !important;
+      overflow: visible !important;
+    }
+    #folio {
+      overflow: visible;
+    }
+    #folio .folio-scroll-wrap {
+      max-height: min(70vh, 480px);
+      overflow: auto;
+      -webkit-overflow-scrolling: touch;
+      touch-action: pan-x pan-y;
+      margin-bottom: 12px;
+    }
+    #folio .folio-scroll-wrap .folio-iframe,
+    #folio iframe.folio-iframe {
+      width: 100%;
+      min-width: 640px;
+      height: 480px;
+      max-width: none;
+    }
 }
 
 @media (max-width:767px) {

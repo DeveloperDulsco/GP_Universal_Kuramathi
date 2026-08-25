@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
@@ -219,6 +219,7 @@ namespace CheckinPortal.Models.OWS
     public class ModifyBookingRequest
     {
         public string ReservationNumber { get; set; }
+        public string ReservationNameID { get; set; }
         public bool? isUDFFieldSpecified { get; set; }
         public List<UDFField> uDFFields { get; set; }
         public bool? updateCreditCardDetails { get; set; }
@@ -226,6 +227,9 @@ namespace CheckinPortal.Models.OWS
         public PaymentMethod PaymentMethod { get; set; }
         public bool? isETASpecified { get; set; }
         public DateTime? ETA { get; set; }
+        public bool? isTransportInfoSpecified { get; set; }
+        public TransportInfo ArrivalTransport { get; set; }
+        public TransportInfo DepartureTransport { get; set; }
     }
 
     public class ModifyPackageRequest
@@ -357,6 +361,8 @@ namespace CheckinPortal.Models.OWS
         public string GuestSignature { get; set; }
         public bool? IsEmailSend { get; set; }
         public string VisitPurposeCode { get; set; }
+        public TransportInfo ArrivalTransport { get; set; }
+        public TransportInfo DepartureTransport { get; set; }
     }
 
     public class ReservationDocument
@@ -598,5 +604,15 @@ namespace CheckinPortal.Models.OWS
         public string Department { get; set; }
         /// <summary>Matches CloudAPI field spelling (TraceMEssage).</summary>
         public string TraceMEssage { get; set; }
+    }
+    public class TransportInfo
+    {
+        /// <summary>Flight / transportation number. Maps to OWS TransportInfo.id (Opera Transportation Number).</summary>
+        public string TransportNumber { get; set; }
+        public string TransportType { get; set; }
+        public DateTime? TransportTime { get; set; }
+        public bool TransportRequired { get; set; }
+        /// <summary>Airline carrier code only (e.g. QR). Do not put flight number here.</summary>
+        public string CarrierCode { get; set; }
     }
 }

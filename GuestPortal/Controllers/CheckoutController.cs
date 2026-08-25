@@ -114,15 +114,20 @@ namespace CheckinPortal.Controllers
 
                         if (reservation != null && !(reservation.IsPrecheckOutPMS ?? false))
                         {
-                            if (reservationfromopera.First().Adults != null && reservationfromopera.First().Adults.Value > 0)
+                            var operaFirst = reservationfromopera.First();
+                            int? adultCount = LinkExpiryHelper.ResolveAdultCount(operaFirst.Adults, reservation.Adultcount);
+                            if (LinkExpiryHelper.HasEligibleAdultCount(adultCount))
                             {
-                                SessionData.OperaReservation = reservationfromopera.First();
+                                SessionData.OperaReservation = operaFirst;
                                 isPreCheckoutComplete = reservation.IsPrecheckOutPMS ?? false;
                                 ViewBag.EcomStatus = reservation.IsEcomchekOUtPaymentStaus ?? false;
                             }
                             else
                             {
-                                return ShowLinkExpiry(LinkExpiryHelper.ReservationNotFound, ConfirmationNo, ActionName, ActionGroup);
+                                Helpers.LogHelper.Instance.Warn(
+                                    $"Blocked precheckout — adult count is zero or missing (sharer). Adults={adultCount}. Res#={ConfirmationNo}",
+                                    reservation.ReservationNameID ?? ConfirmationNo, ActionName, ActionGroup);
+                                return ShowLinkExpiry(LinkExpiryHelper.ZeroAdults, ConfirmationNo, ActionName, ActionGroup);
                             }
                         }
                     }
@@ -209,10 +214,14 @@ namespace CheckinPortal.Controllers
                     new LogHelper().Debug("Converting API json to object", SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
                     try
                     {
-                        guestFolio = JsonConvert.DeserializeObject<Models.OWS.FolioModel>(owsResponse1.responseData.ToString());
+                        guestFolio = DeserializeFolioModel(owsResponse1.responseData);
                         if (guestFolio != null)
                         {
-                            new LogHelper().Log("Current guest balance of the reservation is : " + guestFolio.BalanceAmount, SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
+                            int windowCount = guestFolio.FolioWindows != null ? guestFolio.FolioWindows.Count : 0;
+                            new LogHelper().Log(
+                                "Current guest balance of the reservation is : " + guestFolio.BalanceAmount
+                                + " (primaryGuestWindows=" + windowCount + ")",
+                                SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
                             new LogHelper().Log("Reservation folio by window fetched successfully", SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
                         }
                         else
@@ -283,26 +292,28 @@ namespace CheckinPortal.Controllers
                 }
                 #endregion
 
-                bool isAllowedforCheckout = true;
-                if (guestFolio != null && guestFolio.FolioWindows != null && guestFolio.FolioWindows.Count > 0)
-                {
+                decimal guestBalanceForUi;
+                string folioBlockReason;
+                bool guestFoliosClear = EvaluatePrimaryGuestFoliosForPreCheckout(
+                    guestFolio,
+                    SessionData.OperaReservation?.ReservationNameID,
+                    ActionName,
+                    ActionGroup,
+                    out guestBalanceForUi,
+                    out folioBlockReason);
 
-                    foreach (var folio in guestFolio.FolioWindows)
-                    {
-                        if (folio.BalanceAmount < 0)
-                        {
-                            isAllowedforCheckout = false;
-                            break;
-                        }
-                    }
-                }
-                if (!isAllowedforCheckout)
+                if (!guestFoliosClear)
                 {
-
+                    new LogHelper().Log(
+                        "Precheckout blocked on Index — " + folioBlockReason,
+                        SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
                 }
 
                 #region check
-                SessionData.OperaReservation.CurrentBalance = guestFolio.BalanceAmount;
+                // UI / Agree uses guest-window balance only (company/TA outstanding does not set this)
+                SessionData.OperaReservation.CurrentBalance = guestBalanceForUi;
+                if (guestFolio != null)
+                    guestFolio.BalanceAmount = guestBalanceForUi;
                 SessionData.FolioModel = guestFolio;
                 SessionData.SharerReservation = SessionData.OperaReservation.SharerReservations;
                 #endregion
@@ -327,7 +338,7 @@ namespace CheckinPortal.Controllers
                     checkoutReservation.ReservationNameID = SessionData.OperaReservation.ReservationNameID;
 
                     checkoutReservation.TotalAmount = SessionData.OperaReservation.TotalAmount != null ? SessionData.OperaReservation.TotalAmount.Value : 0;
-                    checkoutReservation.BalanecAmount = SessionData.OperaReservation.CurrentBalance;
+                    checkoutReservation.BalanecAmount = guestBalanceForUi;
                     checkoutReservation.PaidAmount = SessionData.OperaReservation.DepositDetail != null ? SessionData.OperaReservation.DepositDetail.Count() > 0 ? SessionData.OperaReservation.DepositDetail[0].Amount : 0 : 0;
                     if (SessionData.OperaReservation.GuestProfiles != null && SessionData.OperaReservation.GuestProfiles.Count > 0)
                     {
@@ -536,10 +547,27 @@ namespace CheckinPortal.Controllers
                             try
                             {
 
-                                guestFolio = JsonConvert.DeserializeObject<Models.OWS.FolioModel>(owsResponse1.responseData.ToString());
+                                guestFolio = DeserializeFolioModel(owsResponse1.responseData);
                                 if (guestFolio != null)
                                 {
-                                    new LogHelper().Log("Current guest balance of the reservation is : " + guestFolio.BalanceAmount, SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
+                                    decimal guestBalanceForUi;
+                                    string folioBlockReason;
+                                    EvaluatePrimaryGuestFoliosForPreCheckout(
+                                        guestFolio,
+                                        SessionData.OperaReservation?.ReservationNameID,
+                                        ActionName,
+                                        ActionGroup,
+                                        out guestBalanceForUi,
+                                        out folioBlockReason);
+                                    guestFolio.BalanceAmount = guestBalanceForUi;
+                                    SessionData.FolioModel = guestFolio;
+                                    SessionData.OperaReservation.CurrentBalance = guestBalanceForUi;
+                                    operaReservation.CurrentBalance = guestBalanceForUi;
+                                    int windowCount = guestFolio.FolioWindows != null ? guestFolio.FolioWindows.Count : 0;
+                                    new LogHelper().Log(
+                                        "Current guest balance of the reservation is : " + guestBalanceForUi
+                                        + " (primaryGuestWindows=" + windowCount + ")",
+                                        SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
                                     new LogHelper().Log("Reservation folio by window fetched successfully", SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
                                 }
                                 else
@@ -575,7 +603,8 @@ namespace CheckinPortal.Controllers
                         checkoutReservation.ReservationNameID = reservation.ReservationNameID;
 
                         checkoutReservation.TotalAmount = operaReservation.TotalAmount != null ? operaReservation.TotalAmount.Value : 0;
-                        checkoutReservation.BalanecAmount = operaReservation.CurrentBalance > 0 ? operaReservation.CurrentBalance : 0;
+                        // Guest-window balance only (negative and outstanding both surface; company/TA excluded)
+                        checkoutReservation.BalanecAmount = operaReservation.CurrentBalance;
                         checkoutReservation.PaidAmount = operaReservation.DepositDetail != null ? SessionData.OperaReservation.DepositDetail.Count() > 0 ? SessionData.OperaReservation.DepositDetail[0].Amount : 0 : 0;
 
                         var profile = await reservationLogics.GetReservationProfileList(reservation.ReservationDetailID);
@@ -837,11 +866,22 @@ namespace CheckinPortal.Controllers
 
             string ActionName = "CompletePreCheckout", ActionGroup = "Pre-Checkout";
 
-            // Non-zero balance (above or below zero): do not complete online pre check-out
-            if (SessionData.FolioModel != null && SessionData.FolioModel.BalanceAmount != 0)
+            // Block only when any primary-guest folio window is non-zero (outstanding or negative).
+            // Company/TA outstanding must NOT block — FO settles those manually.
+            decimal guestBalanceForUi;
+            string folioBlockReason;
+            bool guestFoliosClear = EvaluatePrimaryGuestFoliosForPreCheckout(
+                SessionData.FolioModel,
+                SessionData.OperaReservation?.ReservationNameID,
+                ActionName,
+                ActionGroup,
+                out guestBalanceForUi,
+                out folioBlockReason);
+
+            if (!guestFoliosClear)
             {
                 new LogHelper().Log(
-                    "Blocked CompletePreCheckout — folio balance is not zero: " + SessionData.FolioModel.BalanceAmount,
+                    "Blocked CompletePreCheckout — " + folioBlockReason,
                     SessionData.OperaReservation?.ReservationNameID, ActionName, ActionGroup);
                 return Json(new
                 {
@@ -922,6 +962,21 @@ namespace CheckinPortal.Controllers
                     if (string.IsNullOrWhiteSpace(precheckoutTraceText))
                         precheckoutTraceText = "pre-check-out completed";
 
+                    // When guest windows are clear but company/TA still has balance, note it for FO in Opera
+                    if (SessionData.FolioModel != null)
+                    {
+                        decimal guestSum = (SessionData.FolioModel.FolioWindows != null && SessionData.FolioModel.FolioWindows.Count > 0)
+                            ? SessionData.FolioModel.FolioWindows.Sum(w => w.BalanceAmount)
+                            : SessionData.FolioModel.BalanceAmount;
+                        decimal companyOrTaBalance = SessionData.FolioModel.ReservationBalance - guestSum;
+                        if (Math.Abs(companyOrTaBalance) > 0.0001m)
+                        {
+                            precheckoutTraceText = precheckoutTraceText
+                                + " — company/TA folio balance " + companyOrTaBalance.ToString("0.00")
+                                + " remains; settle company folio manually";
+                        }
+                    }
+
                     var traceResponse = await new CloudHelper().AddReservationCompletionTrace(
                         SessionData.OperaReservation.ReservationNameID,
                         SessionData.OperaReservation.ReservationNumber,
@@ -952,7 +1007,7 @@ namespace CheckinPortal.Controllers
                 RequestObject = new Models.ReservationTrackStatus()
                 {
                     ReservationNameID = SessionData.OperaReservation.ReservationNameID,
-                    ProcessType = Models.ReservationProcessType.PrecheckoutCompleted.ToString(),
+                    ProcessType = Models.ReservationProcessType.PreCheckedOutFetched.ToString(),
                     ReservationNumber = SessionData.OperaReservation.ReservationNumber,
                     ProcessStatus = "Precheckout",
                     EmailSent = false
@@ -1317,37 +1372,59 @@ namespace CheckinPortal.Controllers
             #endregion
 
             #region Sending Email
+            bool? isEmailSent = false;
             new LogHelper().Log("Sending final folio email", SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
-            if (!string.IsNullOrEmpty(SessionData.FolioBase64) && !string.IsNullOrEmpty(SessionData.FolioBase64))
+            string folioToEmail = null;
+            if (SessionData.OperaReservation.GuestProfiles != null && SessionData.OperaReservation.GuestProfiles.Count > 0
+                && SessionData.OperaReservation.GuestProfiles[0].Email != null && SessionData.OperaReservation.GuestProfiles[0].Email.Count > 0)
+            {
+                var emails = SessionData.OperaReservation.GuestProfiles[0].Email;
+                var primary = emails.FirstOrDefault(e => e.primary != null && e.primary.Value && !string.IsNullOrWhiteSpace(e.email));
+                folioToEmail = primary != null
+                    ? primary.email
+                    : emails.FirstOrDefault(e => !string.IsNullOrWhiteSpace(e.email))?.email;
+            }
+
+            if (!string.IsNullOrEmpty(SessionData.FolioBase64) && !string.IsNullOrWhiteSpace(folioToEmail))
             {
                 TextInfo textInfo = new CultureInfo("en-US", false).TextInfo;
+                var guestProfile = SessionData.OperaReservation.GuestProfiles[0];
                 Models.Emails.EmailResponse emailResponse = await new CloudHelper().SendEmail(SessionData.OperaReservation.ReservationNameID, new Models.Emails.EmailRequest()
                 {
                     FromEmail = ConfigurationManager.AppSettings["PreCheckoutFolioEmail"].ToString(),
-                    ToEmail = SessionData.OperaReservation.GuestProfiles[0].Email[0].email,
-                    GuestName = "" + (!string.IsNullOrEmpty(SessionData.OperaReservation.GuestProfiles[0].FirstName) ? textInfo.ToTitleCase(SessionData.OperaReservation.GuestProfiles[0].FirstName) + " " : "")
-                                    + (!string.IsNullOrEmpty(SessionData.OperaReservation.GuestProfiles[0].MiddleName) ? textInfo.ToTitleCase(SessionData.OperaReservation.GuestProfiles[0].MiddleName) + " " : "")
-                                    + (!string.IsNullOrEmpty(SessionData.OperaReservation.GuestProfiles[0].LastName) ? textInfo.ToTitleCase(SessionData.OperaReservation.GuestProfiles[0].LastName) : ""),
+                    ToEmail = folioToEmail,
+                    GuestName = "" + (!string.IsNullOrEmpty(guestProfile.FirstName) ? textInfo.ToTitleCase(guestProfile.FirstName) + " " : "")
+                                    + (!string.IsNullOrEmpty(guestProfile.MiddleName) ? textInfo.ToTitleCase(guestProfile.MiddleName) + " " : "")
+                                    + (!string.IsNullOrEmpty(guestProfile.LastName) ? textInfo.ToTitleCase(guestProfile.LastName) : ""),
                     Subject = ConfigurationManager.AppSettings["PreCheckoutFolioEmailSubject"].ToString(),
                     confirmationNumber = SessionData.OperaReservation.ReservationNumber,
                     displayFromEmail = ConfigurationManager.AppSettings["EmailDisplayName"].ToString(),
                     EmailType = Models.Emails.EmailType.GuestFolio,
-                    AttchmentBase64 = SessionData.FolioBase64
+                    AttchmentBase64 = SessionData.FolioBase64,
+                    AttachmentFileName = "Folio.pdf"
 
                 }, "pre checked-out fetch", ConfigurationManager.AppSettings["APIBaseUrl"].ToString());
 
                 if (!emailResponse.result)
                 {
+                    isEmailSent = false;
                     new LogHelper().Log("Failed to send confirmation email with reason :- " + emailResponse.responseMessage, SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
                     new LogHelper().Warn("Failed to send confirmation email with reason :- " + emailResponse.responseMessage, SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
                 }
                 else
-                    new LogHelper().Log("Email send successfully", SessionData.OperaReservation.ReservationNameID, "CompletePreCheckout", "pre checked-out complete");
+                {
+                    isEmailSent = true;
+                    new LogHelper().Log("Email send successfully to " + folioToEmail, SessionData.OperaReservation.ReservationNameID, "CompletePreCheckout", "pre checked-out complete");
+
+                }
             }
             else
             {
-                new LogHelper().Log("Failed to send guest folio email since email address not found from pre checked out list response", SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
-                new LogHelper().Warn("Failed to send guest folio email since email address not found from pre checked out list response", SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
+                string skipReason = string.IsNullOrEmpty(SessionData.FolioBase64)
+                    ? "folio attachment missing"
+                    : "email address not found on guest profile";
+                new LogHelper().Log("Failed to send guest folio email since " + skipReason, SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
+                new LogHelper().Warn("Failed to send guest folio email since " + skipReason, SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
             }
             #endregion
 
@@ -1361,12 +1438,12 @@ namespace CheckinPortal.Controllers
                 RequestObject = new Models.ReservationTrackStatus()
                 {
                     ReservationNameID = SessionData.OperaReservation.ReservationNameID,
-                    ProcessType = Models.ReservationProcessType.PreCheckedOutFetched.ToString(),
+                    ProcessType = Models.ReservationProcessType.PrecheckoutCompleted.ToString(),
                     ReservationNumber = SessionData.OperaReservation.ReservationNumber,
-                    ProcessStatus = "Checkout",
-                    EmailSent = false
+                    ProcessStatus = "Precheckout",
+                    EmailSent = isEmailSent
                 }
-            }, "pre checked-out fetch", ConfigurationManager.AppSettings["APIBaseUrl"].ToString());
+            }, "pre checked-out complete", ConfigurationManager.AppSettings["APIBaseUrl"].ToString());
             if (localResponse.result)
             {
                 new LogHelper().Debug("Reservation track in local DB updated successfully ", SessionData.OperaReservation.ReservationNameID, "FetchDueOutReservation", "pre checked-out fetch");
@@ -3201,6 +3278,126 @@ namespace CheckinPortal.Controllers
 
             }
 
+        }
+
+        /// <summary>
+        /// Deserializes FolioModel from Cloud API responseData (JObject, FolioModel, or JSON string).
+        /// </summary>
+        private static Models.OWS.FolioModel DeserializeFolioModel(object responseData)
+        {
+            if (responseData == null)
+                return null;
+            var asModel = responseData as Models.OWS.FolioModel;
+            if (asModel != null)
+                return asModel;
+            var asToken = responseData as JToken;
+            if (asToken != null)
+                return asToken.ToObject<Models.OWS.FolioModel>();
+            return JsonConvert.DeserializeObject<Models.OWS.FolioModel>(responseData.ToString());
+        }
+
+        /// <summary>
+        /// Precheckout folio rules (QA):
+        /// - Evaluate ALL primary-guest folio windows (ProfileID-matched FolioWindows from Opera).
+        /// - Block if any guest window balance != 0 (outstanding or negative).
+        /// - Do NOT block solely because company/TA (ReservationBalance beyond guest) has outstanding;
+        ///   log a clear trace so FO can settle company folio manually.
+        /// Returns true when precheckout may proceed; guestBalanceForUi is what Agree/IsPaymentDisabled UI uses.
+        /// </summary>
+        private static bool EvaluatePrimaryGuestFoliosForPreCheckout(
+            Models.OWS.FolioModel folio,
+            string reservationNameId,
+            string actionName,
+            string actionGroup,
+            out decimal guestBalanceForUi,
+            out string blockReason)
+        {
+            guestBalanceForUi = 0m;
+            blockReason = null;
+            var log = new LogHelper();
+
+            if (folio == null)
+            {
+                blockReason = "Folio model is null";
+                return false;
+            }
+
+            decimal companyOrTaBalance = folio.ReservationBalance - folio.BalanceAmount;
+            if (folio.FolioWindows != null && folio.FolioWindows.Count > 0)
+            {
+                decimal windowsSum = 0m;
+                Models.OWS.FolioWindow blockingWindow = null;
+                log.Log(
+                    "Evaluating " + folio.FolioWindows.Count + " primary-guest folio window(s) for precheckout",
+                    reservationNameId, actionName, actionGroup);
+
+                foreach (var window in folio.FolioWindows)
+                {
+                    windowsSum += window.BalanceAmount;
+                    log.Log(
+                        "Primary guest folio window " + (window.WindowNumber.HasValue ? window.WindowNumber.Value.ToString() : "?")
+                        + " balance=" + window.BalanceAmount,
+                        reservationNameId, actionName, actionGroup);
+
+                    // Any non-zero window blocks — do not stop after the first clear window
+                    if (blockingWindow == null && Math.Abs(window.BalanceAmount) > 0.0001m)
+                        blockingWindow = window;
+                }
+
+                // Prefer per-window sum for display; if windows net to 0 but any single window != 0, surface that amount so Agree stays blocked
+                guestBalanceForUi = windowsSum;
+                if (blockingWindow != null && Math.Abs(guestBalanceForUi) <= 0.0001m)
+                    guestBalanceForUi = blockingWindow.BalanceAmount;
+
+                companyOrTaBalance = folio.ReservationBalance - windowsSum;
+                if (Math.Abs(companyOrTaBalance) > 0.0001m)
+                {
+                    log.Log(
+                        "Company/travel-agent folio still has balance " + companyOrTaBalance
+                        + " (reservationBalance=" + folio.ReservationBalance + ", guestWindowsSum=" + windowsSum
+                        + "). Precheckout is allowed when all guest windows are 0; FO will checkout company/TA manually.",
+                        reservationNameId, actionName, actionGroup);
+                }
+
+                if (blockingWindow != null)
+                {
+                    string winLabel = blockingWindow.WindowNumber.HasValue
+                        ? blockingWindow.WindowNumber.Value.ToString()
+                        : "?";
+                    blockReason = blockingWindow.BalanceAmount < 0m
+                        ? "Primary guest folio window " + winLabel + " has negative balance: " + blockingWindow.BalanceAmount
+                        : "Primary guest folio window " + winLabel + " has outstanding balance: " + blockingWindow.BalanceAmount;
+                    return false;
+                }
+
+                log.Log(
+                    "All primary guest folio windows are 0 — precheckout allowed"
+                    + (Math.Abs(companyOrTaBalance) > 0.0001m
+                        ? " (company/TA balance " + companyOrTaBalance + " remains for FO)"
+                        : " (guest and company/TA clear)"),
+                    reservationNameId, actionName, actionGroup);
+                return true;
+            }
+
+            // Fallback when FolioWindows missing: use aggregated guest BalanceAmount only
+            guestBalanceForUi = folio.BalanceAmount;
+            if (Math.Abs(companyOrTaBalance) > 0.0001m)
+            {
+                log.Log(
+                    "Company/travel-agent folio still has balance " + companyOrTaBalance
+                    + ". Precheckout uses guest BalanceAmount only; FO settles company/TA manually.",
+                    reservationNameId, actionName, actionGroup);
+            }
+
+            if (Math.Abs(folio.BalanceAmount) > 0.0001m)
+            {
+                blockReason = folio.BalanceAmount < 0m
+                    ? "Primary guest folio balance is negative: " + folio.BalanceAmount
+                    : "Primary guest folio has outstanding balance: " + folio.BalanceAmount;
+                return false;
+            }
+
+            return true;
         }
 
         /// <summary>

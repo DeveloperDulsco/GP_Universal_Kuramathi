@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
@@ -24,6 +24,19 @@ namespace CheckinPortal.Models
         public string reservationID { get; set; }
         public string emailID { get; set; }
 
+        /// <summary>Legacy FormData key from checkout sendEmail().</summary>
+        public string reservationId
+        {
+            get { return reservationID; }
+            set { if (!string.IsNullOrWhiteSpace(value)) reservationID = value; }
+        }
+
+        /// <summary>Legacy FormData key from checkout sendEmail().</summary>
+        public string email
+        {
+            get { return emailID; }
+            set { if (!string.IsNullOrWhiteSpace(value)) emailID = value; }
+        }
     }
     public class ValidateDocumentModel
     {
@@ -44,7 +57,7 @@ namespace CheckinPortal.Models
         /// <summary>completed index</summary>
         public string CompletedTabIndex { get; set; }
         public string Allergies { get; set; }
-        /// <summary>JSON: Aqua Sports participants (name + signature base64, up to 4).</summary>
+        /// <summary>JSON: Aqua Sports participants (name + signature base64, up to 5 on RegCard).</summary>
         public string ExcursionParticipants { get; set; }
         public DateTime CreatedDate { get; set; }
         public DateTime? UpdatedDate { get; set; }

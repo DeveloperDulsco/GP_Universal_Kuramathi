@@ -2041,7 +2041,7 @@ namespace CheckinPortal.Helpers
         {
             string department = ConfigurationManager.AppSettings["TraceDepartment"];
             if (string.IsNullOrWhiteSpace(department))
-                department = "FO";
+                department = "Guest";
 
             var owsRequest = new Models.OWS.OwsRequestModel()
             {

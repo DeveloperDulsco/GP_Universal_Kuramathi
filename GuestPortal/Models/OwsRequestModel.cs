@@ -91,6 +91,7 @@ namespace CheckinPortal.Models
     public class ModifyBookingRequest
     {
         public string ReservationNumber { get; set; }
+        public string ReservationNameID { get; set; }
         public bool? isUDFFieldSpecified { get; set; }
         public List<UDFField> uDFFields { get; set; }
         public bool? updateCreditCardDetails { get; set; }
