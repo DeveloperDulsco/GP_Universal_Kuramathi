@@ -2286,10 +2286,10 @@ new { @class = "text-danger" }
                     var excursionPartSigCache = {};
                     var committedExcursionParticipants = null;
                     var excursionPartCount = 0;
-                    var MAX_EXCURSION_PARTS = Math.max(1,
+                    var MAX_EXCURSION_PARTS = Math.min(5, Math.max(1,
                         (parseInt('@Model.AdultCount', 10) || 0)
                         + (parseInt('@Model.ChildCount', 10) || 0)
-                        + (parseInt('@Model.InfantCount', 10) || 0));
+                        + (parseInt('@Model.InfantCount', 10) || 0)));
 
                     function SavePolicies(btn) {
 
@@ -2985,79 +2985,6 @@ new { @class = "text-danger" }
         });
     });
 
-    (function initPrecheckinReservationTabLock() {
-        var resNo = '@Model.ReservationNumber';
-        if (!resNo) return;
-        var lockKey = 'gp_precheckin_tab_lock_' + resNo;
-        var tabId = 'tab_' + Date.now() + '_' + Math.random().toString(36).slice(2);
-        var HEARTBEAT_MS = 2500;
-        var STALE_MS = 12000;
-        var isOwner = false;
-        var isBlocked = false;
-        var heartbeatTimer = null;
-        var loggedMulti = false;
-        function now() { return Date.now(); }
-        function readLock() {
-            try {
-                var raw = localStorage.getItem(lockKey);
-                if (!raw) return null;
-                if (raw.charAt(0) !== '{') return { tabId: raw, ts: 0 };
-                return JSON.parse(raw);
-            } catch (e) { return null; }
-        }
-        function writeLock() {
-            try { localStorage.setItem(lockKey, JSON.stringify({ tabId: tabId, ts: now() })); } catch (e) { }
-        }
-        function ownsLock(lock) { return lock && lock.tabId === tabId; }
-        function isLockStale(lock) { return !lock || !lock.ts || (now() - lock.ts) > STALE_MS; }
-        function showMultiTabBlock() {
-            isBlocked = true;
-            isOwner = false;
-            if (!loggedMulti) {
-                loggedMulti = true;
-                logPortalAudit('OpenedInMultipleWindows', '', currentPrecheckinPageId());
-            }
-            if (!$('#gpTabLockOverlay').length) {
-                $('body').append(
-                    '<div id="gpTabLockOverlay" style="position:fixed;inset:0;z-index:20000;background:rgba(0,0,0,0.55);display:flex;align-items:center;justify-content:center;padding:24px;">' +
-                    '<div style="max-width:480px;width:100%;background:#fff;padding:28px 24px;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,.25);">' +
-                    '<h5 style="margin:0 0 16px;">Message</h5>' +
-                    '<p style="margin:0;font-size:13px;line-height:1.45;">This reservation is already open in another window. Please continue in that window.</p>' +
-                    '</div></div>'
-                );
-            }
-        }
-        function tryClaim() {
-            try {
-                var lock = readLock();
-                if (ownsLock(lock)) { writeLock(); isOwner = true; return true; }
-                if (!lock || isLockStale(lock)) { writeLock(); isOwner = true; return true; }
-                showMultiTabBlock();
-                return false;
-            } catch (e) { return true; }
-        }
-        tryClaim();
-        heartbeatTimer = setInterval(function () {
-            if (isOwner) writeLock();
-            else tryClaim();
-        }, HEARTBEAT_MS);
-        window.addEventListener('pagehide', function () {
-            try {
-                var lock = readLock();
-                if (ownsLock(lock)) localStorage.removeItem(lockKey);
-            } catch (e) { }
-            if (heartbeatTimer) clearInterval(heartbeatTimer);
-        });
-        window.addEventListener('storage', function (e) {
-            if (e.key !== lockKey) return;
-            if (!e.newValue) { tryClaim(); return; }
-            try {
-                var lock = JSON.parse(e.newValue);
-                if (lock && lock.tabId !== tabId) showMultiTabBlock();
-            } catch (ex) { }
-        });
-    })();
-
     function hideDocumentLoader() {
         try { $('.loader-screen').fadeOut(100); } catch (e) { }
     }
@@ -3162,6 +3089,7 @@ new { @class = "text-danger" }
         var heartbeatTimer = null;
         var watchTimer = null;
         var BLOCK_MSG = 'This reservation is already open in another tab. Please continue in that tab.';
+        var loggedMulti = false;
 
         try {
             if (typeof BroadcastChannel !== 'undefined') {
@@ -3211,6 +3139,10 @@ new { @class = "text-danger" }
             isBlocked = true;
             isOwner = false;
             window.gpReservationTabBlocked = true;
+            if (!loggedMulti) {
+                loggedMulti = true;
+                try { logPortalAudit('OpenedInMultipleWindows', '', currentPrecheckinPageId()); } catch (e) { }
+            }
 
             try {
                 $('.modal').not('#customMessageModal').modal('hide');

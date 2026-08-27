@@ -342,7 +342,7 @@ namespace CheckinPortal.Controllers
                         AuditProgressHelper.Actions.InvoiceEmailResendFailed,
                         reservationID,
                         reservationNameID,
-                        extraDetail: "from Thank you page, to " + emailID + " — " + reason);
+                        extraDetail: "from Thank you page, to " + emailID + " - " + reason);
                     return Ok(new { result = false, responseMessage = "Unable to send the invoice email. Please try again or contact the front desk." });
                 }
 

@@ -1435,7 +1435,7 @@ namespace CheckinPortal.Controllers
                         success: false,
                         ReservationID,
                         SessionData.OperaReservation.ReservationNameID,
-                        extraDetail: "after approve, to " + folioToEmail + " — " + (emailResponse.responseMessage ?? "failed"));
+                        extraDetail: "after approve, to " + folioToEmail + " - " + (emailResponse.responseMessage ?? "failed"));
                 }
                 else
                 {
@@ -1463,7 +1463,7 @@ namespace CheckinPortal.Controllers
                     success: false,
                     ReservationID,
                     SessionData.OperaReservation.ReservationNameID,
-                    extraDetail: "after approve — " + skipReason);
+                    extraDetail: "after approve - " + skipReason);
             }
             #endregion
 

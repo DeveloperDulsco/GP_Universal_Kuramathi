@@ -125,7 +125,7 @@ namespace CheckinPortal.Helpers
         /// Grabber / Back office should send src=grabber or src=backoffice on the link.
         /// QR search appends src=qr. Otherwise treated as an email / WhatsApp guest link.
         /// </summary>
-        public static string ResolveLinkSource(HttpRequestBase request, System.Web.SessionState.HttpSessionState session)
+        public static string ResolveLinkSource(HttpRequestBase request, HttpSessionStateBase session)
         {
             string raw = request?["src"] ?? request?["source"] ?? request?["from"];
             if (string.IsNullOrWhiteSpace(raw) && session != null)
@@ -168,11 +168,16 @@ namespace CheckinPortal.Helpers
             if (ids.Count == 0)
                 return string.IsNullOrWhiteSpace(guestLabels)
                     ? "Guest skipped ID upload, so a guest profile was not created"
-                    : "Skipped for " + guestLabels.Trim() + " — guest profile was not created";
+                    : "Skipped for " + guestLabels.Trim() + " - guest profile was not created";
             string idList = string.Join(", ", ids);
             if (!string.IsNullOrWhiteSpace(guestLabels))
                 return "Skipped for " + guestLabels.Trim() + " (guest profiles " + idList + ")";
             return "Skipped for guest profiles " + idList;
+        }
+
+        public static bool HasNoCreatedProfile(string profileDetailIdsCsv)
+        {
+            return ParsePositiveIds(profileDetailIdsCsv).Count == 0;
         }
 
         public static string FormatDocumentOutcome(
@@ -234,6 +239,25 @@ namespace CheckinPortal.Helpers
             return ids;
         }
 
+        /// <summary>
+        /// Excel FO CSV is often opened as Windows-1252, so UTF-8 dashes show as â€“.
+        /// Keep audit text ASCII-safe for that export.
+        /// </summary>
+        private static string SanitizeAuditText(string value)
+        {
+            if (string.IsNullOrEmpty(value))
+                return value;
+            return value
+                .Replace('\u2013', '-') // en dash
+                .Replace('\u2014', '-') // em dash
+                .Replace('\u2212', '-') // minus
+                .Replace('\u2018', '\'')
+                .Replace('\u2019', '\'')
+                .Replace('\u201C', '"')
+                .Replace('\u201D', '"')
+                .Replace('\u00A0', ' ');
+        }
+
         /// <summary>FO audit for confirmation email or SMS/WhatsApp after pre-check-in / pre-check-out.</summary>
         public static void LogConfirmationSend(
             string moduleName,
@@ -274,9 +298,11 @@ namespace CheckinPortal.Helpers
 
                 string message = string.IsNullOrWhiteSpace(extraDetail)
                     ? actionName
-                    : $"{actionName} — {extraDetail}";
+                    : actionName + " - " + extraDetail;
+                message = SanitizeAuditText(message);
                 if (message.Length > 200)
                     message = message.Substring(0, 200);
+                actionName = SanitizeAuditText(actionName);
 
                 var auditRequest = new PortalAuditLogModel
                 {
