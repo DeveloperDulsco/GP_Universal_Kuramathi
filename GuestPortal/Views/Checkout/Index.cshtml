@@ -2,6 +2,7 @@
 @{
     ViewBag.Title = "Index";
     Layout = "~/Views/Shared/_LayoutCheckout.cshtml";
+    // Checkout only: CheckoutReservationModel + _LayoutCheckout. Do not use _Layout / ReservationModel.
     var ActiveTransctions = new List<CheckinPortal.Models.PaymentHeader>();
     if (ViewBag.ActiveTransactions != null)
     {
@@ -110,7 +111,7 @@
                                 <div class="row">
                                     <div class="col-lg-6 col-xl-4 offset-xl-4 offset-lg-6">
                                         <div class="btn-grp d-flex justify-content-between">
-                                            <button class="btn_cancel" onclick="ShowContactFrontDesk()" value='Back'>Cancel</button>
+                                            @*<button type="button" class="btn_cancel" onclick="CancelPreCheckout()" value='Back'>Cancel</button>*@
                                             @if (canAgreeToFolio)
                                             {
                                                 <button class="btn_next " onclick="AgreeAndMoveNext(this)">Agree</button>
@@ -169,39 +170,35 @@
                         }
 
                         <div class="tab-pane cstm-form @((ViewBag.EcomStatus)  ? "active" : "")" id="thankyou">
-                            <div class="min-height">
-                                <div class="sucess">
-                                    <div class="code"><img src="~/assets/images/tick.png"></div>
-                                    <label>Thank You!</label>
-                                    <p>We have successfully processed your check-out request. </p>
-                                    <p>The room key will now be disabled.</p>
-                                    <p>Please drop your room key in the box located at our lobby on departure.</p>
-                                    <p>Thank you once again for choosing Niva Kuramathi. We look forward to welcoming you back soon.</p>
-                                    <div class="row">
-                                        <div class="col-md-12 text-center thank-you-actions mt-5">
-                                            <a href="https://www.nivakuramathi.com" class="btnstyle blue thank-you-btn">OK</a>
-                                        </div>
+                            <div class="content">
+                                <div class="qr thank-you-panel">
+                                    <p>
+                                        Thank you for completing your pre-checkout. We have successfully processed your Precheck-out request.
+                                        The room key will now be disabled. Please drop your room key in the box located at our lobby on departure.<br>
+                                        We look forward to welcoming you back soon.
+                                    </p>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12 text-center thank-you-actions">
+                                        <a href="https://www.nivakuramathi.com" class="btnstyle blue thank-you-btn">OK</a>
                                     </div>
                                 </div>
-                                <div class="mail">
-
-                                    <div class="row">
-                                        <div class="col-md-6 col-xl-4  offset-xl-4 offset-md-4">
-                                            <div class="form-inline">
-                                                <label for="exampleInputEmail1">To receive a copy of your invoice via email</label>
-                                                <div class="mail-form">
-                                                    <input id="emailID" type="email" class="form-control" value="@Model.EmailID" placeholder="Enter email">
-                                                    <button type="button" class="btnstyle blue" onclick="sendEmail()">SEND</button>
-                                                </div>
-                                            </div>
-                                        </div>
+                                <div class="mail thank-you-invoice">
+                                    <label for="emailID">To receive a copy of your invoice via email</label>
+                                    <div class="mail-form">
+                                        <input id="emailID" type="email" class="form-control" value="@Model.EmailID" placeholder="Enter email" autocomplete="email">
+                                        <button type="button" class="btnstyle blue" onclick="sendEmail()">SEND</button>
                                     </div>
-
+                                </div>
+                                <div class="address">
+                                    <label>Niva Kuramathi Maldives</label>
+                                    <label>T +960 6660527 </label>
+                                    <label>E <a href="mailto:info@nivakuramathi.com">nivakuramathi.com</a></label>
                                 </div>
                                 <div class="social-media">
-                                    <p>Subscribe to our mailing list or follow us on Facebook and Instagram for exclusive offers and updates.</p>
+                                    <p>Subscribe or follow us on Facebook, Instagram for exclusive offers and updates.</p>
                                     <ul>
-                                        <li><a target="_blank" href="mailto:info@nivakuramathi.com"><i class="fas fa-envelope-square"></i></a></li>
+                                        <li><a target="_blank" href="https://www.nivakuramathi.com"><i class="fas fa-globe"></i></a></li>
                                         <li>
                                             <a target="_blank" href="https://www.facebook.com/NivaKuramathi/"><i class="fab fa-facebook-square"></i></a>
                                         </li>
@@ -498,6 +495,10 @@
 
         function ShowContactFrontDesk() {
             $('#contactFOModal').modal('show');
+        }
+
+        function CancelPreCheckout() {
+            window.location.href = "https://www.nivakuramathi.com";
         }
 
         var wrapper = document.getElementById("signature-pad");

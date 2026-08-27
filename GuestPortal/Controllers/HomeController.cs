@@ -37,11 +37,13 @@ namespace CheckinPortal.Controllers
     {
         ReservationLogics reservationLogics = new ReservationLogics();
 
-        public async Task<ActionResult> Index(string id)
+        public async Task<ActionResult> Index(string id, string src = null)
         {
             Session.Clear();
             Session.Abandon();
             ViewBag.id = id;
+            if (!string.IsNullOrWhiteSpace(src))
+                Session["GpLinkSource"] = src;
 
             string ActionName = "Index";
             string ActionGroup = "Pre-Checkin";
@@ -359,14 +361,6 @@ namespace CheckinPortal.Controllers
                         reservationLogics.InsertEvent(reservations.ReservationDetailID, "Email Link Click");
                         Helpers.LogHelper.Instance.Log($"Getting prfile details", $"{reservations.ReservationNameID}", ActionName, ActionGroup);
                         var ProfileList = await reservationLogics.GetReservationProfileList(reservations.ReservationDetailID);
-                        AuditProgressHelper.Log(
-                            AuditProgressHelper.ModulePreCheckin,
-                            AuditProgressHelper.Actions.LinkOpened,
-                            reservations.ReservationDetailID,
-                            reservations.ReservationNameID,
-                            guestName: ProfileList != null && ProfileList.Count > 0
-                                ? AuditProgressHelper.BuildGuestName(ProfileList[0].FirstName, ProfileList[0].MiddleName, ProfileList[0].LastName)
-                                : null);
 
                         ViewBag.Profiles = ProfileList;
                         ViewBag.CountryList = BuildCountryList(CountryList, ProfileList[0].CountryMasterID);
@@ -610,6 +604,13 @@ namespace CheckinPortal.Controllers
                                 $"Per-guest document resume. pendingGuests=true profiles={profiles.Count} slots={totalGuestSlots} completedIdx={completedIdx} ResumeTabIndex={ViewBag.ResumeTabIndex}",
                                 reservations.ReservationNameID, ActionName, ActionGroup);
                         }
+
+                        LogPrecheckinLinkOpened(
+                            reservations.ReservationDetailID,
+                            reservations.ReservationNameID,
+                            ProfileList != null && ProfileList.Count > 0
+                                ? AuditProgressHelper.BuildGuestName(ProfileList[0].FirstName, ProfileList[0].MiddleName, ProfileList[0].LastName)
+                                : null);
 
                         QRCodeGenerator qrGenerator = new QRCodeGenerator();
                         QRCodeData qrCodeData = qrGenerator.CreateQrCode(confirmationNo, QRCodeGenerator.ECCLevel.Q);
@@ -973,6 +974,17 @@ namespace CheckinPortal.Controllers
                     reservationModel.ReservationID,
                     reservationModel.ReservationNameID,
                     guestName: auditGuestName);
+                string changedFields = FormatGuestDetailsChangeExtra();
+                if (!string.IsNullOrWhiteSpace(changedFields))
+                {
+                    AuditProgressHelper.Log(
+                        AuditProgressHelper.ModulePreCheckin,
+                        AuditProgressHelper.Actions.GuestDetailsChanged,
+                        reservationModel.ReservationID,
+                        reservationModel.ReservationNameID,
+                        extraDetail: "before Next: " + changedFields,
+                        guestName: auditGuestName);
+                }
 
                 foreach (var profile in reservationModel.Profiles)
                 {
@@ -1331,7 +1343,7 @@ namespace CheckinPortal.Controllers
                     AuditProgressHelper.Actions.MovedToNextPage,
                     reservationModel.ReservationID,
                     reservationModel.ReservationNameID,
-                    extraDetail: AuditProgressHelper.FormatPageMove("Guest Details", "Policies"),
+                    extraDetail: AuditProgressHelper.FormatPageMove("Guest details", "Policies"),
                     guestName: auditGuestName);
                 return Json(new { result = true }, JsonRequestBehavior.AllowGet);
             }
@@ -1588,6 +1600,11 @@ namespace CheckinPortal.Controllers
                         new LogHelper().Error(allergyUdfEx, policiesModel?.ReservationNameID, ActionName, ActionGroup);
                     }
                 }
+                else
+                {
+                    new LogHelper().Log("Skipped Opera allergy UDF — Allergy not selected", policiesModel?.ReservationNameID, ActionName, ActionGroup);
+
+                }
             }
             else
             {
@@ -1620,7 +1637,9 @@ namespace CheckinPortal.Controllers
                 AuditProgressHelper.Actions.MovedToNextPage,
                 policiesModel.ReservationID,
                 policiesModel.ReservationNameID,
-                extraDetail: AuditProgressHelper.FormatPageMove("Policies", "Document"));
+                extraDetail: AuditProgressHelper.FormatPageMove("Policies", "Documents"));
+
+            LogPrecheckinPolicyChoices(policiesModel, excursionPartCount);
 
             return Json(new
             {
@@ -1698,6 +1717,11 @@ namespace CheckinPortal.Controllers
                                 $"Invalid document rejected. IdType={docInfo.documentType}; IssueCountry={docInfo.issueCountry}",
                                 $"{dt.ReservationNameID}", ActionName, ActionGroup);
                             reservationLogics.InsertEvent(uploadGuestDocumentModel.ReservationID, "DocumentUploadInvalidType");
+                            LogDocumentUploadAuditFailure(
+                                "DocumentUploadInvalidType",
+                                uploadGuestDocumentModel.ReservationID,
+                                dt?.ReservationNameID ?? session?.ReservationNameID,
+                                extraDetail: $"IdType={docInfo.documentType}; IssueCountry={docInfo.issueCountry}");
                             return Json(new { result = false, message = rejectReason });
                         }
 
@@ -1719,6 +1743,11 @@ namespace CheckinPortal.Controllers
                                 $"Expiry validation fail. IdType={docInfo.documentType}; IssueCountry={docInfo.issueCountry}",
                                 $"{dt.ReservationNameID}", ActionName, ActionGroup);
                             reservationLogics.InsertEvent(uploadGuestDocumentModel.ReservationID, "DocumentUploadExpiryFail");
+                            LogDocumentUploadAuditFailure(
+                                "DocumentUploadExpiryFail",
+                                uploadGuestDocumentModel.ReservationID,
+                                dt?.ReservationNameID ?? session?.ReservationNameID,
+                                extraDetail: $"IdType={docInfo.documentType}; IssueCountry={docInfo.issueCountry}");
                             return Json(new { result = false, message = "Document is expired. Please upload a valid one." });
                         }
                         if (!TryParseDocumentDate(docInfo.birthDate, out birthDate))
@@ -2141,12 +2170,29 @@ namespace CheckinPortal.Controllers
                 // Helpers.LogHelper.Instance.Debug($"Uploading Document Json : {Newtonsoft.Json.JsonConvert.SerializeObject(documentModel)}", $"{uploadGuestDocumentModel.ReservationID}", ActionName, ActionGroup);
 
                await  reservationLogics.ExecuteUpdateReservationByStage("Upload", documentModel);
+                string uploadGuestLabel = Request["GuestLabel"];
+                string documentAuditAction;
+                string documentAuditExtra;
+                if (uploadGuestDocumentModel.ProfileDetailID <= 0)
+                {
+                    documentAuditAction = AuditProgressHelper.Actions.ProfileCreationFailedDocumentSkipped;
+                    documentAuditExtra = string.IsNullOrWhiteSpace(uploadGuestLabel)
+                        ? null
+                        : uploadGuestLabel.Trim();
+                }
+                else
+                {
+                    documentAuditAction = AuditProgressHelper.Actions.DocumentUploaded;
+                    documentAuditExtra = AuditProgressHelper.FormatDocumentUploadedDetail(
+                        uploadGuestDocumentModel.ProfileDetailID,
+                        uploadGuestLabel);
+                }
                 AuditProgressHelper.Log(
                     AuditProgressHelper.ModulePreCheckin,
-                    AuditProgressHelper.Actions.DocumentUploaded,
+                    documentAuditAction,
                     documentModel.ReservationID > 0 ? documentModel.ReservationID : (object)uploadGuestDocumentModel.ReservationID,
                     session?.ReservationNameID ?? dt?.ReservationNameID,
-                    extraDetail: "ProfileDetailID=" + uploadGuestDocumentModel.ProfileDetailID);
+                    extraDetail: documentAuditExtra);
 
                 // Clear per-guest skip flag if this profile was previously skipped then uploaded
                 if (uploadGuestDocumentModel.ProfileDetailID > 0)
@@ -2279,7 +2325,7 @@ namespace CheckinPortal.Controllers
                 AuditProgressHelper.Actions.ThankYouButtonClicked,
                 detailId,
                 ReservationNameID,
-                extraDetail: "Button=" + safeButton + ";ResNo=" + (ReservationNumber ?? ""));
+                extraDetail: safeButton);
 
             return Json(new { result = true });
         }
@@ -2287,7 +2333,172 @@ namespace CheckinPortal.Controllers
         public ActionResult InsertEvent(string EventName, int reservationid)
         {
             reservationLogics.InsertEvent(reservationid, EventName);
+            LogDocumentUploadAuditFailure(
+                EventName,
+                reservationid,
+                SessionData.OperaReservation?.ReservationNameID);
             return Json(new { result = true });
+        }
+
+        /// <summary>Staff-facing portal events from the browser (tab close, second window, page name).</summary>
+        [HttpPost]
+        public ActionResult LogPortalActivity(
+            string ActionName,
+            string ExtraDetail = null,
+            int? ReservationID = null,
+            string ReservationNameID = null,
+            string CurrentPage = null)
+        {
+            string mapped = MapPortalClientAction(ActionName);
+            if (string.IsNullOrEmpty(mapped))
+                return Json(new { result = false });
+
+            object detailId = ReservationID.HasValue && ReservationID.Value > 0
+                ? (object)ReservationID.Value
+                : (object)(Session["BookingSession"] as SessionDt)?.ReservationNameID;
+
+            string extra = ExtraDetail;
+            if (string.Equals(mapped, AuditProgressHelper.Actions.TabClosed, StringComparison.OrdinalIgnoreCase))
+            {
+                string page = AuditProgressHelper.PageNameFromTabId(CurrentPage);
+                extra = "while on " + page;
+            }
+            else if (string.Equals(mapped, AuditProgressHelper.Actions.OpenedInMultipleWindows, StringComparison.OrdinalIgnoreCase))
+            {
+                extra = "Same reservation was already open in another window";
+            }
+
+            AuditProgressHelper.Log(
+                AuditProgressHelper.ModulePreCheckin,
+                mapped,
+                detailId,
+                ReservationNameID ?? SessionData.OperaReservation?.ReservationNameID,
+                extraDetail: extra);
+
+            return Json(new { result = true });
+        }
+
+        private static string MapPortalClientAction(string actionName)
+        {
+            if (string.IsNullOrWhiteSpace(actionName))
+                return null;
+            if (string.Equals(actionName, AuditProgressHelper.Actions.TabClosed, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(actionName, "TabClosed", StringComparison.OrdinalIgnoreCase))
+                return AuditProgressHelper.Actions.TabClosed;
+            if (string.Equals(actionName, AuditProgressHelper.Actions.OpenedInMultipleWindows, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(actionName, "OpenedInMultipleWindows", StringComparison.OrdinalIgnoreCase))
+                return AuditProgressHelper.Actions.OpenedInMultipleWindows;
+            if (string.Equals(actionName, AuditProgressHelper.Actions.GuestDetailsChanged, StringComparison.OrdinalIgnoreCase))
+                return AuditProgressHelper.Actions.GuestDetailsChanged;
+            return null;
+        }
+
+        private void LogPrecheckinLinkOpened(int reservationDetailId, string reservationNameID, string guestName)
+        {
+            string source = AuditProgressHelper.ResolveLinkSource(Request, Session);
+            int completed = -1;
+            int resume = -1;
+            if (ViewBag.CompletedTabIndex != null)
+                int.TryParse(ViewBag.CompletedTabIndex.ToString(), out completed);
+            if (ViewBag.ResumeTabIndex != null)
+                int.TryParse(ViewBag.ResumeTabIndex.ToString(), out resume);
+            bool isReopen = completed >= 0 || resume >= 0;
+            string pageName = AuditProgressHelper.PageNameFromTabIndex(resume >= 0 ? resume : completed);
+            string extra = AuditProgressHelper.FormatLinkOpenDetail(source, isReopen, pageName);
+            AuditProgressHelper.Log(
+                AuditProgressHelper.ModulePreCheckin,
+                isReopen ? AuditProgressHelper.Actions.LinkReopened : AuditProgressHelper.Actions.LinkOpened,
+                reservationDetailId,
+                reservationNameID,
+                extraDetail: extra,
+                guestName: guestName);
+        }
+
+        private string FormatGuestDetailsChangeExtra()
+        {
+            string raw = Request["AuditChangedFields"];
+            if (string.IsNullOrWhiteSpace(raw))
+                return null;
+            var labels = new List<string>();
+            foreach (var part in raw.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries))
+            {
+                string label = AuditProgressHelper.MapGuestFieldLabel(part.Trim());
+                if (!string.IsNullOrEmpty(label) && !labels.Contains(label))
+                    labels.Add(label);
+            }
+            return labels.Count == 0 ? null : string.Join(", ", labels);
+        }
+
+        private void LogPrecheckinPolicyChoices(PoliciesModel policiesModel, int excursionPartCount)
+        {
+            if (policiesModel == null)
+                return;
+
+            string allergyAction;
+            if (!policiesModel.HasAllergies.HasValue)
+                allergyAction = AuditProgressHelper.Actions.AllergiesNotAdded;
+            else if (policiesModel.HasAllergies.Value)
+                allergyAction = AuditProgressHelper.Actions.AllergiesYes;
+            else
+                allergyAction = AuditProgressHelper.Actions.AllergiesNo;
+
+            AuditProgressHelper.Log(
+                AuditProgressHelper.ModulePreCheckin,
+                allergyAction,
+                policiesModel.ReservationID,
+                policiesModel.ReservationNameID);
+
+            bool promo = policiesModel.CheckBox2.HasValue && policiesModel.CheckBox2.Value;
+            AuditProgressHelper.Log(
+                AuditProgressHelper.ModulePreCheckin,
+                promo ? AuditProgressHelper.Actions.PromotionalConsentAdded : AuditProgressHelper.Actions.PromotionalConsentNotAdded,
+                policiesModel.ReservationID,
+                policiesModel.ReservationNameID);
+
+            bool excursionAdded = (policiesModel.ExcursionAccepted.HasValue && policiesModel.ExcursionAccepted.Value)
+                && excursionPartCount > 0;
+            AuditProgressHelper.Log(
+                AuditProgressHelper.ModulePreCheckin,
+                excursionAdded ? AuditProgressHelper.Actions.ExcursionDetailsAdded : AuditProgressHelper.Actions.ExcursionDetailsNotAdded,
+                policiesModel.ReservationID,
+                policiesModel.ReservationNameID);
+        }
+
+        /// <summary>
+        /// FO audit for rejected document attempts (invalid type/file, or expired).
+        /// Client OCR path hits InsertEvent; UploadDocument is the server-side safety net.
+        /// </summary>
+        private static void LogDocumentUploadAuditFailure(
+            string eventName,
+            object reservationDetailId,
+            string reservationNameID,
+            string extraDetail = null)
+        {
+            if (string.IsNullOrWhiteSpace(eventName))
+                return;
+
+            string actionName;
+            if (string.Equals(eventName, "DocumentUploadExpiryFail", StringComparison.OrdinalIgnoreCase))
+            {
+                actionName = AuditProgressHelper.Actions.TriedToUploadExpiredDocument;
+            }
+            else if (string.Equals(eventName, "DocumentUploadInvalid", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(eventName, "DocumentUploadInvalidType", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(eventName, "DocumentUploadInvalidFile", StringComparison.OrdinalIgnoreCase))
+            {
+                actionName = AuditProgressHelper.Actions.TriedToUploadInvalidDocument;
+            }
+            else
+            {
+                return;
+            }
+
+            AuditProgressHelper.Log(
+                AuditProgressHelper.ModulePreCheckin,
+                actionName,
+                reservationDetailId,
+                reservationNameID,
+                extraDetail: extraDetail);
         }
 
         /// <summary>
@@ -2300,18 +2511,27 @@ namespace CheckinPortal.Controllers
             string ReservationNameID,
             string ReservationNumber,
             string ProfileDetailIDs = null,
+            string SkippedGuestLabels = null,
             bool FinalizeDocumentStep = false)
         {
             string ActionName = "DocumentUploadSkipped", ActionGroup = "Pre-Checkin";
             try
             {
                 reservationLogics.InsertEvent(ReservationID, FinalizeDocumentStep ? "DocumentUploadSkipFinalize" : "DocumentUploadSkip");
-                AuditProgressHelper.Log(
-                    AuditProgressHelper.ModulePreCheckin,
-                    AuditProgressHelper.Actions.DocumentSkipped,
-                    ReservationID,
-                    ReservationNameID,
-                    extraDetail: "Profiles=" + (ProfileDetailIDs ?? "") + ";Finalize=" + FinalizeDocumentStep);
+                bool hasSkip = !string.IsNullOrWhiteSpace(SkippedGuestLabels)
+                    || !string.IsNullOrWhiteSpace(ProfileDetailIDs);
+                if (hasSkip)
+                {
+                    bool noProfileCreated = AuditProgressHelper.HasNoCreatedProfile(ProfileDetailIDs);
+                    AuditProgressHelper.Log(
+                        AuditProgressHelper.ModulePreCheckin,
+                        noProfileCreated
+                            ? AuditProgressHelper.Actions.ProfileCreationFailedDocumentSkipped
+                            : AuditProgressHelper.Actions.DocumentSkipped,
+                        ReservationID,
+                        ReservationNameID,
+                        extraDetail: AuditProgressHelper.FormatDocumentSkippedDetail(ProfileDetailIDs, SkippedGuestLabels));
+                }
 
                 var statusResponse = await new CloudHelper().UpdateReservationStatus(
                     ReservationNameID,
@@ -4237,9 +4457,11 @@ namespace CheckinPortal.Controllers
                 ["Username"].ToString(),
                     SystemType = ConfigurationManager.AppSettings
                 ["SystemType"].ToString(),
-                    OperaReservation = operaReservation
+                    OperaReservation = operaReservation,
+                    DeviceName="MCI"
                 }, "Pre-Checkin", ConfigurationManager.AppSettings
-                ["APIBaseUrl"].ToString());
+                ["APIBaseUrl"].ToString()
+                 );
 
                 if (!regcardResponse.result || regcardResponse.responseData == null)
                 {
@@ -4351,7 +4573,7 @@ namespace CheckinPortal.Controllers
                     AuditProgressHelper.Actions.MovedToNextPage,
                     reservation?.ReservationDetailID > 0 ? reservation.ReservationDetailID : (object)session.ReservationNameID,
                     session.ReservationNameID,
-                    extraDetail: AuditProgressHelper.FormatPageMove("Document", "Thank You"),
+                    extraDetail: AuditProgressHelper.FormatPageMove("Documents", "Thank you"),
                     guestName: operaReservation?.GuestProfiles != null && operaReservation.GuestProfiles.Count > 0
                         ? AuditProgressHelper.BuildGuestName(
                             operaReservation.GuestProfiles[0].FirstName,
@@ -4418,6 +4640,16 @@ namespace CheckinPortal.Controllers
                 return Json(new { result = true }, JsonRequestBehavior.AllowGet);
             }
 
+            object confirmationAuditKey = reservation?.ReservationDetailID > 0
+                ? (object)reservation.ReservationDetailID
+                : session.ReservationNameID;
+            string confirmationGuestName = operaReservation?.GuestProfiles != null && operaReservation.GuestProfiles.Count > 0
+                ? AuditProgressHelper.BuildGuestName(
+                    operaReservation.GuestProfiles[0].FirstName,
+                    operaReservation.GuestProfiles[0].MiddleName,
+                    operaReservation.GuestProfiles[0].LastName)
+                : null;
+
             if (NotificationEnabled)
             {
                 new LogHelper().Log("PreCheckIn channels enabled : " + NotificationChannels, session.ReservationNameID, ActionName, ActionGroup);
@@ -4463,17 +4695,40 @@ namespace CheckinPortal.Controllers
                             isEmailSent = false;
                             new LogHelper().Log("Failed to send confirmation email with reason :- " + emailResponse.responseMessage, session.ReservationNameID, ActionName, ActionGroup);
                             new LogHelper().Warn("Failed to send confirmation email with reason :- " + emailResponse.responseMessage, session.ReservationNameID, ActionName, ActionGroup);
+                            AuditProgressHelper.LogConfirmationSend(
+                                AuditProgressHelper.ModulePreCheckin,
+                                emailChannel: true,
+                                success: false,
+                                confirmationAuditKey,
+                                session.ReservationNameID,
+                                extraDetail: emailResponse.responseMessage,
+                                guestName: confirmationGuestName);
                         }
                         else
                         {
                             isEmailSent = true;
                             new LogHelper().Log("Email send successfully to primary email :- " + toEmail, session.ReservationNameID, ActionName, ActionGroup);
+                            AuditProgressHelper.LogConfirmationSend(
+                                AuditProgressHelper.ModulePreCheckin,
+                                emailChannel: true,
+                                success: true,
+                                confirmationAuditKey,
+                                session.ReservationNameID,
+                                guestName: confirmationGuestName);
                         }
                     }
                     else
                     {
                         new LogHelper().Log("Failed to send confirmation email since email address not found from pre checked in list response", session.ReservationNameID, ActionName, ActionGroup);
                         new LogHelper().Warn("Failed to send confirmation email since email address not found from pre checked in list response", session.ReservationNameID, ActionName, ActionGroup);
+                        AuditProgressHelper.LogConfirmationSend(
+                            AuditProgressHelper.ModulePreCheckin,
+                            emailChannel: true,
+                            success: false,
+                            confirmationAuditKey,
+                            session.ReservationNameID,
+                            extraDetail: "Email address not found",
+                            guestName: confirmationGuestName);
                     }
                     #endregion
                 }
@@ -4487,10 +4742,12 @@ namespace CheckinPortal.Controllers
                         new LogHelper().Log("Sending confirmation whatsapp SMS", session.ReservationNameID, ActionName, ActionGroup);
                         if (operaReservation != null && operaReservation.GuestProfiles != null && operaReservation.GuestProfiles[0].Phones != null && operaReservation.GuestProfiles[0].Phones.Count > 0)
                         {
+                            bool whatsappAttempted = false;
                             foreach (Models.OWS.Phone phone in operaReservation.GuestProfiles[0].Phones)
                             {
                                 if (phone.primary != null && phone.primary.Value && !string.IsNullOrEmpty(phone.PhoneNumber))
                                 {
+                                    whatsappAttempted = true;
                                     TextInfo textInfo = new CultureInfo("en-US", false).TextInfo;
 
                                     string fullName = string.Join(" ",
@@ -4519,17 +4776,54 @@ namespace CheckinPortal.Controllers
                                     {
                                         new LogHelper().Log("Failed to send confirmation whatsapp with reason :- " + whatsappResponse.responseMessage, session.ReservationNameID, ActionName, ActionGroup);
                                         new LogHelper().Warn("Failed to send confirmation whatsapp with reason :- " + whatsappResponse.responseMessage, session.ReservationNameID, ActionName, ActionGroup);
+                                        AuditProgressHelper.LogConfirmationSend(
+                                            AuditProgressHelper.ModulePreCheckin,
+                                            emailChannel: false,
+                                            success: false,
+                                            confirmationAuditKey,
+                                            session.ReservationNameID,
+                                            extraDetail: "WhatsApp; " + whatsappResponse.responseMessage,
+                                            guestName: confirmationGuestName);
                                     }
                                     else
+                                    {
                                         new LogHelper().Log("Whatsapp message send successfully", session.ReservationNameID, ActionName, ActionGroup);
+                                        AuditProgressHelper.LogConfirmationSend(
+                                            AuditProgressHelper.ModulePreCheckin,
+                                            emailChannel: false,
+                                            success: true,
+                                            confirmationAuditKey,
+                                            session.ReservationNameID,
+                                            extraDetail: "WhatsApp",
+                                            guestName: confirmationGuestName);
+                                    }
                                 }
 
+                            }
+                            if (!whatsappAttempted)
+                            {
+                                AuditProgressHelper.LogConfirmationSend(
+                                    AuditProgressHelper.ModulePreCheckin,
+                                    emailChannel: false,
+                                    success: false,
+                                    confirmationAuditKey,
+                                    session.ReservationNameID,
+                                    extraDetail: "WhatsApp; primary phone not found",
+                                    guestName: confirmationGuestName);
                             }
                         }
                         else
                         {
                             new LogHelper().Log("Failed to send pre-checkin since phone number not found from pre checked in list response", operaReservation.ReservationNameID, ActionName, "Due-In push");
                             new LogHelper().Warn("Failed to send pre-checkin since phone number not found from pre checked in list response", operaReservation.ReservationNameID, ActionName, "Due-In push");
+                            AuditProgressHelper.LogConfirmationSend(
+                                AuditProgressHelper.ModulePreCheckin,
+                                emailChannel: false,
+                                success: false,
+                                confirmationAuditKey,
+                                session.ReservationNameID,
+                                extraDetail: "WhatsApp; phone number not found",
+                                guestName: confirmationGuestName);
                         }
 
 
@@ -4537,6 +4831,14 @@ namespace CheckinPortal.Controllers
                     catch (Exception ex)
                     {
                         new LogHelper().Error(ex, operaReservation.ReservationNameID, ActionName, "Due-In push");
+                        AuditProgressHelper.LogConfirmationSend(
+                            AuditProgressHelper.ModulePreCheckin,
+                            emailChannel: false,
+                            success: false,
+                            confirmationAuditKey,
+                            session.ReservationNameID,
+                            extraDetail: "WhatsApp; " + ex.Message,
+                            guestName: confirmationGuestName);
                     }
                     #endregion
                 }
@@ -4921,12 +5223,10 @@ namespace CheckinPortal.Controllers
                         reservationLogics.InsertEvent(reservations.ReservationDetailID, "Email Link Click");
                         Helpers.LogHelper.Instance.Log($"Getting prfile details", $"{reservations.ReservationNameID}", ActionName, ActionGroup);
                         var ProfileList = await reservationLogics.GetReservationProfileList(reservations.ReservationDetailID);
-                        AuditProgressHelper.Log(
-                            AuditProgressHelper.ModulePreCheckin,
-                            AuditProgressHelper.Actions.LinkOpened,
+                        LogPrecheckinLinkOpened(
                             reservations.ReservationDetailID,
                             reservations.ReservationNameID,
-                            guestName: ProfileList != null && ProfileList.Count > 0
+                            ProfileList != null && ProfileList.Count > 0
                                 ? AuditProgressHelper.BuildGuestName(ProfileList[0].FirstName, ProfileList[0].MiddleName, ProfileList[0].LastName)
                                 : null);
 
@@ -5657,7 +5957,7 @@ namespace CheckinPortal.Controllers
                         return Json(new { result = false, redirectUrl = string.Empty, errorMessage = "Reservation Not Found!" });
                     }
 
-                    string checkoutUrl = hostedUrl + "/Checkout/Index?id=" + encryptedId;
+                    string checkoutUrl = hostedUrl + "/Checkout/Index?id=" + encryptedId + "&src=qr";
                     Helpers.LogHelper.Instance.Log(
                         $"Search routed to Pre Check-out. Status={status}, TrackHint={trackingHint ?? "none"}, Res#={reservationNumber}",
                         reservationNumber, ActionName, ActionGroup);
@@ -5721,7 +6021,7 @@ namespace CheckinPortal.Controllers
                         });
                     }
 
-                    string precheckinUrl = hostedUrl + "/Home/Index?id=" + encryptedId;
+                    string precheckinUrl = hostedUrl + "/Home/Index?id=" + encryptedId + "&src=qr";
                     Helpers.LogHelper.Instance.Log(
                         $"Search routed to Pre Check-in. Status={status}, TrackHint={trackingHint ?? "none"}, Res#={reservationNumber}",
                         reservationNumber, ActionName, ActionGroup);
@@ -6087,14 +6387,36 @@ namespace CheckinPortal.Controllers
                 {
                     new LogHelper().Log("Failed to send confirmation email with reason :- " + emailResponse.responseMessage, SessionData.OperaReservation.ReservationNameID, "FetchPreCheckedInReservation", "pre checked-in fetch");
                     new LogHelper().Warn("Failed to send confirmation email with reason :- " + emailResponse.responseMessage, SessionData.OperaReservation.ReservationNameID, "FetchPreCheckedInReservation", "pre checked-in fetch");
+                    AuditProgressHelper.LogConfirmationSend(
+                        AuditProgressHelper.ModulePreCheckin,
+                        emailChannel: true,
+                        success: false,
+                        SessionData.OperaReservation.ReservationNameID,
+                        SessionData.OperaReservation.ReservationNameID,
+                        extraDetail: emailResponse.responseMessage);
                 }
                 else
+                {
                     new LogHelper().Log("Email send successfully to " + toEmail, SessionData.OperaReservation.ReservationNameID, "FetchPreCheckedInReservation", "pre checked-in fetch");
+                    AuditProgressHelper.LogConfirmationSend(
+                        AuditProgressHelper.ModulePreCheckin,
+                        emailChannel: true,
+                        success: true,
+                        SessionData.OperaReservation.ReservationNameID,
+                        SessionData.OperaReservation.ReservationNameID);
+                }
             }
             else
             {
                 new LogHelper().Log("Failed to send confirmation email since email address not found from pre checked in list response", SessionData.OperaReservation.ReservationNameID, "FetchPreCheckedInReservation", "pre checked-in fetch");
                 new LogHelper().Warn("Failed to send confirmation email since email address not found from pre checked in list response", SessionData.OperaReservation.ReservationNameID, "FetchPreCheckedInReservation", "pre checked-in fetch");
+                AuditProgressHelper.LogConfirmationSend(
+                    AuditProgressHelper.ModulePreCheckin,
+                    emailChannel: true,
+                    success: false,
+                    SessionData.OperaReservation.ReservationNameID,
+                    SessionData.OperaReservation.ReservationNameID,
+                    extraDetail: "Email address not found");
             }
             #endregion
 

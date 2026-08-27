@@ -31,10 +31,12 @@ namespace CheckinPortal.Controllers
     {
         ReservationLogics reservationLogics = new ReservationLogics();
         // GET: Checkout
-        public async Task<ActionResult> Index(string id)
+        public async Task<ActionResult> Index(string id, string src = null)
         {
             string ActionName = "Index", ActionGroup = "Pre-Checkout";
             ViewBag.id = id;
+            if (!string.IsNullOrWhiteSpace(src))
+                Session["GpLinkSource"] = src;
             string folioAsBase64 = "";
             var currentCulture = Thread.CurrentThread.CurrentUICulture;
             //Check cookie have language and set to selected language
@@ -342,17 +344,25 @@ namespace CheckinPortal.Controllers
                     checkoutReservation.PaidAmount = SessionData.OperaReservation.DepositDetail != null ? SessionData.OperaReservation.DepositDetail.Count() > 0 ? SessionData.OperaReservation.DepositDetail[0].Amount : 0 : 0;
                     if (SessionData.OperaReservation.GuestProfiles != null && SessionData.OperaReservation.GuestProfiles.Count > 0)
                     {
+                        var guestProfile = SessionData.OperaReservation.GuestProfiles[0];
+                        checkoutReservation.FullName = !string.IsNullOrWhiteSpace(guestProfile.LastName)
+                            ? guestProfile.LastName
+                            : (!string.IsNullOrWhiteSpace(guestProfile.GuestName) ? guestProfile.GuestName : "Guest");
 
-                        if (SessionData.OperaReservation.GuestProfiles != null && SessionData.OperaReservation.GuestProfiles.Count > 0)
+                        string emailId = "";
+                        if (guestProfile.Email != null && guestProfile.Email.Count > 0)
                         {
-                            checkoutReservation.FullName = $"{SessionData.OperaReservation.GuestProfiles[0].LastName}";
-                            checkoutReservation.EmailID = SessionData.OperaReservation.GuestProfiles[0].Email[0].email;
+                            var primary = guestProfile.Email.FirstOrDefault(e => e != null && e.primary != null && e.primary.Value && !string.IsNullOrWhiteSpace(e.email));
+                            emailId = primary != null
+                                ? primary.email
+                                : guestProfile.Email.FirstOrDefault(e => e != null && !string.IsNullOrWhiteSpace(e.email))?.email;
                         }
-                        else
-                        {
-                            checkoutReservation.FullName = $"Guest";
-                            checkoutReservation.EmailID = "";
-                        }
+                        checkoutReservation.EmailID = emailId ?? "";
+                    }
+                    else
+                    {
+                        checkoutReservation.FullName = "Guest";
+                        checkoutReservation.EmailID = "";
                     }
 
                     var activeTransactions = paymentHeaders != null && paymentHeaders.Count() > 0 ? paymentHeaders.Where(x => x.TransactionType == "PreAuth") : new List<PaymentHeader>(); //List *//*only Active pre-auth
@@ -372,7 +382,8 @@ namespace CheckinPortal.Controllers
                         AuditProgressHelper.ModulePreCheckout,
                         AuditProgressHelper.Actions.LinkOpened,
                         reservation.ReservationDetailID,
-                        SessionData.OperaReservation?.ReservationNameID);
+                        SessionData.OperaReservation?.ReservationNameID,
+                        extraDetail: "Opened via " + AuditProgressHelper.ResolveLinkSource(Request, Session));
                     ViewBag.PreauthAmount = preAuthAmount;
                     ViewBag.ActiveTransactions = activeTransactions != null && activeTransactions.Count() > 0 ? activeTransactions.ToList() : new List<PaymentHeader>();
                     return View(checkoutReservation);
@@ -1002,26 +1013,26 @@ namespace CheckinPortal.Controllers
             }
             #endregion
 
-            localResponse = await new CloudHelper().PushReservationTrackLocally(SessionData.OperaReservation.ReservationNameID, new Models.APIRequestModel()
-            {
-                RequestObject = new Models.ReservationTrackStatus()
-                {
-                    ReservationNameID = SessionData.OperaReservation.ReservationNameID,
-                    ProcessType = Models.ReservationProcessType.PreCheckedOutFetched.ToString(),
-                    ReservationNumber = SessionData.OperaReservation.ReservationNumber,
-                    ProcessStatus = "Precheckout",
-                    EmailSent = false
-                }
-            }, "pre checked-in fetch", ConfigurationManager.AppSettings["APIBaseUrl"].ToString());
+            //localResponse = await new CloudHelper().PushReservationTrackLocally(SessionData.OperaReservation.ReservationNameID, new Models.APIRequestModel()
+            //{
+            //    RequestObject = new Models.ReservationTrackStatus()
+            //    {
+            //        ReservationNameID = SessionData.OperaReservation.ReservationNameID,
+            //        ProcessType = Models.ReservationProcessType.PreCheckedOutFetched.ToString(),
+            //        ReservationNumber = SessionData.OperaReservation.ReservationNumber,
+            //        ProcessStatus = "Precheckout",
+            //        EmailSent = false
+            //    }
+            //}, "pre checked-in fetch", ConfigurationManager.AppSettings["APIBaseUrl"].ToString());
 
-            if (localResponse.result)
-            {
-                new LogHelper().Log("Reservation track in local DB updated successfully ", SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
-            }
-            else
-            {
-                new LogHelper().Log("Failed to update reservation track in local DB with reason :- " + localResponse.responseMessage, SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
-            }
+            //if (localResponse.result)
+            //{
+            //    new LogHelper().Log("Reservation track in local DB updated successfully ", SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
+            //}
+            //else
+            //{
+            //    new LogHelper().Log("Failed to update reservation track in local DB with reason :- " + localResponse.responseMessage, SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
+            //}
 
             #endregion
 
@@ -1410,12 +1421,24 @@ namespace CheckinPortal.Controllers
                     isEmailSent = false;
                     new LogHelper().Log("Failed to send confirmation email with reason :- " + emailResponse.responseMessage, SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
                     new LogHelper().Warn("Failed to send confirmation email with reason :- " + emailResponse.responseMessage, SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
+                    AuditProgressHelper.LogConfirmationSend(
+                        AuditProgressHelper.ModulePreCheckout,
+                        emailChannel: true,
+                        success: false,
+                        ReservationID,
+                        SessionData.OperaReservation.ReservationNameID,
+                        extraDetail: emailResponse.responseMessage);
                 }
                 else
                 {
                     isEmailSent = true;
                     new LogHelper().Log("Email send successfully to " + folioToEmail, SessionData.OperaReservation.ReservationNameID, "CompletePreCheckout", "pre checked-out complete");
-
+                    AuditProgressHelper.LogConfirmationSend(
+                        AuditProgressHelper.ModulePreCheckout,
+                        emailChannel: true,
+                        success: true,
+                        ReservationID,
+                        SessionData.OperaReservation.ReservationNameID);
                 }
             }
             else
@@ -1425,6 +1448,13 @@ namespace CheckinPortal.Controllers
                     : "email address not found on guest profile";
                 new LogHelper().Log("Failed to send guest folio email since " + skipReason, SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
                 new LogHelper().Warn("Failed to send guest folio email since " + skipReason, SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
+                AuditProgressHelper.LogConfirmationSend(
+                    AuditProgressHelper.ModulePreCheckout,
+                    emailChannel: true,
+                    success: false,
+                    ReservationID,
+                    SessionData.OperaReservation.ReservationNameID,
+                    extraDetail: skipReason);
             }
             #endregion
 

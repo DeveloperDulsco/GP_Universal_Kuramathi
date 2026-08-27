@@ -9,7 +9,8 @@ namespace CheckinPortal
     {
         public static void Register(HttpConfiguration config)
         {
-            // Web API configuration and services
+            // Stack traces in API JSON only when the request is local (not ngrok / test IIS).
+            config.IncludeErrorDetailPolicy = IncludeErrorDetailPolicy.LocalOnly;
 
             // Web API routes
             config.MapHttpAttributeRoutes();

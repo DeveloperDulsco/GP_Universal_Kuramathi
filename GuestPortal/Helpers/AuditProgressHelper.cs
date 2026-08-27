@@ -30,6 +30,8 @@ namespace CheckinPortal.Helpers
             public const string SignatureCompleted = "Signature completed";
             public const string DocumentUploaded = "Document uploaded";
             public const string DocumentSkipped = "Document skipped";
+            public const string TriedToUploadInvalidDocument = "Tried to upload invalid document";
+            public const string TriedToUploadExpiredDocument = "Tried to upload expired document";
             public const string RegistrationCardUpdated = "Registration card updated";
             public const string DisclaimerSaved = "Disclaimer saved";
             public const string PrecheckinCompleted = "Precheckin completed";
@@ -40,6 +42,10 @@ namespace CheckinPortal.Helpers
             public const string LinkSentEmail = "Link sent via email";
             public const string LinkSentWhatsApp = "Link sent via WhatsApp";
             public const string LinkSentSms = "Link sent via SMS";
+            public const string ConfirmationMailSent = "Confirmation mail sent";
+            public const string ConfirmationMailFailed = "Confirmation mail failed";
+            public const string ConfirmationSmsSent = "Confirmation SMS sent";
+            public const string ConfirmationSmsFailed = "Confirmation SMS failed";
 
             public const string OperaEmailUpdateSuccess = "Opera email update success";
             public const string OperaEmailUpdateFailed = "Opera email update failed";
@@ -52,12 +58,173 @@ namespace CheckinPortal.Helpers
             public const string LocalNationalityUpdateSuccess = "Local nationality update success";
             public const string LocalNationalityUpdateFailed = "Local nationality update failed";
             public const string MovedToNextPage = "Moved to next page";
+            public const string GuestDetailsChanged = "Guest details changed";
+            public const string LinkReopened = "Link reopened";
+            public const string TabClosed = "Guest portal tab closed";
+            public const string OpenedInMultipleWindows = "Guest portal opened in another window";
+            public const string AllergiesYes = "Allergies: Yes";
+            public const string AllergiesNo = "Allergies: No";
+            public const string AllergiesNotAdded = "Allergies not added";
+            public const string PromotionalConsentAdded = "Promotional consent accepted";
+            public const string PromotionalConsentNotAdded = "Promotional consent not added";
+            public const string ExcursionDetailsAdded = "Excursion details added";
+            public const string ExcursionDetailsNotAdded = "Excursion details not added";
+            public const string ProfileCreationFailedDocumentSkipped = "Profile creation failed because the document was skipped";
         }
 
-        /// <summary>Format for MovedToNextPage extraDetail, e.g. "Guest Details → Policies".</summary>
+        public const string LinkSourceGrabber = "Grabber";
+        public const string LinkSourceBackoffice = "Back office";
+        public const string LinkSourceQr = "QR code";
+        public const string LinkSourceEmail = "email / WhatsApp link";
+
+        /// <summary>Format for MovedToNextPage extraDetail, e.g. "Guest details to Policies".</summary>
         public static string FormatPageMove(string fromStep, string toStep)
         {
-            return $"{fromStep} → {toStep}";
+            return $"{fromStep} to {toStep}";
+        }
+
+        public static string PageNameFromTabIndex(object tabIndex)
+        {
+            int idx = -1;
+            if (tabIndex != null)
+                int.TryParse(tabIndex.ToString(), out idx);
+            switch (idx)
+            {
+                case 0: return "Guest details";
+                case 1: return "Policies";
+                case 2: return "Documents";
+                case 3: return "Thank you";
+                default: return "Start";
+            }
+        }
+
+        public static string PageNameFromTabId(string tabId)
+        {
+            if (string.IsNullOrWhiteSpace(tabId))
+                return "Guest details";
+            switch (tabId.Trim())
+            {
+                case "guestDetails": return "Guest details";
+                case "policies": return "Policies";
+                case "document": return "Documents";
+                case "qrCode": return "Thank you";
+                case "payment": return "Payment";
+                default: return tabId.Trim();
+            }
+        }
+
+        /// <summary>
+        /// Grabber / Back office should send src=grabber or src=backoffice on the link.
+        /// QR search appends src=qr. Otherwise treated as an email / WhatsApp guest link.
+        /// </summary>
+        public static string ResolveLinkSource(HttpRequestBase request, System.Web.SessionState.HttpSessionState session)
+        {
+            string raw = request?["src"] ?? request?["source"] ?? request?["from"];
+            if (string.IsNullOrWhiteSpace(raw) && session != null)
+                raw = session["GpLinkSource"] as string;
+
+            string key = (raw ?? "").Trim().ToLowerInvariant();
+            if (key == "grabber" || key == "gr" || key == "g")
+                return LinkSourceGrabber;
+            if (key == "backoffice" || key == "bo" || key == "back office" || key == "fo")
+                return LinkSourceBackoffice;
+            if (key == "qr" || key == "kiosk" || key == "search")
+                return LinkSourceQr;
+            if (key == "email" || key == "mail" || key == "sms" || key == "whatsapp")
+                return LinkSourceEmail;
+            return LinkSourceEmail;
+        }
+
+        public static string FormatLinkOpenDetail(string sourceLabel, bool isReopen, string pageName)
+        {
+            string via = "Opened via " + (sourceLabel ?? LinkSourceEmail);
+            if (!isReopen)
+                return via;
+            if (string.IsNullOrWhiteSpace(pageName) || pageName == "Start")
+                return via + ". Link reopened";
+            return via + ". Link reopened and returned to " + pageName;
+        }
+
+        public static string FormatDocumentUploadedDetail(int profileDetailId, string guestLabel = null)
+        {
+            if (profileDetailId <= 0)
+                return null;
+            if (!string.IsNullOrWhiteSpace(guestLabel))
+                return "for " + guestLabel.Trim() + " (guest profile " + profileDetailId + ")";
+            return "for guest profile " + profileDetailId;
+        }
+
+        public static string FormatDocumentSkippedDetail(string profileDetailIdsCsv, string guestLabels = null)
+        {
+            var ids = ParsePositiveIds(profileDetailIdsCsv);
+            if (ids.Count == 0)
+                return string.IsNullOrWhiteSpace(guestLabels)
+                    ? "Guest skipped ID upload, so a guest profile was not created"
+                    : "Skipped for " + guestLabels.Trim() + " — guest profile was not created";
+            string idList = string.Join(", ", ids);
+            if (!string.IsNullOrWhiteSpace(guestLabels))
+                return "Skipped for " + guestLabels.Trim() + " (guest profiles " + idList + ")";
+            return "Skipped for guest profiles " + idList;
+        }
+
+        public static bool HasNoCreatedProfile(string profileDetailIdsCsv)
+        {
+            return ParsePositiveIds(profileDetailIdsCsv).Count == 0;
+        }
+
+        public static string MapGuestFieldLabel(string inputName)
+        {
+            if (string.IsNullOrWhiteSpace(inputName))
+                return null;
+            string n = inputName.ToLowerInvariant();
+            if (n.Contains("email")) return "email";
+            if (n.Contains("phone")) return "phone";
+            if (n.Contains("firstname") || n.Contains("first_name")) return "first name";
+            if (n.Contains("lastname") || n.Contains("last_name")) return "last name";
+            if (n.Contains("middlename")) return "middle name";
+            if (n.Contains("nationality")) return "nationality";
+            if (n.Contains("address")) return "address";
+            if (n.Contains("city")) return "city";
+            if (n.Contains("postal") || n.Contains("zip")) return "postal code";
+            if (n.Contains("country")) return "country";
+            if (n.Contains("birth") || n.Contains("dob")) return "date of birth";
+            if (n.Contains("gender")) return "gender";
+            if (n.Contains("visitpurpose") || n.Contains("purpose")) return "purpose of visit";
+            if (n.Contains("flight")) return "flight number";
+            if (n.Contains("eta") || n.Contains("arrival")) return "arrival time";
+            if (n.Contains("salutation") || n.Contains("title")) return "title";
+            return null;
+        }
+
+        private static System.Collections.Generic.List<int> ParsePositiveIds(string csv)
+        {
+            var ids = new System.Collections.Generic.List<int>();
+            if (string.IsNullOrWhiteSpace(csv))
+                return ids;
+            foreach (var part in csv.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries))
+            {
+                int id;
+                if (int.TryParse(part.Trim(), out id) && id > 0 && !ids.Contains(id))
+                    ids.Add(id);
+            }
+            return ids;
+        }
+
+        /// <summary>FO audit for confirmation email or SMS/WhatsApp after pre-check-in / pre-check-out.</summary>
+        public static void LogConfirmationSend(
+            string moduleName,
+            bool emailChannel,
+            bool success,
+            object reservationDetailId,
+            string reservationNameID,
+            string extraDetail = null,
+            string guestName = null)
+        {
+            string actionName = emailChannel
+                ? (success ? Actions.ConfirmationMailSent : Actions.ConfirmationMailFailed)
+                : (success ? Actions.ConfirmationSmsSent : Actions.ConfirmationSmsFailed);
+
+            Log(moduleName, actionName, reservationDetailId, reservationNameID, extraDetail, guestName);
         }
 
         /// <param name="reservationDetailId">Local ReservationDetailID (or ReservationModel.ReservationID). Stored in SP ReservationNumber column.</param>

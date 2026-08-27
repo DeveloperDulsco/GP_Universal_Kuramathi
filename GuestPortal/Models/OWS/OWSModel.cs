@@ -44,6 +44,8 @@ namespace CheckinPortal.Models.OWS
         public string ProfileID { get; set; }
         public UpdateProfileAllergyRequest UpdateProfileAllergyRequest { get; set; }
         public AddReservationTrace AddReservationTrace { get; set; }
+        public string DeviceName { get; set; }
+        public string AppName { get; set; }
     }
     public class FetchGuestRequest
     {

@@ -1,0 +1,33 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/.vs/GuestPortal
+/GuestPortal/App_Data/LocalLogs
+/GuestPortal/assets/css/Backup files(7-4-26)
+/GuestPortal/assets/css/custom(13-4-26).zip
+*.zip
+/GuestPortal/assets/images/room-bg_old.jpg
+/GuestPortal/assets/images/intro-bg_old.jpg
+/GuestPortal/assets/images/building-bg_old.jpg
+/GuestPortal/assets/images/hotel-full-bg_old.png
+/GuestPortal/assets/images/room-bg.jpg
+/GuestPortal/assets/images/logo1.png
+/GuestPortal/Properties/PublishProfiles
+*.config
+/GuestPortal/Web.Debug.config
+/GuestPortal/Web.Release.config
+/GuestPortal/GuestPortal.csproj.user
+/PropertyFiles
+/GuestPortal/temp
+/GuestPortal/Web.Debug.config
+/GuestPortal/Web.Release.config
+/GuestPortal/.vs/GuestPortal.csproj.dtbcache.json
+/GuestPortal/Web.Debug.config
+/GuestPortal/Web.Release.config
+/_tmp_dims.py
+/GuestPortal/GuestPortal.csproj.user
+/GuestPortal/Web.Debug.config
+/GuestPortal/Web.Release.config
+/GuestPortal/.vs/GuestPortal.csproj.dtbcache.json
+/GuestPortal/GuestPortal.csproj.user

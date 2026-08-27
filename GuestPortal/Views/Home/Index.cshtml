@@ -1,5 +1,7 @@
 @model CheckinPortal.Models.ReservationModel
 @{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    // Pre-check-in only: ReservationModel + _Layout. Do not use _LayoutCheckout / CheckoutReservationModel.
     var ProfileList = (List<CheckinPortal.Models.Profile>)Model.Profiles;
     var primaryProfile = ProfileList[0];
 
@@ -520,7 +522,7 @@ new { @class = "text-danger" }
         </div>*@
                                         <div class="form-check">
                                             <input class="form-check-input" type="checkbox" id="promotionalConsent" name="CheckBox2" value="True">
-                                            <label class="form-check-label" for="promotionalConsent" style="text-transform: none; font-weight: 500;">
+                                            <label class="form-check-label" for="promotionalConsent" style="text-transform: none; font-weight: 500; font-family: 'Agenda-Light';">
                                                 I would like to receive Universal Kuramathi promotions and offers via email and WhatsApp. Enabling this means you may receive marketing messages about packages, events, and special offers. You can unsubscribe at any time.
                                             </label>
                                         </div>
@@ -2031,16 +2033,27 @@ new { @class = "text-danger" }
             $('.fileUpload').each(function () {
                 if ($(this).data('upload') === 'skipped') {
                     var pid = parseInt($(this).data('guestprofileid'), 10) || 0;
-                    if (pid > 0) {
-                        ids.push(pid);
-                    }
+                    ids.push(pid);
                 }
             });
             return ids;
         }
 
+        function collectSkippedGuestLabels() {
+            var labels = [];
+            $('.fileUpload').each(function () {
+                if ($(this).data('upload') === 'skipped') {
+                    var role = ($(this).data('guest-role') || '').toString().trim();
+                    var name = ($('#guestname_' + $(this).data('guestid')).clone().children().remove().end().text() || '').trim();
+                    labels.push(role || name || 'guest');
+                }
+            });
+            return labels;
+        }
+
         function persistGuestDocumentSkips(finalize) {
             var profileIds = collectSkippedProfileDetailIds();
+            var labels = collectSkippedGuestLabels();
             // Always POST on finalize so IsUploadComplete can roll up even when no skips remain.
             if (!finalize && profileIds.length === 0) {
                 return $.Deferred().resolve({ result: true }).promise();
@@ -2053,6 +2066,7 @@ new { @class = "text-danger" }
                     ReservationNameID: '@Model.ReservationNameID',
                     ReservationNumber: '@Model.ReservationNumber',
                     ProfileDetailIDs: profileIds.join(','),
+                    SkippedGuestLabels: labels.join(', '),
                     FinalizeDocumentStep: finalize === true
                 },
                 type: "POST",
@@ -2232,6 +2246,12 @@ new { @class = "text-danger" }
             const data = new URLSearchParams(
                 new FormData(document.getElementById('frm_guestdetails'))
             );
+            var changedFields = (typeof collectGuestDetailChanges === 'function')
+                ? collectGuestDetailChanges()
+                : '';
+            if (changedFields) {
+                data.set('AuditChangedFields', changedFields);
+            }
             fetch(BaseURL + '/Home/UpdateReservation', {
                 method: "POST",
                 body: data
@@ -2851,6 +2871,142 @@ new { @class = "text-danger" }
             });
         } catch (e) { }
     }
+
+    function currentPrecheckinPageId() {
+        var $active = $('.tab-pane.active').first();
+        return $active.length ? $active.attr('id') : 'guestDetails';
+    }
+
+    function logPortalAudit(actionName, extraDetail, currentPage) {
+        try {
+            var payload = new URLSearchParams();
+            payload.append('ActionName', actionName);
+            payload.append('ExtraDetail', extraDetail || '');
+            payload.append('ReservationID', $('#ReservationID').val() || '');
+            payload.append('ReservationNameID', '@Model.ReservationNameID');
+            payload.append('CurrentPage', currentPage || currentPrecheckinPageId());
+            var url = "@Url.Action("LogPortalActivity", "Home")";
+            if (navigator.sendBeacon) {
+                navigator.sendBeacon(url, new Blob([payload.toString()], { type: 'application/x-www-form-urlencoded' }));
+            } else {
+                $.post(url, payload.toString());
+            }
+        } catch (e) { }
+    }
+
+    var gpGuestDetailsSnapshot = '';
+    function snapshotGuestDetailsForm() {
+        try {
+            var parts = [];
+            $('#frm_guestdetails').find('input, select, textarea').each(function () {
+                var $el = $(this);
+                var name = ($el.attr('name') || '').toString();
+                if (!name || $el.attr('type') === 'hidden') return;
+                if (name.indexOf('ProfileDetailID') >= 0 || name.indexOf('ProfileID') >= 0) return;
+                parts.push(name + '=' + ($el.val() || ''));
+            });
+            gpGuestDetailsSnapshot = parts.join('|');
+        } catch (e) {
+            gpGuestDetailsSnapshot = '';
+        }
+    }
+
+    function collectGuestDetailChanges() {
+        var changed = [];
+        try {
+            $('#frm_guestdetails').find('input, select, textarea').each(function () {
+                var $el = $(this);
+                var name = ($el.attr('name') || '').toString();
+                if (!name || $el.attr('type') === 'hidden') return;
+                if (name.indexOf('ProfileDetailID') >= 0 || name.indexOf('ProfileID') >= 0) return;
+                var token = name + '=' + ($el.val() || '');
+                if (gpGuestDetailsSnapshot && gpGuestDetailsSnapshot.indexOf(token) < 0) {
+                    changed.push(name);
+                }
+            });
+        } catch (e) { }
+        return changed.join(',');
+    }
+
+    $(function () {
+        snapshotGuestDetailsForm();
+        window.addEventListener('pagehide', function () {
+            logPortalAudit('TabClosed', '', currentPrecheckinPageId());
+        });
+    });
+
+    (function initPrecheckinReservationTabLock() {
+        var resNo = '@Model.ReservationNumber';
+        if (!resNo) return;
+        var lockKey = 'gp_precheckin_tab_lock_' + resNo;
+        var tabId = 'tab_' + Date.now() + '_' + Math.random().toString(36).slice(2);
+        var HEARTBEAT_MS = 2500;
+        var STALE_MS = 12000;
+        var isOwner = false;
+        var isBlocked = false;
+        var heartbeatTimer = null;
+        var loggedMulti = false;
+        function now() { return Date.now(); }
+        function readLock() {
+            try {
+                var raw = localStorage.getItem(lockKey);
+                if (!raw) return null;
+                if (raw.charAt(0) !== '{') return { tabId: raw, ts: 0 };
+                return JSON.parse(raw);
+            } catch (e) { return null; }
+        }
+        function writeLock() {
+            try { localStorage.setItem(lockKey, JSON.stringify({ tabId: tabId, ts: now() })); } catch (e) { }
+        }
+        function ownsLock(lock) { return lock && lock.tabId === tabId; }
+        function isLockStale(lock) { return !lock || !lock.ts || (now() - lock.ts) > STALE_MS; }
+        function showMultiTabBlock() {
+            isBlocked = true;
+            isOwner = false;
+            if (!loggedMulti) {
+                loggedMulti = true;
+                logPortalAudit('OpenedInMultipleWindows', '', currentPrecheckinPageId());
+            }
+            if (!$('#gpTabLockOverlay').length) {
+                $('body').append(
+                    '<div id="gpTabLockOverlay" style="position:fixed;inset:0;z-index:20000;background:rgba(0,0,0,0.55);display:flex;align-items:center;justify-content:center;padding:24px;">' +
+                    '<div style="max-width:480px;width:100%;background:#fff;padding:28px 24px;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,.25);">' +
+                    '<h5 style="margin:0 0 16px;">Message</h5>' +
+                    '<p style="margin:0;font-size:13px;line-height:1.45;">This reservation is already open in another window. Please continue in that window.</p>' +
+                    '</div></div>'
+                );
+            }
+        }
+        function tryClaim() {
+            try {
+                var lock = readLock();
+                if (ownsLock(lock)) { writeLock(); isOwner = true; return true; }
+                if (!lock || isLockStale(lock)) { writeLock(); isOwner = true; return true; }
+                showMultiTabBlock();
+                return false;
+            } catch (e) { return true; }
+        }
+        tryClaim();
+        heartbeatTimer = setInterval(function () {
+            if (isOwner) writeLock();
+            else tryClaim();
+        }, HEARTBEAT_MS);
+        window.addEventListener('pagehide', function () {
+            try {
+                var lock = readLock();
+                if (ownsLock(lock)) localStorage.removeItem(lockKey);
+            } catch (e) { }
+            if (heartbeatTimer) clearInterval(heartbeatTimer);
+        });
+        window.addEventListener('storage', function (e) {
+            if (e.key !== lockKey) return;
+            if (!e.newValue) { tryClaim(); return; }
+            try {
+                var lock = JSON.parse(e.newValue);
+                if (lock && lock.tabId !== tabId) showMultiTabBlock();
+            } catch (ex) { }
+        });
+    })();
 
     function hideDocumentLoader() {
         try { $('.loader-screen').fadeOut(100); } catch (e) { }
@@ -3670,6 +3826,7 @@ new { @class = "text-danger" }
                             formdata.append('ReservationID', $('#ReservationID').val());
                             formdata.append('ProfileDetailID', profileDetailID);
                             formdata.append('ProfileID', profileid);
+                            formdata.append('GuestLabel', ($('#guestid_' + guestID).data('guest-role') || '').toString());
                             formdata.append("dt.ReservationNameId", '@Model.ReservationNameID');
                             formdata.append("dt.ReservationNumber",'@Model.ReservationNumber');
                             formdata.append('documentInformation', JSON.stringify(docInfoSnapshot));

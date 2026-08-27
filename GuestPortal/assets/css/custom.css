@@ -206,7 +206,7 @@ position: fixed;width: 100%;z-index:5;height: 110px;
 .plcy-wrapper span{font-size: 13px;display: block;}
 .plcy-wrapper span span{display: inline;color: #000000;}
 .plcy-wrapper span.required{display: inline;color: #c00;}
-.plcy-wrapper .form-check-label{font-size: 16px;font-weight: 500;text-transform: none;color: #000000;font-family: "Inter", Arial, sans-serif;}
+.plcy-wrapper .form-check-label{font-size: 16px;font-weight: 500;text-transform: none;color: #000000;font-family: 'Agenda-Light';}
 .plcy-wrapper .form-check-label a{font-size: inherit;font-weight: inherit;font-family: inherit;color: #000000;text-decoration: underline;}
 .plcy-wrapper .form-check-label span{display: inline;font-size: inherit;}
 .plcy-wrapper .total label{font-size: 13px;}
@@ -452,6 +452,13 @@ width:150px;padding:58px 0;margin: 0 auto;content:''!important;word-break: break
 
 .qr{background:#CDE9E0;border-radius: 3px;text-align: center;padding: 30px;margin:10px 0;border-radius:20px;}
 .qr .code{margin-bottom:30px;}
+.qr p{font-size:15px;line-height:1.65;color:#000000;max-width:720px;margin:0 auto;font-family:"Inter", Arial, sans-serif;}
+.qr.thank-you-panel{padding:48px 40px;}
+.thank-you-invoice{text-align:center;margin:28px auto 0;max-width:520px;}
+.thank-you-invoice label{display:block;font-size:13px;color:#5f6062;font-weight:500;text-transform:none;margin-bottom:10px;font-family:"Inter", Arial, sans-serif;}
+.thank-you-invoice .mail-form{display:flex;gap:10px;justify-content:center;align-items:center;}
+.thank-you-invoice .mail-form .form-control{flex:1;min-width:0;height:44px;border-radius:22px;}
+.thank-you-invoice .mail-form .btnstyle{min-width:100px;margin:0;flex-shrink:0;}
 
 .buttonwrapper{padding-bottom:5px;}
 .buttonwrapper a{font-family: "Inter", Arial, sans-serif;font-weight: 600;text-transform: uppercase;color: #202020;display: inline-block; margin-top:20px;}
@@ -1282,6 +1289,10 @@ box-shadow: -1px 13px 13px -10px rgba(0,0,0,0.35);
       height: 480px;
       max-width: none;
     }
+    .qr.thank-you-panel{padding:32px 20px;}
+    .thank-you-invoice{max-width:100%;padding:0 8px;}
+    .thank-you-invoice .mail-form{flex-direction:column;align-items:stretch;}
+    .thank-you-invoice .mail-form .btnstyle{width:100%;}
 }
 
 @media (max-width:767px) {

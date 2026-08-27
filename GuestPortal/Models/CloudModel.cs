@@ -330,6 +330,7 @@ namespace CheckinPortal.Models
         public string ProcessStatus { get; set; }
         public bool? EmailSent { get; set; }
         public int? ID { get; set; }
+        public string ApplicationName { get; set; } = "GuestPortal";
     }
     public partial class PolicyMaster
     {
