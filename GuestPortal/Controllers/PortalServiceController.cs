@@ -337,10 +337,22 @@ namespace CheckinPortal.Controllers
                     string reason = emailResponse?.responseMessage ?? "Unknown email API failure";
                     new LogHelper().Log("Failed to send guest folio email with reason :- " + reason, reservationNameID, actionName, actionGroup);
                     new LogHelper().Warn("Failed to send guest folio email with reason :- " + reason, reservationNameID, actionName, actionGroup);
+                    AuditProgressHelper.Log(
+                        AuditProgressHelper.ModulePreCheckout,
+                        AuditProgressHelper.Actions.InvoiceEmailResendFailed,
+                        reservationID,
+                        reservationNameID,
+                        extraDetail: "from Thank you page, to " + emailID + " — " + reason);
                     return Ok(new { result = false, responseMessage = "Unable to send the invoice email. Please try again or contact the front desk." });
                 }
 
                 new LogHelper().Log("Guest folio email sent successfully to " + emailID, reservationNameID, actionName, actionGroup);
+                AuditProgressHelper.Log(
+                    AuditProgressHelper.ModulePreCheckout,
+                    AuditProgressHelper.Actions.InvoiceEmailResent,
+                    reservationID,
+                    reservationNameID,
+                    extraDetail: "from Thank you page, to " + emailID);
 
                 // Best-effort: persist the address used for this send
                 try

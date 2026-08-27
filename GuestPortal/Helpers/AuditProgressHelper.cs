@@ -30,6 +30,8 @@ namespace CheckinPortal.Helpers
             public const string SignatureCompleted = "Signature completed";
             public const string DocumentUploaded = "Document uploaded";
             public const string DocumentSkipped = "Document skipped";
+            public const string DocumentSkippedWithoutProfile = "Document skipped without a profile";
+            public const string DocumentUploadSummary = "Document upload summary";
             public const string TriedToUploadInvalidDocument = "Tried to upload invalid document";
             public const string TriedToUploadExpiredDocument = "Tried to upload expired document";
             public const string RegistrationCardUpdated = "Registration card updated";
@@ -38,6 +40,10 @@ namespace CheckinPortal.Helpers
             public const string ThankYouButtonClicked = "Thank You button clicked";
             public const string FolioAgreed = "Folio agreed";
             public const string FolioSigned = "Folio signed";
+            public const string FolioApprovedSigned = "Approved by signing the invoice";
+            public const string ApprovedMovedToThankYou = "Approved and moved to Thank you";
+            public const string InvoiceEmailResent = "Invoice email sent again from Thank you page";
+            public const string InvoiceEmailResendFailed = "Invoice email from Thank you page failed";
             public const string PrecheckoutCompleted = "Precheckout completed";
             public const string LinkSentEmail = "Link sent via email";
             public const string LinkSentWhatsApp = "Link sent via WhatsApp";
@@ -108,6 +114,8 @@ namespace CheckinPortal.Helpers
                 case "policies": return "Policies";
                 case "document": return "Documents";
                 case "qrCode": return "Thank you";
+                case "folio": return "Folio invoice";
+                case "thankyou": return "Thank you";
                 case "payment": return "Payment";
                 default: return tabId.Trim();
             }
@@ -167,9 +175,25 @@ namespace CheckinPortal.Helpers
             return "Skipped for guest profiles " + idList;
         }
 
-        public static bool HasNoCreatedProfile(string profileDetailIdsCsv)
+        public static string FormatDocumentOutcome(
+            int paxCount,
+            int uploadedCount,
+            int skippedWithoutProfileCount,
+            string skippedWithoutProfileLabels)
         {
-            return ParsePositiveIds(profileDetailIdsCsv).Count == 0;
+            int pax = paxCount > 0 ? paxCount : uploadedCount + skippedWithoutProfileCount;
+            string summary = uploadedCount + " of " + pax + " guests uploaded";
+            if (skippedWithoutProfileCount > 0)
+            {
+                summary += ". " + skippedWithoutProfileCount + " skipped without a profile";
+                if (!string.IsNullOrWhiteSpace(skippedWithoutProfileLabels))
+                    summary += " (" + skippedWithoutProfileLabels.Trim() + ")";
+            }
+            else
+            {
+                summary += ". None skipped without a profile";
+            }
+            return summary;
         }
 
         public static string MapGuestFieldLabel(string inputName)

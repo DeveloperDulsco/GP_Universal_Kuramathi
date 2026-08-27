@@ -338,6 +338,7 @@ namespace CheckinPortal.Controllers
                     //checkoutReservation.ReservationID = SessionData.ReservationDetailID;
                     checkoutReservation.ReservationNumber = SessionData.OperaReservation.ReservationNumber;
                     checkoutReservation.ReservationNameID = SessionData.OperaReservation.ReservationNameID;
+                    checkoutReservation.ReservationID = reservation.ReservationDetailID;
 
                     checkoutReservation.TotalAmount = SessionData.OperaReservation.TotalAmount != null ? SessionData.OperaReservation.TotalAmount.Value : 0;
                     checkoutReservation.BalanecAmount = guestBalanceForUi;
@@ -378,12 +379,11 @@ namespace CheckinPortal.Controllers
                     }
 
                     Helpers.LogHelper.Instance.Log($"Reservation {ConfirmationNo} opening precheckout link", "", ActionName, ActionGroup);
-                    AuditProgressHelper.Log(
-                        AuditProgressHelper.ModulePreCheckout,
-                        AuditProgressHelper.Actions.LinkOpened,
+                    LogCheckoutLinkOpened(
                         reservation.ReservationDetailID,
                         SessionData.OperaReservation?.ReservationNameID,
-                        extraDetail: "Opened via " + AuditProgressHelper.ResolveLinkSource(Request, Session));
+                        reservation.ReservationNumber,
+                        ViewBag.EcomStatus == true);
                     ViewBag.PreauthAmount = preAuthAmount;
                     ViewBag.ActiveTransactions = activeTransactions != null && activeTransactions.Count() > 0 ? activeTransactions.ToList() : new List<PaymentHeader>();
                     return View(checkoutReservation);
@@ -433,6 +433,8 @@ namespace CheckinPortal.Controllers
             Response.SetCookie(langCookie);
             Response.Cookies.Add(langCookie);
             var x = $"{Request.Url.Scheme}://{Request.Url.Authority}/Checkout/Index?ID={HttpUtility.UrlEncode(confirmationToken)}";
+            if (!string.IsNullOrWhiteSpace(Request["src"]))
+                x += "&src=" + HttpUtility.UrlEncode(Request["src"]);
             Response.Redirect(@x);
             return null;
             //return RedirectToAction("Index", new { id = confirmationToken });
@@ -956,6 +958,12 @@ namespace CheckinPortal.Controllers
                         AuditProgressHelper.Actions.PrecheckoutCompleted,
                         ReservationID,
                         SessionData.OperaReservation?.ReservationNameID);
+                    AuditProgressHelper.Log(
+                        AuditProgressHelper.ModulePreCheckout,
+                        AuditProgressHelper.Actions.ApprovedMovedToThankYou,
+                        ReservationID,
+                        SessionData.OperaReservation?.ReservationNameID,
+                        extraDetail: AuditProgressHelper.FormatPageMove("Folio invoice", "Thank you"));
                 }
             }
             #endregion
@@ -1427,7 +1435,7 @@ namespace CheckinPortal.Controllers
                         success: false,
                         ReservationID,
                         SessionData.OperaReservation.ReservationNameID,
-                        extraDetail: emailResponse.responseMessage);
+                        extraDetail: "after approve, to " + folioToEmail + " — " + (emailResponse.responseMessage ?? "failed"));
                 }
                 else
                 {
@@ -1438,7 +1446,8 @@ namespace CheckinPortal.Controllers
                         emailChannel: true,
                         success: true,
                         ReservationID,
-                        SessionData.OperaReservation.ReservationNameID);
+                        SessionData.OperaReservation.ReservationNameID,
+                        extraDetail: "after approve, to " + folioToEmail);
                 }
             }
             else
@@ -1454,7 +1463,7 @@ namespace CheckinPortal.Controllers
                     success: false,
                     ReservationID,
                     SessionData.OperaReservation.ReservationNameID,
-                    extraDetail: skipReason);
+                    extraDetail: "after approve — " + skipReason);
             }
             #endregion
 
@@ -1503,11 +1512,6 @@ namespace CheckinPortal.Controllers
             string folioAsBase64 = "";
             //push events to DB
             reservationLogics.InsertEvent(policiesModel.ReservationID, "Folio Sign");
-            AuditProgressHelper.Log(
-                AuditProgressHelper.ModulePreCheckout,
-                AuditProgressHelper.Actions.FolioAgreed,
-                policiesModel.ReservationID,
-                SessionData.OperaReservation?.ReservationNameID ?? policiesModel.ReservationNameID);
 
             Helpers.LogHelper.Instance.Log($"Updating folio signature", "", ActionName, ActionGroup);
             #region FetchFolioAsBase64
@@ -1584,12 +1588,7 @@ namespace CheckinPortal.Controllers
                         new LogHelper().Log("Signature updated successfully", "", ActionName, ActionGroup);
                         AuditProgressHelper.Log(
                             AuditProgressHelper.ModulePreCheckout,
-                            AuditProgressHelper.Actions.SignatureCompleted,
-                            policiesModel.ReservationID,
-                            SessionData.OperaReservation?.ReservationNameID);
-                        AuditProgressHelper.Log(
-                            AuditProgressHelper.ModulePreCheckout,
-                            AuditProgressHelper.Actions.FolioSigned,
+                            AuditProgressHelper.Actions.FolioApprovedSigned,
                             policiesModel.ReservationID,
                             SessionData.OperaReservation?.ReservationNameID);
                     }
@@ -3428,6 +3427,70 @@ namespace CheckinPortal.Controllers
             }
 
             return true;
+        }
+
+        [HttpPost]
+        public ActionResult LogPortalActivity(
+            string ActionName,
+            string ExtraDetail = null,
+            int? ReservationID = null,
+            string ReservationNameID = null,
+            string CurrentPage = null)
+        {
+            string mapped = null;
+            if (string.Equals(ActionName, AuditProgressHelper.Actions.TabClosed, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(ActionName, "TabClosed", StringComparison.OrdinalIgnoreCase))
+            {
+                mapped = AuditProgressHelper.Actions.TabClosed;
+                ExtraDetail = "while on " + AuditProgressHelper.PageNameFromTabId(CurrentPage);
+            }
+            else if (string.Equals(ActionName, AuditProgressHelper.Actions.OpenedInMultipleWindows, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(ActionName, "OpenedInMultipleWindows", StringComparison.OrdinalIgnoreCase))
+            {
+                mapped = AuditProgressHelper.Actions.OpenedInMultipleWindows;
+                ExtraDetail = "Same reservation was already open in another window";
+            }
+
+            if (string.IsNullOrEmpty(mapped))
+                return Json(new { result = false });
+
+            object detailId = ReservationID.HasValue && ReservationID.Value > 0
+                ? (object)ReservationID.Value
+                : ReservationNameID;
+
+            AuditProgressHelper.Log(
+                AuditProgressHelper.ModulePreCheckout,
+                mapped,
+                detailId,
+                ReservationNameID ?? SessionData.OperaReservation?.ReservationNameID,
+                extraDetail: ExtraDetail);
+
+            return Json(new { result = true });
+        }
+
+        private void LogCheckoutLinkOpened(int reservationDetailId, string reservationNameID, string reservationNumber, bool alreadyOnThankYou)
+        {
+            string source = AuditProgressHelper.ResolveLinkSource(Request, Session);
+            string cookieName = "gp_co_seen_" + (reservationNumber ?? reservationDetailId.ToString());
+            bool seenBefore = Request.Cookies[cookieName] != null;
+            bool isReopen = alreadyOnThankYou || seenBefore;
+            string pageName = alreadyOnThankYou ? "Thank you" : "Folio invoice";
+            string extra = AuditProgressHelper.FormatLinkOpenDetail(source, isReopen, pageName);
+
+            var seenCookie = new HttpCookie(cookieName, "1")
+            {
+                Expires = DateTime.Now.AddDays(14),
+                Path = "/",
+                HttpOnly = true
+            };
+            Response.Cookies.Set(seenCookie);
+
+            AuditProgressHelper.Log(
+                AuditProgressHelper.ModulePreCheckout,
+                isReopen ? AuditProgressHelper.Actions.LinkReopened : AuditProgressHelper.Actions.LinkOpened,
+                reservationDetailId,
+                reservationNameID,
+                extraDetail: extra);
         }
 
         /// <summary>

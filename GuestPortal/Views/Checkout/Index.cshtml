@@ -705,6 +705,28 @@
         }
 
 
+        function currentCheckoutPageId() {
+            var $active = $('.tab-pane.active').first();
+            return $active.length ? $active.attr('id') : 'folio';
+        }
+
+        function logCheckoutAudit(actionName, extraDetail, currentPage) {
+            try {
+                var payload = new URLSearchParams();
+                payload.append('ActionName', actionName);
+                payload.append('ExtraDetail', extraDetail || '');
+                payload.append('ReservationID', $('#ReservationID').val() || '');
+                payload.append('ReservationNameID', '@Model.ReservationNameID');
+                payload.append('CurrentPage', currentPage || currentCheckoutPageId());
+                var url = "@Url.Action("LogPortalActivity", "Checkout")";
+                if (navigator.sendBeacon) {
+                    navigator.sendBeacon(url, new Blob([payload.toString()], { type: 'application/x-www-form-urlencoded' }));
+                } else {
+                    $.post(url, payload.toString());
+                }
+            } catch (e) { }
+        }
+
         function sendEmail() {
             var email = ($('#emailID').val() || '').trim();
 
@@ -800,6 +822,7 @@
                 isBlocked = true;
                 isOwner = false;
                 window.gpCheckoutTabBlocked = true;
+                logCheckoutAudit('OpenedInMultipleWindows', '', currentCheckoutPageId());
 
                 try {
                     $('.modal').not('#customMessageModal').modal('hide');
@@ -946,6 +969,7 @@
             });
 
             function onPageExit() {
+                logCheckoutAudit('TabClosed', '', currentCheckoutPageId());
                 if (heartbeatTimer) {
                     clearInterval(heartbeatTimer);
                     heartbeatTimer = null;

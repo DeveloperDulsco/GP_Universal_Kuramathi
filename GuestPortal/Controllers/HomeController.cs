@@ -2512,25 +2512,57 @@ namespace CheckinPortal.Controllers
             string ReservationNumber,
             string ProfileDetailIDs = null,
             string SkippedGuestLabels = null,
+            string SkippedGuestIndexes = null,
+            string SkippedWithoutProfileLabels = null,
+            int PaxCount = 0,
+            int UploadedCount = 0,
+            int SkippedWithoutProfileCount = 0,
             bool FinalizeDocumentStep = false)
         {
             string ActionName = "DocumentUploadSkipped", ActionGroup = "Pre-Checkin";
             try
             {
                 reservationLogics.InsertEvent(ReservationID, FinalizeDocumentStep ? "DocumentUploadSkipFinalize" : "DocumentUploadSkip");
-                bool hasSkip = !string.IsNullOrWhiteSpace(SkippedGuestLabels)
+
+                bool hasSkipWithoutProfile = SkippedWithoutProfileCount > 0
+                    || !string.IsNullOrWhiteSpace(SkippedWithoutProfileLabels);
+                bool hasSkip = hasSkipWithoutProfile
+                    || !string.IsNullOrWhiteSpace(SkippedGuestLabels)
                     || !string.IsNullOrWhiteSpace(ProfileDetailIDs);
-                if (hasSkip)
+
+                if (hasSkipWithoutProfile)
                 {
-                    bool noProfileCreated = AuditProgressHelper.HasNoCreatedProfile(ProfileDetailIDs);
                     AuditProgressHelper.Log(
                         AuditProgressHelper.ModulePreCheckin,
-                        noProfileCreated
-                            ? AuditProgressHelper.Actions.ProfileCreationFailedDocumentSkipped
-                            : AuditProgressHelper.Actions.DocumentSkipped,
+                        AuditProgressHelper.Actions.DocumentSkippedWithoutProfile,
+                        ReservationID,
+                        ReservationNameID,
+                        extraDetail: string.IsNullOrWhiteSpace(SkippedWithoutProfileLabels)
+                            ? (SkippedWithoutProfileCount + " guest(s)")
+                            : SkippedWithoutProfileLabels.Trim());
+                }
+                else if (hasSkip && !AuditProgressHelper.HasNoCreatedProfile(ProfileDetailIDs))
+                {
+                    AuditProgressHelper.Log(
+                        AuditProgressHelper.ModulePreCheckin,
+                        AuditProgressHelper.Actions.DocumentSkipped,
                         ReservationID,
                         ReservationNameID,
                         extraDetail: AuditProgressHelper.FormatDocumentSkippedDetail(ProfileDetailIDs, SkippedGuestLabels));
+                }
+
+                if (FinalizeDocumentStep)
+                {
+                    AuditProgressHelper.Log(
+                        AuditProgressHelper.ModulePreCheckin,
+                        AuditProgressHelper.Actions.DocumentUploadSummary,
+                        ReservationID,
+                        ReservationNameID,
+                        extraDetail: AuditProgressHelper.FormatDocumentOutcome(
+                            PaxCount,
+                            UploadedCount,
+                            SkippedWithoutProfileCount,
+                            SkippedWithoutProfileLabels));
                 }
 
                 var statusResponse = await new CloudHelper().UpdateReservationStatus(
@@ -2543,6 +2575,14 @@ namespace CheckinPortal.Controllers
                             ReservationNameID = ReservationNameID,
                             Type = "documentSkipped",
                             ProfileDetailIDs = ProfileDetailIDs,
+                            SkippedGuestIndexes = SkippedGuestIndexes,
+                            SkippedGuestLabels = string.IsNullOrWhiteSpace(SkippedWithoutProfileLabels)
+                                ? SkippedGuestLabels
+                                : SkippedWithoutProfileLabels,
+                            PaxCount = PaxCount,
+                            UploadedCount = UploadedCount,
+                            SkippedWithoutProfileCount = SkippedWithoutProfileCount,
+                            HasSkipWithoutProfile = hasSkipWithoutProfile,
                             FinalizeDocumentStep = FinalizeDocumentStep
                         }
                     },
@@ -2551,6 +2591,10 @@ namespace CheckinPortal.Controllers
 
                 new LogHelper().Log(
                     "Document skip. Finalize=" + FinalizeDocumentStep
+                    + " Uploaded=" + UploadedCount
+                    + " SkippedNoProfile=" + SkippedWithoutProfileCount
+                    + " Pax=" + PaxCount
+                    + " Slots=" + (SkippedGuestIndexes ?? "")
                     + " Profiles=" + (ProfileDetailIDs ?? "")
                     + " ReservationNumber=" + ReservationNumber,
                     ReservationNameID, ActionName, ActionGroup);

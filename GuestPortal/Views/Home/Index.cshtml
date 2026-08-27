@@ -1010,7 +1010,7 @@ new { @class = "text-danger" }
                     <span aria-hidden="true">&times;</span>
                 </button>*@
             </div>
-            <div class="modal-body" style="max-height:70vh; overflow:auto;">
+            <div class="modal-body">
                 <p style="font-size:13px; line-height:1.45;">
                     Milaidhoo makes every attempt to identify ingredients that may cause allergic reactions to those with allergies such as,
                     but not limited to food allergy, skin allergy, dust allergy, insect sting allergy, and mould allergy.
@@ -1043,12 +1043,13 @@ new { @class = "text-danger" }
                 </div>
                 <div class="form-group" style="margin-top:12px;">
                     <label for="allergenOtherNotes" style="font-weight:600;">Other allergies [please avoid mentioning any meal preferences]:</label>
-                    <textarea id="allergenOtherNotes" class="form-control" rows="3" maxlength="500" placeholder="Any other allergies or notes"></textarea>
+                    <textarea id="allergenOtherNotes" class="form-control" rows="3" maxlength="50" placeholder="Any other allergies or notes"></textarea>
+                    <div id="allergenOtherNotesCount" style="text-align:right; font-size:12px; color:#5f6062; margin-top:4px;">0 / 50</div>
                 </div>
                 <p style="font-weight:600; font-size:13px; line-height:1.45; margin-top:14px; margin-bottom:8px;">
                     Therefore, I freely and voluntarily agree to the following terms and conditions.
                 </p>
-                <ul style="font-size:13px; line-height:1.45; padding-left:25px; margin-bottom:12px; list-style-type: upper-alpha;">                   
+                <ul style="font-size:13px; line-height:1.45; padding-left:25px; margin-bottom:12px; list-style-type: upper-alpha;">
                         <li>I have the full and final responsibility of choosing any food, beverage and/or service taking into consideration the health and safety of my well-being.</li>
                         <li>I acknowledge and agree that the Milaidhoo Resort is unable to specially prepare any food, beverages and dishes catering only to my needs;</li>
                         <li>I agree that the Milaidhoo Resort shall not be liable in case of any allergic reaction encountered as a result thereof.</li>
@@ -1058,10 +1059,12 @@ new { @class = "text-danger" }
                         <li>I further agree to indemnify and hold any or all of the Indemnitees harmless against any claims, demands, liabilities, rights, damages, or expenses arising as a result of any action taken by a third party in relation to any causes of action whatsoever or losses whatsoever kind resulting from the food consumed at the Milaidhoo Resort including but not limited to any bodily harm, injury, illness, death to me.</li>
                         <li>These Terms and Conditions are governed by the laws of the Maldives and subject to the Courts of the Maldives.</li>
                     </ul>
-                    <div class="button-wrapper1 mt-3">
-                        <button type="button" class="btn_cancel" id="allergenFormCancelBtn" title="Close without saving">CANCEL</button>
-                        <button type="button" class="btn_ok" id="allergenFormSaveBtn">Save allergen details</button>
-                    </div>
+            </div>
+            <div class="modal-footer allergen-form-footer">
+                <div class="button-wrapper1">
+                    <button type="button" class="btn_cancel" id="allergenFormCancelBtn" title="Close without saving">CANCEL</button>
+                    <button type="button" class="btn_ok" id="allergenFormSaveBtn">Save allergen details</button>
+                </div>
             </div>
         </div>
     </div>
@@ -2028,34 +2031,44 @@ new { @class = "text-danger" }
             persistGuestDocumentSkips(false);
         }
 
-        function collectSkippedProfileDetailIds() {
-            var ids = [];
+        function collectDocumentOutcome() {
+            var uploaded = 0;
+            var skippedNoProfile = [];
+            var skippedSlots = [];
+            var skippedIds = [];
+            var skippedLabels = [];
             $('.fileUpload').each(function () {
-                if ($(this).data('upload') === 'skipped') {
-                    var pid = parseInt($(this).data('guestprofileid'), 10) || 0;
-                    ids.push(pid);
+                var status = ($(this).data('upload') || '').toString();
+                var slot = parseInt($(this).data('guestid'), 10) || 0;
+                var pid = parseInt($(this).data('guestprofileid'), 10) || 0;
+                var role = ($(this).data('guest-role') || '').toString().trim() || ('Guest ' + slot);
+                if (status === 'completed') {
+                    uploaded++;
+                    return;
+                }
+                if (status === 'skipped') {
+                    skippedLabels.push(role);
+                    skippedSlots.push(slot);
+                    skippedIds.push(pid);
+                    if (pid <= 0) {
+                        skippedNoProfile.push(role);
+                    }
                 }
             });
-            return ids;
-        }
-
-        function collectSkippedGuestLabels() {
-            var labels = [];
-            $('.fileUpload').each(function () {
-                if ($(this).data('upload') === 'skipped') {
-                    var role = ($(this).data('guest-role') || '').toString().trim();
-                    var name = ($('#guestname_' + $(this).data('guestid')).clone().children().remove().end().text() || '').trim();
-                    labels.push(role || name || 'guest');
-                }
-            });
-            return labels;
+            var pax = $('.fileUpload').length;
+            return {
+                pax: pax,
+                uploaded: uploaded,
+                skippedIds: skippedIds,
+                skippedSlots: skippedSlots,
+                skippedLabels: skippedLabels,
+                skippedWithoutProfile: skippedNoProfile
+            };
         }
 
         function persistGuestDocumentSkips(finalize) {
-            var profileIds = collectSkippedProfileDetailIds();
-            var labels = collectSkippedGuestLabels();
-            // Always POST on finalize so IsUploadComplete can roll up even when no skips remain.
-            if (!finalize && profileIds.length === 0) {
+            var outcome = collectDocumentOutcome();
+            if (!finalize && outcome.skippedIds.length === 0 && outcome.skippedWithoutProfile.length === 0) {
                 return $.Deferred().resolve({ result: true }).promise();
             }
             return $.ajax({
@@ -2065,8 +2078,13 @@ new { @class = "text-danger" }
                     ReservationID: $("#ReservationID").val(),
                     ReservationNameID: '@Model.ReservationNameID',
                     ReservationNumber: '@Model.ReservationNumber',
-                    ProfileDetailIDs: profileIds.join(','),
-                    SkippedGuestLabels: labels.join(', '),
+                    ProfileDetailIDs: outcome.skippedIds.join(','),
+                    SkippedGuestLabels: outcome.skippedLabels.join(', '),
+                    SkippedGuestIndexes: outcome.skippedSlots.join(','),
+                    SkippedWithoutProfileLabels: outcome.skippedWithoutProfile.join(', '),
+                    PaxCount: outcome.pax,
+                    UploadedCount: outcome.uploaded,
+                    SkippedWithoutProfileCount: outcome.skippedWithoutProfile.length,
                     FinalizeDocumentStep: finalize === true
                 },
                 type: "POST",
@@ -2385,13 +2403,30 @@ new { @class = "text-danger" }
 
                     // Allergen Yes/No + form modal
                     var allergenFormCommitted = false;
+                    var ALLERGEN_OTHER_MAX = 50;
+
+                    function updateAllergenOtherCount() {
+                        var $notes = $('#allergenOtherNotes');
+                        var val = ($notes.val() || '');
+                        if (val.length > ALLERGEN_OTHER_MAX) {
+                            val = val.substring(0, ALLERGEN_OTHER_MAX);
+                            $notes.val(val);
+                        }
+                        $('#allergenOtherNotesCount').text(val.length + ' / ' + ALLERGEN_OTHER_MAX);
+                    }
 
                     function restoreAllergenFormFromSaved() {
                         var saved = ($('#Allergies').val() || '').split(',').map(function (s) { return $.trim(s); }).filter(Boolean);
                         $('.allergen-item').each(function () {
                             $(this).prop('checked', saved.indexOf($(this).val()) >= 0);
                         });
-                        $('#allergenOtherNotes').val($('#OtherAllergies').val() || '');
+                        var other = ($('#OtherAllergies').val() || '');
+                        if (other.length > ALLERGEN_OTHER_MAX) {
+                            other = other.substring(0, ALLERGEN_OTHER_MAX);
+                            $('#OtherAllergies').val(other);
+                        }
+                        $('#allergenOtherNotes').val(other);
+                        updateAllergenOtherCount();
                     }
 
                     function clearAllergenFormState() {
@@ -2400,6 +2435,7 @@ new { @class = "text-danger" }
                         $('#OtherAllergies').val('');
                         $('.allergen-item').prop('checked', false);
                         $('#allergenOtherNotes').val('');
+                        updateAllergenOtherCount();
                         $('#allergenSummaryText').text('');
                         $('#allergenSummary').hide();
                     }
@@ -2420,6 +2456,7 @@ new { @class = "text-danger" }
                             $('#OtherAllergies').val('');
                             $('.allergen-item').prop('checked', false);
                             $('#allergenOtherNotes').val('');
+                            updateAllergenOtherCount();
                             $('#allergenSummaryText').text('');
                             $('#allergenSummary').hide();
                             $('#allergenFormModal').modal('hide');
@@ -2442,10 +2479,23 @@ new { @class = "text-danger" }
                         $('#allergenFormModal').modal('show');
                     });
 
+                    $('#allergenOtherNotes').on('input paste keyup', function () {
+                        updateAllergenOtherCount();
+                    });
+                    $('#allergenFormModal').on('shown.bs.modal', function () {
+                        restoreAllergenFormFromSaved();
+                        updateAllergenOtherCount();
+                    });
+
                     $('#allergenFormSaveBtn').on('click', function () {
                         var selected = [];
                         $('.allergen-item:checked').each(function () { selected.push($(this).val()); });
                         var other = ($('#allergenOtherNotes').val() || '').trim();
+                        if (other.length > ALLERGEN_OTHER_MAX) {
+                            other = other.substring(0, ALLERGEN_OTHER_MAX);
+                            $('#allergenOtherNotes').val(other);
+                            updateAllergenOtherCount();
+                        }
                         if (selected.length === 0 && !other) {
                             $('#customMessageModalMessage').html("Select at least one allergen or enter Other/Notes.");
                             $('#customMessageModal').modal('show');

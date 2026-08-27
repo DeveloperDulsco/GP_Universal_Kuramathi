@@ -27,6 +27,14 @@ namespace CheckinPortal.Models
         public string Type { get; set; }
         /// <summary>CSV of ProfileDetailIDs to mark as document-skipped.</summary>
         public string ProfileDetailIDs { get; set; }
+        /// <summary>1-based guest slots that skipped ID upload (e.g. 2,4). Used when no profile row exists.</summary>
+        public string SkippedGuestIndexes { get; set; }
+        /// <summary>Staff labels for skipped slots, e.g. Adult 2, Adult 4.</summary>
+        public string SkippedGuestLabels { get; set; }
+        public int? PaxCount { get; set; }
+        public int? UploadedCount { get; set; }
+        public int? SkippedWithoutProfileCount { get; set; }
+        public bool HasSkipWithoutProfile { get; set; }
         /// <summary>When true, set IsUploadComplete if every profile is uploaded or skipped.</summary>
         public bool FinalizeDocumentStep { get; set; }
     }
