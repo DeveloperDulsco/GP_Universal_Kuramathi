@@ -2141,6 +2141,9 @@ new { @class = "text-danger" }
         }
 
         function proceedDocumentUpload($trigger) {
+            if (typeof gpGuardPortalSave === 'function' && !gpGuardPortalSave()) {
+                return;
+            }
             $('.loader-screen').fadeIn(100);
             waitForPendingDocumentUploads().then(function () {
                 // Persist per-profile skips BEFORE Thank You / PreCheckinComplete so FO report updates on redirect.
@@ -2163,12 +2166,20 @@ new { @class = "text-danger" }
                             $('.loader-screen').fadeOut(500);
                             moveToNextTab($trigger);
                         },
-                        error: function (data) {
-                            // Still advance so guest is not stuck; server may have partially completed.
+                        error: function (xhr, status) {
+                            if (status === 'timeout' || (typeof gpPortalIdleExpired === 'function' && gpPortalIdleExpired())) {
+                                if (typeof gpShowPortalTimeout === 'function') {
+                                    gpShowPortalTimeout();
+                                } else {
+                                    $('.loader-screen').fadeOut(500);
+                                }
+                                return;
+                            }
                             documentupload = true;
                             $('.loader-screen').fadeOut(500);
                             moveToNextTab($trigger);
-                        }
+                        },
+                        timeout: (window.GP_PORTAL_REQUEST_MS || 60000)
                     });
                 });
             });
@@ -2260,6 +2271,9 @@ new { @class = "text-danger" }
             //phoneInput.value = iti.getNumber()
             //    .replace('+', '')
             //    .replace(/\s/g, '');
+            if (typeof gpGuardPortalSave === 'function' && !gpGuardPortalSave()) {
+                return false;
+            }
             $('.loader-screen').fadeIn(100);
             const data = new URLSearchParams(
                 new FormData(document.getElementById('frm_guestdetails'))
@@ -2278,6 +2292,13 @@ new { @class = "text-danger" }
                 .then(response => {
                     moveToNextTab(btn);
                     $('.loader-screen').fadeOut(1000);
+                })
+                .catch(function () {
+                    if (typeof gpShowPortalTimeout === 'function') {
+                        gpShowPortalTimeout();
+                    } else {
+                        $('.loader-screen').fadeOut(200);
+                    }
                 });
         }
 
@@ -2390,6 +2411,9 @@ new { @class = "text-danger" }
                                 data.append('ExcursionParticipants', $('#ExcursionParticipants').val() || '');
                             }
 
+                            if (typeof gpGuardPortalSave === 'function' && !gpGuardPortalSave()) {
+                                return false;
+                            }
                             $('.loader-screen').fadeIn(100);
                             fetch(BaseURL + '/Home/UpdatePolicies', {
                                 method: "POST",
@@ -2397,6 +2421,12 @@ new { @class = "text-danger" }
                             }).then(response => response = response.json()).then(response => {
                                 moveToNextTab(btn);
                                 $('.loader-screen').fadeOut(1000);
+                            }).catch(function () {
+                                if (typeof gpShowPortalTimeout === 'function') {
+                                    gpShowPortalTimeout();
+                                } else {
+                                    $('.loader-screen').fadeOut(200);
+                                }
                             });
                         }
                     }
@@ -3493,6 +3523,7 @@ new { @class = "text-danger" }
                 url: '/Home/CompletePreCheckin',
                 type: 'POST',
                 contentType: 'application/json; charset=utf-8',
+                timeout: (window.GP_PORTAL_REQUEST_MS || 60000),
                 data: JSON.stringify({
                     ReservationNumber: @Model.ReservationNumber,
                     ReservationNameId: @Model.ReservationNameID,
@@ -3516,9 +3547,12 @@ new { @class = "text-danger" }
                     $('.loader-screen').fadeOut(200);
                     btn.data('busy', false);
                 },
-                error: function () {
+                error: function (xhr, status) {
                     $('.loader-screen').fadeOut(200);
                     btn.data('busy', false);
+                    if (status === 'timeout' && typeof gpShowPortalTimeout === 'function') {
+                        gpShowPortalTimeout();
+                    }
                 }
             });
         });

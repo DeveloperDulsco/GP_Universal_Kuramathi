@@ -121,6 +121,19 @@
     <!-- Optional JavaScript -->
     <!-- jQuery first, then Popper.js, then Bootstrap JS -->
     <script src="~/assets/js/jquery-3.5.1.js"></script>
+    @{
+        var portalIdleMin = 20;
+        var portalReqSec = 60;
+        int.TryParse(System.Configuration.ConfigurationManager.AppSettings["PortalIdleTimeoutMinutes"], out portalIdleMin);
+        int.TryParse(System.Configuration.ConfigurationManager.AppSettings["PortalRequestTimeoutSeconds"], out portalReqSec);
+        if (portalIdleMin < 1) { portalIdleMin = 20; }
+        if (portalReqSec < 10) { portalReqSec = 60; }
+    }
+    <script>
+        window.GP_PORTAL_IDLE_MS = @(portalIdleMin * 60 * 1000);
+        window.GP_PORTAL_REQUEST_MS = @(portalReqSec * 1000);
+    </script>
+    <script src="~/assets/js/portalIdleTimeout.js?v=20260901idle"></script>
     <script src="~/assets/js/bootstrap.bundle.js"></script>
     <script src="~/assets/js/bootstrap-select.min.js"></script>
     <script src="~/assets/js/moment.js"></script>

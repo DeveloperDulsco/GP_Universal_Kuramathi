@@ -483,6 +483,7 @@
     <Content Include="assets\js\bootstrap.bundle.min.js" />
     <Content Include="assets\js\client-compress.js" />
     <Content Include="assets\js\commonFunctions.js" />
+    <Content Include="assets\js\portalIdleTimeout.js" />
     <Content Include="assets\js\compress.js" />
     <Content Include="assets\js\core\base64.js" />
     <Content Include="assets\js\core\converter.js" />

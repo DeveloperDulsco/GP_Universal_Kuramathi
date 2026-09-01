@@ -608,6 +608,9 @@
 
         function AgreeAndMoveNext(obj) {
 
+            if (typeof gpGuardPortalSave === 'function' && !gpGuardPortalSave()) {
+                return;
+            }
             // Non-zero folio balance (debit or credit): block Agree — guest must contact Front Desk
             var balanceAmount = parseFloat(("@Model.BalanecAmount" || "0").toString().replace(',', '.')) || 0;
             if (Math.abs(balanceAmount) > 0.0001) {
@@ -657,10 +660,20 @@
                                 $('.loader-screen').fadeOut(500);
                             }, 500);
                         }).catch(error => {
-                            $('#customMessageModalMessage').html("Unable to process your checkout.");
-                            $('#customMessageModal').modal('show');
-                            $('.loader-screen').fadeOut(500);
+                            if (typeof gpShowPortalTimeout === 'function') {
+                                gpShowPortalTimeout();
+                            } else {
+                                $('#customMessageModalMessage').html("Unable to process your checkout.");
+                                $('#customMessageModal').modal('show');
+                                $('.loader-screen').fadeOut(500);
+                            }
                         });
+                    }).catch(function () {
+                        if (typeof gpShowPortalTimeout === 'function') {
+                            gpShowPortalTimeout();
+                        } else {
+                            $('.loader-screen').fadeOut(200);
+                        }
                     });
 
                 }
