@@ -3448,7 +3448,7 @@ namespace CheckinPortal.Controllers
                 || string.Equals(ActionName, "OpenedInMultipleWindows", StringComparison.OrdinalIgnoreCase))
             {
                 mapped = AuditProgressHelper.Actions.OpenedInMultipleWindows;
-                ExtraDetail = "Same reservation was already open in another window";
+                ExtraDetail = "Same reservation already open";
             }
 
             if (string.IsNullOrEmpty(mapped))

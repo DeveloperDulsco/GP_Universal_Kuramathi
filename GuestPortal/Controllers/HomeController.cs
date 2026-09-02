@@ -2365,7 +2365,7 @@ namespace CheckinPortal.Controllers
             }
             else if (string.Equals(mapped, AuditProgressHelper.Actions.OpenedInMultipleWindows, StringComparison.OrdinalIgnoreCase))
             {
-                extra = "Same reservation was already open in another window";
+                extra = "Same reservation already open";
             }
 
             AuditProgressHelper.Log(

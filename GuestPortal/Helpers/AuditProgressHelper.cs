@@ -299,9 +299,17 @@ namespace CheckinPortal.Helpers
                 string message = string.IsNullOrWhiteSpace(extraDetail)
                     ? actionName
                     : actionName + " - " + extraDetail;
+                // Do not prefix this event: ActionName + extra exceeds older Description VARCHAR(50)
+                // and was saved as "... Same reser".
+                if (string.Equals(actionName, Actions.OpenedInMultipleWindows, StringComparison.OrdinalIgnoreCase)
+                    && !string.IsNullOrWhiteSpace(extraDetail))
+                {
+                    message = extraDetail;
+                }
                 message = SanitizeAuditText(message);
-                if (message.Length > 200)
-                    message = message.Substring(0, 200);
+                const int auditDescriptionMax = 200;
+                if (message.Length > auditDescriptionMax)
+                    message = message.Substring(0, auditDescriptionMax);
                 actionName = SanitizeAuditText(actionName);
 
                 var auditRequest = new PortalAuditLogModel
