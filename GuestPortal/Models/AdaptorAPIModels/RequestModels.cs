@@ -44,6 +44,10 @@ namespace CheckinPortal.Models.AdaptorAPIModels
     {
 
         public string Base64Image { get; set; }
+        /// <summary>Front side; Cloud multi-side also accepts this name.</summary>
+        public string Base64ImageFront { get; set; }
+        /// <summary>Back side for ExtractDataFromMBDocumentMultiSide (not Base64Image2).</summary>
+        public string Base64ImageBack { get; set; }
         /// <summary>Optional back/side-2 for identity-card multi-side OCR.</summary>
         public string Base64Image2 { get; set; }
         public string ImageFormat { get; set; }

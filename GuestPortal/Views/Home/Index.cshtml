@@ -3019,19 +3019,24 @@ new { @class = "text-danger" }
         try { $('.loader-screen').fadeOut(100); } catch (e) { }
     }
 
-    function isAcceptedGuestDocument(idType, issueCountry) {
-        var type = (idType || '').toString().trim().toUpperCase().replace(/^TYPE_/, '');
+    function isMaldivesIssueCountry(issueCountry) {
         var country = (issueCountry || '').toString().trim().toUpperCase();
-        if (!type) {
-            return false;
-        }
+        return country === 'MDV' || country === 'MV' || country === 'MALDIVES'
+            || country.indexOf('MALDIV') >= 0;
+    }
+
+    function isAcceptedGuestDocument(idType, issueCountry, documentNumber) {
+        var type = (idType || '').toString().trim().toUpperCase().replace(/^TYPE_/, '');
         if (isPassportDocumentType(type)) {
             return true;
         }
-        return isNationalIdDocumentType(type) && (
-            country === 'MDV' || country === 'MV' || country === 'MALDIVES'
-            || country.indexOf('MALDIV') >= 0
-        );
+        if (looksLikeMaldivesNationalIdNumber(documentNumber)) {
+            return true;
+        }
+        if (!type) {
+            return false;
+        }
+        return isNationalIdDocumentType(type) && isMaldivesIssueCountry(issueCountry);
     }
 
     function isPassportDocumentType(idType) {
@@ -3040,9 +3045,46 @@ new { @class = "text-danger" }
             || type.indexOf('PASSPORT') >= 0;
     }
 
+    function isAadhaarDocumentType(idType) {
+        var type = (idType || '').toString().trim().toUpperCase().replace(/^TYPE_/, '');
+        var normalized = type.replace(/[-_\s]/g, '');
+        return normalized.indexOf('AADHAAR') >= 0 || normalized.indexOf('AADHAR') >= 0
+            || normalized.indexOf('UIDAI') >= 0
+            || type.indexOf('ENROLLMENT') >= 0;
+    }
+
+    function isIncompatibleIdBackType(idType, issueCountry, documentNumber) {
+        if (!idType) {
+            return false;
+        }
+        if (isAadhaarDocumentType(idType) || isPassportDocumentType(idType)) {
+            return true;
+        }
+        var type = (idType || '').toString().trim().toUpperCase();
+        if (type.indexOf('DRIVER') >= 0 || type.indexOf('LICENCE') >= 0 || type.indexOf('LICENSE') >= 0
+            || type.indexOf('VISA') >= 0 || type.indexOf('RESIDENCE') >= 0) {
+            return true;
+        }
+        if (isNationalIdDocumentType(idType)) {
+            var country = (issueCountry || '').toString().trim();
+            if (country && !isMaldivesIssueCountry(country) && !looksLikeMaldivesNationalIdNumber(documentNumber)) {
+                return true;
+            }
+            return false;
+        }
+        return true;
+    }
+
+    function frontIsNationalIdForBack() {
+        return shouldEnableBackSide(
+            documentInformation.documentType,
+            documentInformation.issueCountry,
+            documentInformation.documentNumber);
+    }
+
     function isNationalIdDocumentType(idType) {
         var type = (idType || '').toString().trim().toUpperCase().replace(/^TYPE_/, '');
-        if (!type || isPassportDocumentType(type)) {
+        if (!type || isPassportDocumentType(type) || isAadhaarDocumentType(type)) {
             return false;
         }
         // BlinkID kebab types (id, multipurpose-id, eid) + legacy IDENTITY_CARD / NID.
@@ -3061,19 +3103,15 @@ new { @class = "text-danger" }
         return /^A\d{6,}$/.test(n);
     }
 
-    // Dual-side Back unlock: do not require a narrow OCR type match.
-    // Passport stays single-side; Maldives NIC / national ID / unknown non-passport unlock Back.
+    // Back only for accepted Maldives national ID. Passport is single-side. No other IDs.
     function shouldEnableBackSide(idType, issueCountry, documentNumber) {
-        if (looksLikeMaldivesNationalIdNumber(documentNumber)) {
-            return true;
-        }
-        if (isNationalIdDocumentType(idType)) {
-            return true;
-        }
         if (isPassportDocumentType(idType)) {
             return false;
         }
-        return true;
+        if (!isAcceptedGuestDocument(idType, issueCountry, documentNumber)) {
+            return false;
+        }
+        return isNationalIdDocumentType(idType) || looksLikeMaldivesNationalIdNumber(documentNumber);
     }
 
     function setPrimaryDoc2Enabled(enabled) {
@@ -3086,6 +3124,17 @@ new { @class = "text-danger" }
             $doc2.prop('disabled', true).attr('disabled', 'disabled');
             $label.addClass('doc-side-disabled');
         }
+    }
+
+    function rejectMismatchedBackDocument(alertId, fileControl) {
+        hideDocumentLoader();
+        showAlert(alertId, "Please upload the back of the same national ID. Passport, Aadhaar, or another document cannot be used as the back.", "warning");
+        recordDocumentUploadFailure($("#currentGuestIndex").val());
+        logDocumentAction('DocumentUploadInvalidType');
+        $(fileControl).val('');
+        $(fileControl).siblings(".custom-file-label").removeClass("selected").html('Choose file');
+        $(fileControl).parent('div').find('img').attr('src', '');
+        $(fileControl).parent('div').find('img').hide();
     }
 
     function rejectUnsupportedDocument(alertId, fileControl, filecontrolID, message) {
@@ -3723,7 +3772,7 @@ new { @class = "text-danger" }
         function applySelectedNationalityFallback() {
             if (!documentInformation.nationality || !documentInformation.nationality.trim()) {
                 // Maldives national ID: nationality is MDV/MV even when OCR MRZ nationality is blank.
-                if (isAcceptedGuestDocument(documentInformation.documentType, documentInformation.issueCountry)
+                if (isAcceptedGuestDocument(documentInformation.documentType, documentInformation.issueCountry, documentInformation.documentNumber)
                     && isMaldivesIssueCountry(documentInformation.issueCountry)
                     && isNationalIdDocumentType(documentInformation.documentType)) {
                     documentInformation.nationality = 'MV';
@@ -3805,7 +3854,7 @@ new { @class = "text-danger" }
                                 recordDocumentUploadFailure($("#currentGuestIndex").val());
                                 return;
                             }
-                            if (!isAcceptedGuestDocument(documentInformation.documentType, documentInformation.issueCountry)) {
+                            if (!isAcceptedGuestDocument(documentInformation.documentType, documentInformation.issueCountry, documentInformation.documentNumber)) {
                                 $('#customMessageModalMessage').html(DOCUMENT_ACCEPT_MSG);
                                 $('#customMessageModal').modal('show');
                                 logDocumentAction('DocumentUploadInvalidType');
@@ -4004,11 +4053,6 @@ new { @class = "text-danger" }
             }
 
             {
-                // Pragmatic: once Front file is accepted client-side, unlock Back for dual-side ID.
-                // OCR may later re-lock if the document is a passport.
-                if (filecontrolID === "primaryDoc1") {
-                    setPrimaryDoc2Enabled(true);
-                }
                 $('.loader-screen').fadeIn(100);
                 logDocumentAction('DocumentUploadAttempt');
                 var ocrGeneration = documentUploadOcrGeneration;
@@ -4041,16 +4085,60 @@ new { @class = "text-danger" }
                             return;
                         }
                         var imageBase64 = imgout.data;
-                        validateDocumentDirect({
+                        var ocrPayload = {
                             imageBase64: imageBase64,
                             extension: ".jpg"
+                        };
+                        if (filecontrolID === "primaryDoc2") {
+                            var frontSrc = $('#imgprimaryDoc1').attr('src') || '';
+                            var frontB64 = (frontSrc || '').replace(/^data:image\/[a-zA-Z0-9+.-]+;base64,/, '');
+                            if (!frontB64) {
+                                hideDocumentLoader();
+                                showAlert(alertId, "Please upload the Front of your national ID first.", "warning");
+                                $(fileControl).val('');
+                                $(fileControl).siblings(".custom-file-label").removeClass("selected").html('Choose file');
+                                $(fileControl).parent('div').find('img').attr('src', '');
+                                $(fileControl).parent('div').find('img').hide();
+                                return;
+                            }
+                            ocrPayload.imageBase64 = frontB64;
+                            ocrPayload.imageBase64Back = imageBase64;
+                        }
+                        validateDocumentDirect(ocrPayload).then(function (response) {
+                            if (filecontrolID !== "primaryDoc2" || !frontIsNationalIdForBack() || !(response && response.Result)) {
+                                return response;
+                            }
+                            if (isIncompatibleIdBackType(
+                                response.responseData && response.responseData.idType,
+                                response.responseData && (response.responseData.issueCountry || response.responseData.issueCountry_fullname),
+                                response.responseData && response.responseData.documentNumber)) {
+                                var combinedMismatch = new Error('wrong-back');
+                                combinedMismatch.gpWrongBack = true;
+                                throw combinedMismatch;
+                            }
+                            // Combined OCR may still report the front ID type; classify the back image alone.
+                            return validateDocumentDirect({
+                                imageBase64: imageBase64,
+                                extension: ".jpg"
+                            }).then(function (backOnly) {
+                                var backType = backOnly && backOnly.responseData && backOnly.responseData.idType;
+                                var backCountry = backOnly && backOnly.responseData
+                                    && (backOnly.responseData.issueCountry || backOnly.responseData.issueCountry_fullname);
+                                var backNumber = backOnly && backOnly.responseData && backOnly.responseData.documentNumber;
+                                if (isIncompatibleIdBackType(backType, backCountry, backNumber)) {
+                                    var backMismatch = new Error('wrong-back');
+                                    backMismatch.gpWrongBack = true;
+                                    throw backMismatch;
+                                }
+                                return response;
+                            });
                         }).then(response => {
                             if (ocrGeneration !== documentUploadOcrGeneration) {
                                 return;
                             }
                             console.log(response);
                             if (response.Result) {
-                                assignDocumentInfo(response);
+                                assignDocumentInfo(response, filecontrolID === "primaryDoc2");
 
                                 var transactionIDRequestObj = {
                                     "RequestObject": response.responseData.TransactionID
@@ -4064,11 +4152,20 @@ new { @class = "text-danger" }
                                     );
                                 console.log('isValid : ' + isValid);
                                 if (isValid) {
-                                   if (!response.responseData.IsExpired) {
+                                   var skipExpiryUntilBack = false;
+                                   if (filecontrolID === "primaryDoc1") {
+                                       skipExpiryUntilBack = shouldEnableBackSide(
+                                           response.responseData.idType,
+                                           response.responseData.issueCountry || response.responseData.issueCountry_fullname,
+                                           response.responseData.documentNumber)
+                                           && !response.responseData.expiryDate;
+                                   }
+                                   if (!response.responseData.IsExpired || skipExpiryUntilBack) {
                                         if (filecontrolID === "primaryDoc1"
                                             && !isAcceptedGuestDocument(
                                                 response.responseData.idType,
-                                                response.responseData.issueCountry || response.responseData.issueCountry_fullname)) {
+                                                response.responseData.issueCountry || response.responseData.issueCountry_fullname,
+                                                response.responseData.documentNumber)) {
                                             rejectUnsupportedDocument(alertId, fileControl, filecontrolID, DOCUMENT_ACCEPT_MSG);
                                             return;
                                         }
@@ -4092,7 +4189,11 @@ new { @class = "text-danger" }
                                         if (filecontrolID === "primaryDoc1") {
                                             setPendingModalDocNumber(response.responseData.documentNumber);
                                         }
-                                        if (response.responseData && response.responseData.fullImage) {
+                                        if (filecontrolID === "primaryDoc2") {
+                                            $(imgPreview).attr('src', `${imgout.prefix}${imgout.data}`);
+                                            $(imgPreview).show();
+                                        }
+                                        else if (response.responseData && response.responseData.fullImage) {
                                             $(imgPreview).attr('src', "data:image/jpg;base64," + response.responseData.fullImage);
                                             $(imgPreview).show();
                                         }
@@ -4173,7 +4274,11 @@ new { @class = "text-danger" }
                                 }
                             }
 
-                        }).catch(function () {
+                        }).catch(function (err) {
+                            if (err && err.gpWrongBack) {
+                                rejectMismatchedBackDocument(alertId, fileControl);
+                                return;
+                            }
                             hideDocumentLoader();
                             logDocumentAction('MicroblinkUnavailable');
                             showAlert(alertId, "Document service is temporarily unavailable. Please try again.", "warning");
@@ -4251,50 +4356,51 @@ new { @class = "text-danger" }
                     });
 
 
-                            function assignDocumentInfo(response) {
+                            function assignDocumentInfo(response, overwriteFromCombined) {
                                 //alert(response.responseData.idType);
                                 console.log('doctype: '+response.responseData.idType);
-                        if (!documentInformation.documentType)
+                        var overwrite = !!overwriteFromCombined;
+                        if (overwrite || !documentInformation.documentType)
                             documentInformation.documentType = response.responseData.idType;
-                        if (!documentInformation.documentNumber)
+                        if (overwrite || !documentInformation.documentNumber)
                             documentInformation.documentNumber = response.responseData.documentNumber;
-                        if (!documentInformation.issueDate)
+                        if (overwrite || !documentInformation.issueDate)
                             documentInformation.issueDate = response.responseData.issueDate;
-                        if (!documentInformation.expiryDate)
+                        if (overwrite || !documentInformation.expiryDate)
                             documentInformation.expiryDate = response.responseData.expiryDate;
-                        if (!documentInformation.gender)
+                        if (overwrite || !documentInformation.gender)
                             documentInformation.gender = response.responseData.gender;
-                        if (!documentInformation.firstName)
+                        if (overwrite || !documentInformation.firstName)
                             documentInformation.firstName = response.responseData.firstName;
-                        if (!documentInformation.middleName)
+                        if (overwrite || !documentInformation.middleName)
                             documentInformation.middleName = response.responseData.middleName;
-                        if (!documentInformation.lastName)
+                        if (overwrite || !documentInformation.lastName)
                             documentInformation.lastName = response.responseData.lastName;
-                        if (!documentInformation.fullName)
+                        if (overwrite || !documentInformation.fullName)
                             documentInformation.fullName = response.responseData.fullName;
-                        if (!documentInformation.nationality)
+                        if (overwrite || !documentInformation.nationality)
                             documentInformation.nationality = response.responseData.nationality;
-                        if (!documentInformation.nationality_fullname)
+                        if (overwrite || !documentInformation.nationality_fullname)
                             documentInformation.nationality_fullname = response.responseData.nationality_fullname;
-                        if (!documentInformation.issueCountry)
+                        if (overwrite || !documentInformation.issueCountry)
                             documentInformation.issueCountry = response.responseData.issueCountry || response.responseData.issueCountry_fullname;
-                        if (!documentInformation.address1)
+                        if (overwrite || !documentInformation.address1)
                             documentInformation.address1 = response.responseData.address1;
-                        if (!documentInformation.address2)
+                        if (overwrite || !documentInformation.address2)
                             documentInformation.address2 = response.responseData.address2;
-                        if (!documentInformation.city)
+                        if (overwrite || !documentInformation.city)
                             documentInformation.city = response.responseData.city;
-                        if (!documentInformation.state)
+                        if (overwrite || !documentInformation.state)
                             documentInformation.state = response.responseData.state;
-                        if (!documentInformation.zip)
+                        if (overwrite || !documentInformation.zip)
                             documentInformation.zip = response.responseData.zip;
                         applySelectedNationalityFallback();
-                        if (!documentInformation.faceImage)
+                        if (overwrite || !documentInformation.faceImage)
                             documentInformation.faceImage = response.responseData.faceImage;
-                        if (!documentInformation.documentType)
+                        if (overwrite || !documentInformation.documentType)
                             documentInformation.documentType = response.responseData.idType;
                                // documentInformation.issueCountry = response.responseData.issueCountry_fullname;
-                        if (!documentInformation.birthDate)
+                        if (overwrite || !documentInformation.birthDate)
                             if (response.responseData.dateOfBirth != null && response.responseData.dateOfBirth != "" && response.responseData.dateOfBirth != undefined)
                                 documentInformation.birthDate = response.responseData.dateOfBirth;
                         if (response.responseData.birthDate != null && response.responseData.birthDate != "" && response.responseData.birthDate != undefined)

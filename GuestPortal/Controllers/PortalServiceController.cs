@@ -577,11 +577,13 @@ namespace CheckinPortal.Controllers
             try
             {
                 bool hasBack = !string.IsNullOrWhiteSpace(uplodedDocument.imageBase64Back);
+                string frontImage = StripDocumentDataUrl(uplodedDocument.imageBase64);
+                string backImage = hasBack ? StripDocumentDataUrl(uplodedDocument.imageBase64Back) : null;
                 Helpers.LogHelper.Instance.Debug(
                     "Uploading Document Type and Size :- " + uplodedDocument.extension
-                    + " : frontLen=" + (uplodedDocument.imageBase64 != null ? uplodedDocument.imageBase64.Length : 0)
+                    + " : frontLen=" + (frontImage != null ? frontImage.Length : 0)
                     + "; hasBack=" + hasBack
-                    + (hasBack ? ("; backLen=" + uplodedDocument.imageBase64Back.Length) : ""),
+                    + (hasBack ? ("; backLen=" + backImage.Length) : ""),
                     "", "ExtractDataFromMBDocument", "GuestPortal");
                 string BaseURL = ConfigurationManager.AppSettings["APIBaseUrl"].ToString();
 
@@ -589,8 +591,10 @@ namespace CheckinPortal.Controllers
                 {
                     RequestObject = new RegulaRequest()
                     {
-                        Base64Image = uplodedDocument.imageBase64,
-                        Base64Image2 = hasBack ? uplodedDocument.imageBase64Back : null,
+                        Base64Image = frontImage,
+                        Base64ImageFront = frontImage,
+                        Base64ImageBack = backImage,
+                        Base64Image2 = backImage,
                         ImageFormat = uplodedDocument.extension
                     }
                 };
@@ -604,7 +608,10 @@ namespace CheckinPortal.Controllers
                     httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
                 }
                 HttpContent requestContent = new StringContent(jsonString, Encoding.UTF8, "application/json");
-                HttpResponseMessage response = await httpClient.PostAsync($"MicroBlink/ExtractDataFromMBDocument", requestContent);
+                string cloudAction = hasBack
+                    ? "MicroBlink/ExtractDataFromMBDocumentMultiSide"
+                    : "MicroBlink/ExtractDataFromMBDocument";
+                HttpResponseMessage response = await httpClient.PostAsync(cloudAction, requestContent);
 
                 if (response != null)
                 {
@@ -780,6 +787,20 @@ namespace CheckinPortal.Controllers
                     statusCode = -1
                 };
             }
+        }
+
+        private static string StripDocumentDataUrl(string image)
+        {
+            if (string.IsNullOrWhiteSpace(image))
+            {
+                return image;
+            }
+            int comma = image.IndexOf(',');
+            if (image.StartsWith("data:", StringComparison.OrdinalIgnoreCase) && comma > 0)
+            {
+                return image.Substring(comma + 1);
+            }
+            return image;
         }
 
     }
