@@ -155,11 +155,15 @@ namespace CheckinPortal.Helpers
 
         public static string FormatDocumentUploadedDetail(int profileDetailId, string guestLabel = null)
         {
-            if (profileDetailId <= 0)
-                return null;
             if (!string.IsNullOrWhiteSpace(guestLabel))
-                return "for " + guestLabel.Trim() + " (guest profile " + profileDetailId + ")";
-            return "for guest profile " + profileDetailId;
+            {
+                if (profileDetailId > 0)
+                    return "for " + guestLabel.Trim() + " (guest profile " + profileDetailId + ")";
+                return "for " + guestLabel.Trim();
+            }
+            if (profileDetailId > 0)
+                return "for guest profile " + profileDetailId;
+            return null;
         }
 
         public static string FormatDocumentSkippedDetail(string profileDetailIdsCsv, string guestLabels = null)
@@ -296,17 +300,11 @@ namespace CheckinPortal.Helpers
                 string detailKey = NormalizeDetailId(reservationDetailId);
                 string userName = ResolveGuestName(guestName);
 
-                string message = string.IsNullOrWhiteSpace(extraDetail)
-                    ? actionName
-                    : actionName + " - " + extraDetail;
-                // Do not prefix this event: ActionName + extra exceeds older Description VARCHAR(50)
-                // and was saved as "... Same reser".
-                if (string.Equals(actionName, Actions.OpenedInMultipleWindows, StringComparison.OrdinalIgnoreCase)
-                    && !string.IsNullOrWhiteSpace(extraDetail))
-                {
-                    message = extraDetail;
-                }
-                message = SanitizeAuditText(message);
+                // FO Action column shows ActionName, then Description as a second line.
+                // Never copy or prefix ActionName into Description — that duplicated long
+                // titles and, on DBs whose insert SP still uses VARCHAR(50), clipped at 50
+                // (e.g. "...document was s", "Adult 2, Chil").
+                string message = SanitizeAuditText(extraDetail ?? "").Trim();
                 const int auditDescriptionMax = 200;
                 if (message.Length > auditDescriptionMax)
                     message = message.Substring(0, auditDescriptionMax);

@@ -516,13 +516,14 @@ namespace CheckinPortal.Controllers
                             ExpectedTimeofArrival = Helpers.DateTimeHelper.ConvertFromUTC(timeUtc);
                         }
 
-                        // Per-guest resume: do not hide Document tab while any guest is still pending
+                        // Per-guest resume: do not hide Document tab while any guest is still pending.
+                        // Upload+skip on every slot is NOT wizard complete — only Document Next
+                        // (CompletedocUpload / FinalizeDocumentStep) sets reservations.IsUploadComplete.
                         int totalGuestSlots = (reservations.Adultcount ?? 0) + (reservations.Childcount ?? 0) + (reservations.InfantCount ?? 0);
                         if (totalGuestSlots < 1) totalGuestSlots = 1;
                         bool anyGuestDocPending = profiles.Any(p => !p.HasDocumentUploaded && !p.IsDocumentSkipped)
                             || profiles.Count < totalGuestSlots;
-                        bool allGuestsResolved = profiles.Count >= totalGuestSlots
-                            && profiles.All(p => p.HasDocumentUploaded || p.IsDocumentSkipped);
+                        bool dbUploadComplete = reservations.IsUploadComplete != null && reservations.IsUploadComplete.Value;
 
                         reservationModel = new Models.ReservationModel()
                         {
@@ -548,8 +549,7 @@ namespace CheckinPortal.Controllers
                             TotalRoomRate = TotalRoomRate,
                             IsDepositAvailable = reservations.IsDepositAvailable != null ? reservations.IsDepositAvailable.Value : false,
                             IsBreakFastAvailable = reservations.IsBreakFastAvailable != null ? reservations.IsBreakFastAvailable.Value : false,
-                            IsUploadComplete = allGuestsResolved
-                                || ((reservations.IsUploadComplete != null && reservations.IsUploadComplete.Value) && !anyGuestDocPending),
+                            IsUploadComplete = dbUploadComplete && !anyGuestDocPending,
                             VisitPurposeCode = !string.IsNullOrEmpty(ProfileList[0].VisitPurposeCode)
                                 ? ProfileList[0].VisitPurposeCode
                                 : reservations.VisitPurposeCode,
@@ -2171,28 +2171,16 @@ namespace CheckinPortal.Controllers
 
                await  reservationLogics.ExecuteUpdateReservationByStage("Upload", documentModel);
                 string uploadGuestLabel = Request["GuestLabel"];
-                string documentAuditAction;
-                string documentAuditExtra;
-                if (uploadGuestDocumentModel.ProfileDetailID <= 0)
-                {
-                    documentAuditAction = AuditProgressHelper.Actions.ProfileCreationFailedDocumentSkipped;
-                    documentAuditExtra = string.IsNullOrWhiteSpace(uploadGuestLabel)
-                        ? null
-                        : uploadGuestLabel.Trim();
-                }
-                else
-                {
-                    documentAuditAction = AuditProgressHelper.Actions.DocumentUploaded;
-                    documentAuditExtra = AuditProgressHelper.FormatDocumentUploadedDetail(
-                        uploadGuestDocumentModel.ProfileDetailID,
-                        uploadGuestLabel);
-                }
+                // Extra pax (Child 1, Adult 2, …) often have ProfileDetailID 0 until a local
+                // row exists. Upload can still succeed — do not treat that as skip/failure.
                 AuditProgressHelper.Log(
                     AuditProgressHelper.ModulePreCheckin,
-                    documentAuditAction,
+                    AuditProgressHelper.Actions.DocumentUploaded,
                     documentModel.ReservationID > 0 ? documentModel.ReservationID : (object)uploadGuestDocumentModel.ReservationID,
                     session?.ReservationNameID ?? dt?.ReservationNameID,
-                    extraDetail: documentAuditExtra);
+                    extraDetail: AuditProgressHelper.FormatDocumentUploadedDetail(
+                        uploadGuestDocumentModel.ProfileDetailID,
+                        uploadGuestLabel));
 
                 // Clear per-guest skip flag if this profile was previously skipped then uploaded
                 if (uploadGuestDocumentModel.ProfileDetailID > 0)
@@ -6199,8 +6187,8 @@ namespace CheckinPortal.Controllers
                         ? maxTabIndex
                         : completedIdx + 1;
 
-                    // Document pane omitted when upload already complete — jump to Thank You
-                    // (unless ForceDocumentResume: per-guest pending uploads still need Document tab)
+                    // Document Next persisted IsUploadComplete — skip Document tab to Thank You.
+                    // Per-guest upload+skip without Next must NOT jump (uploadcomplete stays false).
                     if (resumeIdx == 2 && ViewBag.uploadcomplete == true && ViewBag.ForceDocumentResume != true)
                         resumeIdx = 3;
 

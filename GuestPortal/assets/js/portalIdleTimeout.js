@@ -9,12 +9,16 @@
     var lastActivity = Date.now();
     var shown = false;
 
-    function bump() {
+    function bump(e) {
+        if (e && e.isTrusted === false) {
+            return;
+        }
         lastActivity = Date.now();
         shown = false;
     }
 
-    ['keydown', 'input', 'change', 'touchstart', 'scroll'].forEach(function (ev) {
+    // Do not listen to scroll/change: layout scroll and form.valid() were resetting idle so Next never timed out.
+    ['keydown', 'input', 'touchstart'].forEach(function (ev) {
         document.addEventListener(ev, bump, { passive: true, capture: true });
     });
 

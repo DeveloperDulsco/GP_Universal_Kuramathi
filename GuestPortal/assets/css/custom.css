@@ -685,6 +685,53 @@ button.btn_cancel,
   margin: 0;
 }
 
+#excursionDisclaimerModal .modal-dialog{
+  max-height: 90vh;
+  margin: 1.75rem auto;
+}
+#excursionDisclaimerModal .modal-content{
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;
+  overflow: hidden;
+}
+#excursionDisclaimerModal .modal-header{
+  flex: 0 0 auto;
+}
+#excursionDisclaimerModal .modal-body{
+  flex: 1 1 auto;
+  overflow-y: auto;
+  min-height: 0;
+  -webkit-overflow-scrolling: touch;
+}
+#excursionDisclaimerModal .modal-footer.excursion-form-footer{
+  flex: 0 0 auto;
+  border-top: 1px solid #e5e5e5;
+  background: #fff;
+  padding: 12px 16px 16px;
+  justify-content: center;
+}
+#excursionDisclaimerModal .excursion-form-footer .button-wrapper1{
+  margin: 0;
+}
+button.remove-excursion-part{
+  background: transparent;
+  border: none;
+  color: #8a8a8a;
+  padding: 4px 8px;
+  min-width: 0;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: none;
+}
+button.remove-excursion-part:hover,
+button.remove-excursion-part:focus{
+  color: #c0392b;
+  background: transparent;
+  outline: none;
+}
+
 /* Policies Terms & Conditions modal — Kuramathi brand fonts (GT Super + Inter) */
 #termsAndConditionModal .modal-dialog.privacy-model{
   max-width: 720px;

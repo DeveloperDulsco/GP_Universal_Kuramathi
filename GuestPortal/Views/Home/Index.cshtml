@@ -1080,7 +1080,7 @@ new { @class = "text-danger" }
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
-            <div class="modal-body" style="font-size:13px; line-height:1.45; max-height:70vh; overflow-y:auto;">
+            <div class="modal-body" style="font-size:13px; line-height:1.45;">
                 <p style="font-weight:600;">Aqua Sports &amp; Fun - Niva Kuramathi Maldives</p>
                 <ol style="padding-left:18px; margin-bottom:12px;">
                     <li>I take part in the water sports activities, excursions and fishing trips of &quot;Aqua Sports &amp; Fun&quot; without any obligation from Aqua Sports &amp; Fun or the resort Niva Kuramathi Maldives.</li>
@@ -1102,9 +1102,11 @@ new { @class = "text-danger" }
                 <div style="margin:10px 0;text-align:right;">
                     <button type="button" class="btnstyle blue" id="addExcursionParticipantBtn" style="min-width:140px;padding:6px 12px;font-size:12px;">Add participant</button>
                 </div>
-                <p style="margin-top:8px;font-size:12px;color:#555;">By selecting OK and ticking the disclaimer checkbox, I confirm I have read and agree to this form. Participant names and signatures will appear on the registration card.</p>
-                <div class="mt-4 text-center">
-                    <button class="btnstyle blue" id="excursionDisclaimerOkBtn">OK</button>
+                <p style="margin-top:8px;font-size:12px;color:#555;">By selecting AGREE and ticking the disclaimer checkbox, I confirm I have read and agree to this form. Participant names and signatures will appear on the registration card.</p>
+            </div>
+            <div class="modal-footer excursion-form-footer">
+                <div class="button-wrapper1">
+                    <button type="button" class="btn_ok" id="excursionDisclaimerOkBtn">AGREE</button>
                 </div>
             </div>
         </div>
@@ -1262,7 +1264,7 @@ new { @class = "text-danger" }
                 <div class="row">
                     <div class="col-md-12">
                         <div class="file-up-wrap">
-                            <label class="lb suces-sp" id="docSide1Label"><span>1</span> Front</label>
+                            <label class="lb suces-sp" id="docSide1Label"><span>1</span> Front of ID</label>
                             <div class="custom-file">
                                 <div class="row" style="margin:auto">
                                     <img src="" id="imgprimaryDoc1" class="img-fluid " style="display: none;margin: auto;height: 200px;" />
@@ -1279,17 +1281,18 @@ new { @class = "text-danger" }
                         <br />
                         <br />
                         @* Dual-side slot (re-enabled for national ID; was display:none for prior property) *@
-                        <label class="lb suces-sp" id="docSide2Label"><span>2</span> Back</label>
-                        <div class="custom-file" id="docSide2Slot">
-                            <div class="row" style="margin:auto">
-                                <img src="" id="imgprimaryDoc2" class="img-fluid " style="display:none;margin: auto;height: 200px;" />
+                        <div class="file-up-wrap">
+                            <label class="lb suces-sp" id="docSide2Label"><span>2</span> Back of ID</label>
+                            <div class="custom-file" id="docSide2Slot">
+                                <div class="row" style="margin:auto">
+                                    <img src="" id="imgprimaryDoc2" class="img-fluid " style="display:none;margin: auto;height: 200px;" />
+                                </div>
+                                <input type="file" class="custom-file-input docUploadFile" id="primaryDoc2" disabled>
+                                <label class="custom-file-label" for="primaryDoc2" style="width: 100%;margin-top: -30px;position: relative;">Choose file</label>
+                                <div id="primaryDoc2_alert" class="row alert-success alert" style="margin: 0px; padding: 10px; margin-top: -22px;">
+                                    <span></span>
+                                </div>
                             </div>
-                            <input type="file" class="custom-file-input docUploadFile" id="primaryDoc2" disabled>
-                            <label class="custom-file-label" for="primaryDoc2" style="width: 100%;margin-top: -30px;position: relative;">Choose file</label>
-                            <div id="primaryDoc2_alert" class="row alert-success alert" style="margin: 0px; padding: 10px; margin-top: -22px;">
-                                <span></span>
-                            </div>
-
                         </div>
                         <label class="lb" style="display:none"><span>3</span>Document</label>
                         <div class="custom-file" style="display:none">
@@ -2244,6 +2247,9 @@ new { @class = "text-danger" }
             //    phoneInput.value = nationalNumber;
             //}
             var form = $('#frm_guestdetails');
+            if (typeof gpGuardPortalSave === 'function' && !gpGuardPortalSave()) {
+                return false;
+            }
             if (!form.valid()) {
 
                 console.log("Form invalid");
@@ -2271,9 +2277,6 @@ new { @class = "text-danger" }
             //phoneInput.value = iti.getNumber()
             //    .replace('+', '')
             //    .replace(/\s/g, '');
-            if (typeof gpGuardPortalSave === 'function' && !gpGuardPortalSave()) {
-                return false;
-            }
             $('.loader-screen').fadeIn(100);
             const data = new URLSearchParams(
                 new FormData(document.getElementById('frm_guestdetails'))
@@ -2313,6 +2316,9 @@ new { @class = "text-danger" }
                         + (parseInt('@Model.InfantCount', 10) || 0)));
 
                     function SavePolicies(btn) {
+                        if (typeof gpGuardPortalSave === 'function' && !gpGuardPortalSave()) {
+                            return false;
+                        }
 
                         const data = new FormData();
                         var terms = $('#IsAdditionalTermsAndConditionAccepted').is(':checked')
@@ -2411,9 +2417,6 @@ new { @class = "text-danger" }
                                 data.append('ExcursionParticipants', $('#ExcursionParticipants').val() || '');
                             }
 
-                            if (typeof gpGuardPortalSave === 'function' && !gpGuardPortalSave()) {
-                                return false;
-                            }
                             $('.loader-screen').fadeIn(100);
                             fetch(BaseURL + '/Home/UpdatePolicies', {
                                 method: "POST",
@@ -2614,7 +2617,9 @@ new { @class = "text-danger" }
                             + '<div class="excursion-part-row" data-idx="' + idx + '" style="border:1px solid #ccc;border-radius:8px;padding:10px;margin-bottom:10px;background:#fafafa;">'
                             + '  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">'
                             + '    <strong style="text-transform:none;">Participant ' + (idx + 1) + '</strong>'
-                            + '    <button type="button" class="btnstyle remove-excursion-part" data-idx="' + idx + '" style="min-width:70px;padding:4px 8px;font-size:11px;background:#888;">Remove</button>'
+                            + '    <button type="button" class="remove-excursion-part" data-idx="' + idx + '" title="Remove participant" aria-label="Remove participant">'
+                            + '      <i class="fas fa-trash-alt"></i>'
+                            + '    </button>'
                             + '  </div>'
                             + '  <label style="text-transform:none;font-weight:500;display:block;margin-bottom:4px;">Name</label>'
                             + '  <input type="text" class="form-control excursion-part-name" data-idx="' + idx + '" maxlength="80" autocomplete="off" placeholder="Participant full name" style="margin-bottom:8px;" />'
@@ -2937,6 +2942,25 @@ new { @class = "text-danger" }
     var documentUploadOcrGeneration = 0;
     var DOCUMENT_MAX_BYTES = 2 * 1024 * 1024; // 2MB — aligned with UI copy
     var DOCUMENT_ACCEPT_MSG = 'Only passport (any country) or Maldives national ID is accepted. Please upload a valid document.';
+    var DOCUMENT_FRONT_FIRST_HINT = 'If you uploaded a national ID, upload the front side first.';
+
+    function describeOcrDocumentType(response) {
+        var d = response && response.responseData;
+        var t = d && (d.idType || d.documentType);
+        t = (t || '').toString().trim();
+        if (!t) {
+            return '';
+        }
+        return t.replace(/[_-]+/g, ' ').replace(/\s+/g, ' ');
+    }
+
+    function frontSlotInvalidMessage(response) {
+        var typeName = describeOcrDocumentType(response);
+        if (typeName) {
+            return DOCUMENT_ACCEPT_MSG + ' (' + typeName + ' is not accepted. ' + DOCUMENT_FRONT_FIRST_HINT + ')';
+        }
+        return DOCUMENT_ACCEPT_MSG + ' (' + DOCUMENT_FRONT_FIRST_HINT + ')';
+    }
 
     function logDocumentAction(eventName) {
         try {
@@ -4166,7 +4190,7 @@ new { @class = "text-danger" }
                                                 response.responseData.idType,
                                                 response.responseData.issueCountry || response.responseData.issueCountry_fullname,
                                                 response.responseData.documentNumber)) {
-                                            rejectUnsupportedDocument(alertId, fileControl, filecontrolID, DOCUMENT_ACCEPT_MSG);
+                                            rejectUnsupportedDocument(alertId, fileControl, filecontrolID, frontSlotInvalidMessage(response));
                                             return;
                                         }
                                         if (isDocumentNumberAlreadyUploaded(response.responseData.documentNumber)) {
@@ -4240,7 +4264,9 @@ new { @class = "text-danger" }
                                 else {
                                     hideDocumentLoader();
 
-                                    showAlert(alertId, "Please upload a valid document", "warning");
+                                    showAlert(alertId, filecontrolID === "primaryDoc1"
+                                        ? frontSlotInvalidMessage(response)
+                                        : "Please upload a valid document", "warning");
                                     recordDocumentUploadFailure($("#currentGuestIndex").val());
                                     logDocumentAction('DocumentUploadInvalid');
 
@@ -4261,7 +4287,9 @@ new { @class = "text-danger" }
                                 if (failMsg && /microblink|unable to read|null|unavailable|timeout/i.test(failMsg)) {
                                     logDocumentAction('MicroblinkUnavailable');
                                 }
-                                showAlert(alertId, "Please upload a valid document", "warning");
+                                showAlert(alertId, filecontrolID === "primaryDoc1"
+                                    ? frontSlotInvalidMessage(response)
+                                    : "Please upload a valid document", "warning");
                                 recordDocumentUploadFailure($("#currentGuestIndex").val());
                                 logDocumentAction('DocumentUploadInvalid');
 
