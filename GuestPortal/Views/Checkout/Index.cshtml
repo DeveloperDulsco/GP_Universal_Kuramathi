@@ -70,11 +70,15 @@
                         @if (ViewBag.EcomStatus == null || !ViewBag.EcomStatus)
                         {
                             <div class="tab-pane cstm-form active" id="folio">
-                                @* <iframe src="~/temp/@(Model.ReservationNumber).pdf&embedded=true" style="width:100%; height:550px;" frameborder="0"></iframe>*@
-                                <div class="folio-scroll-wrap">
-                                    <iframe class="folio-iframe" src="~/temp/@(Model.ReservationNumber).pdf" frameborder="0" title="Tax Invoice"></iframe>
+                                <h1>Tax Invoice</h1>
+                                <div class="folio-open-fallback">
+                                    <a class="ok_btn folio-open-pdf" href="@Url.Content("~/temp/" + Model.ReservationNumber + ".pdf")" target="_blank" rel="noopener noreferrer">View tax invoice</a>
+                                    <p class="folio-open-hint">If the invoice does not appear, tap the button to open it, then use Back to return here.</p>
                                 </div>
-                                @*<iframe src="https://docs.google.com/viewer?url=@(HttpContext.Current.Request.Url.GetLeftPart(UriPartial.Authority))/temp/@(Model.ReservationNumber).pdf&embedded=true" style="width:100%; height:550px;" frameborder="0"></iframe>*@
+                                <div class="folio-scroll-wrap" id="folioScrollWrap" data-pdf-url="@Url.Content("~/temp/" + Model.ReservationNumber + ".pdf")">
+                                    <iframe class="folio-iframe" src="@Url.Content("~/temp/" + Model.ReservationNumber + ".pdf")" frameborder="0" title="Tax Invoice"></iframe>
+                                    <div class="folio-pdfjs-pages" id="folioPdfjsPages" aria-label="Tax invoice pages"></div>
+                                </div>
 
                                 <div class="form-check text-center">
                                     <input class="form-check-input" id="myCheck" value="sign" type="checkbox" @Html.Raw(canAgreeToFolio ? "" : "disabled=\"disabled\"")>
@@ -412,6 +416,66 @@
     }
     <script src="~/assets/js/signature_pad.umd.js"></script>
     <script src="~/assets/js/wizard.js"></script>
+    <script>
+        (function initMobileFolioPdf() {
+            var wrap = document.getElementById('folioScrollWrap');
+            var pagesEl = document.getElementById('folioPdfjsPages');
+            if (!wrap || !pagesEl) { return; }
+            if (!window.matchMedia || !window.matchMedia('(max-width: 767px)').matches) { return; }
+
+            var pdfUrl = wrap.getAttribute('data-pdf-url');
+            if (!pdfUrl) { return; }
+
+            var workerSrc = '@Url.Content("~/assets/js/pdfjs/pdf.worker.min.js")';
+            var libSrc = '@Url.Content("~/assets/js/pdfjs/pdf.min.js")';
+
+            function renderAllPages(pdf) {
+                var width = pagesEl.clientWidth || wrap.clientWidth || 320;
+                var chain = Promise.resolve();
+                var pageNo;
+                for (pageNo = 1; pageNo <= pdf.numPages; pageNo++) {
+                    (function (n) {
+                        chain = chain.then(function () {
+                            return pdf.getPage(n).then(function (page) {
+                                var base = page.getViewport({ scale: 1 });
+                                var scale = (width - 4) / base.width;
+                                if (!(scale > 0)) { scale = 1; }
+                                var viewport = page.getViewport({ scale: scale });
+                                var canvas = document.createElement('canvas');
+                                canvas.className = 'folio-pdfjs-page';
+                                canvas.width = viewport.width;
+                                canvas.height = viewport.height;
+                                pagesEl.appendChild(canvas);
+                                return page.render({
+                                    canvasContext: canvas.getContext('2d', { alpha: false }),
+                                    viewport: viewport
+                                }).promise;
+                            });
+                        });
+                    })(pageNo);
+                }
+                return chain;
+            }
+
+            function startPdfJs() {
+                if (typeof pdfjsLib === 'undefined') { return; }
+                pdfjsLib.GlobalWorkerOptions.workerSrc = workerSrc;
+                pagesEl.innerHTML = '<p class="folio-open-hint" style="display:block">Loading invoice…</p>';
+                pdfjsLib.getDocument({ url: pdfUrl }).promise.then(function (pdf) {
+                    pagesEl.innerHTML = '';
+                    return renderAllPages(pdf);
+                }).catch(function () {
+                    pagesEl.innerHTML = '';
+                });
+            }
+
+            var s = document.createElement('script');
+            s.src = libSrc;
+            s.onload = startPdfJs;
+            s.onerror = function () { pagesEl.innerHTML = ''; };
+            document.body.appendChild(s);
+        })();
+    </script>
 
     @*<script src="~/assets/js/app.js"></script>*@
 

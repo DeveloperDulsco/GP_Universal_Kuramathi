@@ -848,7 +848,7 @@ body.modal-open {
   z-index: 1050;
 }
 
-/* Folio PDF viewer — desktop baseline; mobile scroll overrides below */
+/* Folio PDF viewer — desktop baseline; phones cannot paint PDF pages inside an iframe */
 .folio-scroll-wrap {
   width: 100%;
   overflow: auto;
@@ -860,6 +860,34 @@ body.modal-open {
   height: 550px;
   border: 0;
   display: block;
+}
+.folio-open-fallback{
+  text-align: center;
+  margin: 0 0 16px;
+}
+.folio-open-fallback .folio-open-pdf{
+  display: inline-block;
+  text-decoration: none;
+  min-width: 180px;
+}
+.folio-open-fallback .folio-open-pdf:hover{
+  color: #ffffff;
+  text-decoration: none;
+}
+.folio-open-hint{
+  display: none;
+  margin: 10px 0 0;
+  font-size: 13px;
+  color: #5f6062;
+  line-height: 1.4;
+}
+.folio-pdfjs-pages{display:none;}
+.folio-pdfjs-page{
+  display:block;
+  width:100%;
+  height:auto;
+  margin:0 0 8px;
+  background:#fff;
 }
 
 /*timepicker*/
@@ -1519,7 +1547,28 @@ box-shadow: -1px 13px 13px -10px rgba(0,0,0,0.35);
     }
     .search-reservation-footer{font-size:11px;padding:10px 12px;}
 
-    /* Checkout folio: allow page vertical scroll + PDF pan (not QR/search landing) */
+    /* Checkout folio: native PDF iframe is blank on phones; draw pages with PDF.js */
+    #folio {
+      overflow: visible;
+    }
+    #folio .folio-open-hint{
+      display: block;
+    }
+    #folio .folio-scroll-wrap {
+      display: block;
+      max-height: min(70vh, 520px);
+      overflow: auto;
+      -webkit-overflow-scrolling: touch;
+      margin-bottom: 12px;
+      background: #f3f3f3;
+    }
+    #folio .folio-iframe {
+      display: none !important;
+    }
+    #folio .folio-pdfjs-pages {
+      display: block;
+      padding: 6px;
+    }
     html, body:not(.search-reservation-page) {
       overflow-x: auto;
       overflow-y: auto;
@@ -1542,23 +1591,6 @@ box-shadow: -1px 13px 13px -10px rgba(0,0,0,0.35);
       height: auto !important;
       min-height: 0 !important;
       overflow: visible !important;
-    }
-    #folio {
-      overflow: visible;
-    }
-    #folio .folio-scroll-wrap {
-      max-height: min(70vh, 480px);
-      overflow: auto;
-      -webkit-overflow-scrolling: touch;
-      touch-action: pan-x pan-y;
-      margin-bottom: 12px;
-    }
-    #folio .folio-scroll-wrap .folio-iframe,
-    #folio iframe.folio-iframe {
-      width: 100%;
-      min-width: 640px;
-      height: 480px;
-      max-width: none;
     }
     .qr.thank-you-panel{padding:32px 20px;}
     .thank-you-invoice{max-width:100%;padding:0 8px;}
