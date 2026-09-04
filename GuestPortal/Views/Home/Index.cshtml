@@ -203,7 +203,7 @@
                         <li class="@((ViewBag.PaymentProcessed && ViewBag.IsPaymentSuccess) ? "paymentdone active" : "") tabs"><a href="#payment"><label>Payment</label><span class="count">@PageNo</span></a></li>
                     }*@
             @{ PageNo++;}
-            <li class="@(useResumeTab && resumeTabIndex >= 2 ? "active" : "") @((ViewBag.PaymentProcessed && ViewBag.IsPaymentSuccess && ViewBag.uploadcomplete) ? "paymentdone active" : "") tabs"><a href="#document"><label>Document Upload</label><span class="count">@PageNo</span></a></li>
+            <li class="@(useResumeTab && resumeTabIndex >= 2 ? "active" : "") @((ViewBag.PaymentProcessed && ViewBag.IsPaymentSuccess && ViewBag.uploadcomplete) ? "paymentdone active" : "") tabs"><a href="#document"><label>Upload document</label><span class="count">@PageNo</span></a></li>
             @{ PageNo++;}
             <li class="@(useResumeTab && resumeTabIndex >= 3 ? "active" : "") @((ViewBag.IsPaymentSuccess && ViewBag.uploadcomplete) ? "paymentdone active" : "") tabs"><a href="#qrCode"><label>Thank You</label><span class="count">@PageNo</span></a></li>
 
@@ -255,7 +255,7 @@
                                     @Html.HiddenFor(model => model.Profiles[0].ProfileID)
                                 }
 
-                                <h1>GUEST DETAILS</h1>
+                                <h1>Guest details</h1>
                                 <div class="detail-wrapper">
                                     <ul>
                                         <li>
@@ -882,6 +882,7 @@ new { @class = "text-danger" }
                             </div>*@
 
                         <div class="tab-pane   cstm-form @((ViewBag.PaymentProcessed && ViewBag.IsPaymentSuccess && ViewBag.uploadcomplete) || (useResumeTab && resumeTabIndex == 3) ? "active" : "")" id="qrCode">
+                            <h1>Thank you</h1>
                             <div class="content">
                                 <div class="qr">
                                     <div class="code">
@@ -1071,13 +1072,13 @@ new { @class = "text-danger" }
 </div>
 
 <!-- Aqua Sports / Excursion disclaimer (property PDF: Aqua Sports Disclaimer ENG) -->
-<div class="modal fade cstm-modal" id="excursionDisclaimerModal" tabindex="-1" role="dialog" aria-labelledby="excursionDisclaimerModalLabel" aria-hidden="true">
+<div class="modal fade cstm-modal" id="excursionDisclaimerModal" tabindex="-1" role="dialog" aria-labelledby="excursionDisclaimerModalLabel" data-backdrop="static" data-keyboard="false" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg privacy-model" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="excursionDisclaimerModalLabel">Legal Disclaimer for Participation in Water Sports Activities</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
+                <button type="button" class="close doc-modal-close" id="excursionDisclaimerModalClose" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true" class="close_icon"></span>
                 </button>
             </div>
             <div class="modal-body" style="font-size:13px; line-height:1.45;">
@@ -1113,12 +1114,12 @@ new { @class = "text-danger" }
     </div>
 </div>
 
-<div class="modal fade cstm-modal" id="termsAndConditionModal" tabindex="-1" role="dialog" aria-labelledby="termsAndConditionModalLabel" aria-hidden="true">
+<div class="modal fade cstm-modal" id="termsAndConditionModal" tabindex="-1" role="dialog" aria-labelledby="termsAndConditionModalLabel" data-backdrop="static" data-keyboard="false" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg privacy-model" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="termsAndConditionModalLabel">Terms and Conditions</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <button type="button" class="close doc-modal-close" id="termsAndConditionModalClose" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true" class="close_icon"></span>
                 </button>
             </div>
@@ -2009,7 +2010,7 @@ new { @class = "text-danger" }
             if (documentUploadFailCount >= DOCUMENT_UPLOAD_SKIP_AFTER_FAILS) {
                 showDocumentUploadSkipOption();
                 if (guestID) {
-                    $('#guestskip_' + guestID).show();
+                    $('#guestskip_' + guestID).addClass('is-visible');
                 }
             }
         }
@@ -2029,7 +2030,7 @@ new { @class = "text-danger" }
             $guest.data('upload', 'skipped');
             $guest.html('<i class="fas fa-forward"></i> SKIPPED');
             $guest.parent('li').removeClass('sucess').addClass('skipped');
-            $('#guestskip_' + guestID).hide();
+            $('#guestskip_' + guestID).removeClass('is-visible').hide();
             showDocumentUploadSkipOption();
             persistGuestDocumentSkips(false);
         }
@@ -2125,6 +2126,7 @@ new { @class = "text-danger" }
             $guest.data('upload', 'uploading');
             $guest.html('<i class="fas fa-spinner fa-spin"></i> UPLOADING');
             $guest.parent('li').removeClass('sucess');
+            $('#guestskip_' + guestID).removeClass('is-visible').hide();
         }
 
         function markGuestUploadFailed(guestID) {
@@ -2132,7 +2134,6 @@ new { @class = "text-danger" }
             $guest.data('upload', 'incomplete');
             $guest.html('<i class="fas fa-cloud-upload-alt"></i> UPLOAD');
             $guest.parent('li').removeClass('sucess');
-            $('#guestskip_' + guestID).show();
         }
 
         function markGuestUploadCompleted(guestID) {
@@ -2140,7 +2141,7 @@ new { @class = "text-danger" }
             $guest.parent('li').addClass('sucess').removeClass('skipped');
             $guest.data('upload', 'completed');
             $guest.html('<i class="fas fa-check-circle"></i> COMPLETE');
-            $('#guestskip_' + guestID).hide();
+            $('#guestskip_' + guestID).removeClass('is-visible').hide();
         }
 
         function proceedDocumentUpload($trigger) {
@@ -3720,7 +3721,7 @@ new { @class = "text-danger" }
                                 $guest.data('upload', 'skipped');
                                 $guest.html('<i class="fas fa-forward"></i> SKIPPED');
                                 $guest.parent('li').removeClass('sucess').addClass('skipped');
-                                $('#guestskip_' + gid).hide();
+                                $('#guestskip_' + gid).removeClass('is-visible').hide();
                             }
                         });
 

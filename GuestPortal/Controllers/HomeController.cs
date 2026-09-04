@@ -5946,7 +5946,9 @@ namespace CheckinPortal.Controllers
                 string flow = ResolveSearchFlow(status, trackingHint);
 
                 string encryptedId = Url.Encode(Helpers.EncryptionHelper.EncryptString(reservationNumber));
-                string hostedUrl = Request.Url.GetLeftPart(UriPartial.Authority) + Request.ApplicationPath.TrimEnd('/');
+                // Same-origin path only (no host/port). IIS:8087 behind ngrok:443 must not
+                // emit :8087. Production public host is unchanged — the browser already has it.
+                string appRoot = (Request.ApplicationPath ?? "/").TrimEnd('/');
 
                 // 3) Pre-checkout — Opera DUEOUT/INHOUSE wins; PrecheckinCompleted must NOT block checkout
                 if (flow == "precheckout")
@@ -5989,7 +5991,7 @@ namespace CheckinPortal.Controllers
                         return Json(new { result = false, redirectUrl = string.Empty, errorMessage = "Reservation Not Found!" });
                     }
 
-                    string checkoutUrl = hostedUrl + "/Checkout/Index?id=" + encryptedId + "&src=qr";
+                    string checkoutUrl = appRoot + "/Checkout/Index?id=" + encryptedId + "&src=qr";
                     Helpers.LogHelper.Instance.Log(
                         $"Search routed to Pre Check-out. Status={status}, TrackHint={trackingHint ?? "none"}, Res#={reservationNumber}",
                         reservationNumber, ActionName, ActionGroup);
@@ -6053,7 +6055,7 @@ namespace CheckinPortal.Controllers
                         });
                     }
 
-                    string precheckinUrl = hostedUrl + "/Home/Index?id=" + encryptedId + "&src=qr";
+                    string precheckinUrl = appRoot + "/Home/Index?id=" + encryptedId + "&src=qr";
                     Helpers.LogHelper.Instance.Log(
                         $"Search routed to Pre Check-in. Status={status}, TrackHint={trackingHint ?? "none"}, Res#={reservationNumber}",
                         reservationNumber, ActionName, ActionGroup);

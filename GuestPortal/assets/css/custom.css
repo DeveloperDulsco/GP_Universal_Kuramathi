@@ -419,11 +419,30 @@ label.signlbl{font-family: 'Agenda-Light';font-size: 16px;text-transform: none;c
 .user-list ul li label{display: block;width: 100%;box-sizing: border-box;text-transform: uppercase;font-size: 14px; font-family: "Inter", Arial, sans-serif;font-weight: 500;height: 88px;min-height: 88px;max-height: 88px;line-height: 1.3;margin-bottom: 10px;overflow: hidden;word-break: break-word;overflow-wrap: anywhere;}
 .user-list ul li label small{font-size: 12px;line-height: 1.3;}
 .user-list ul li .pic{margin-bottom:15px;flex-shrink: 0;}
-.user-list ul li a{background:#37697A;display: flex;align-items: center;justify-content: center;gap: 8px;color: #fff;padding:12px 20px;font-size: 12px;border-radius:20px;width: 100%;min-height: 44px;margin-top: auto;box-sizing: border-box;}
-.user-list ul li a i{flex-shrink: 0;line-height: 1;margin: 0;}
-.user-list ul li a:hover{text-decoration: none;background:#19333f;}
+.user-list ul li a.fileUpload{background:#37697A;display: flex;align-items: center;justify-content: center;gap: 8px;color: #fff;padding:12px 20px;font-size: 12px;border-radius:20px;width: 100%;min-height: 44px;margin-top: auto;box-sizing: border-box;}
+.user-list ul li a.fileUpload i{flex-shrink: 0;line-height: 1;margin: 0;}
+.user-list ul li a.fileUpload:hover{text-decoration: none;background:#19333f;}
+.user-list ul li a.guestDocumentSkip{
+  display: none !important;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background:#37697A;
+  color: #fff;
+  padding:12px 20px;
+  font-size: 12px;
+  border-radius:20px;
+  width: 100%;
+  min-height: 44px;
+  margin-top: 8px;
+  box-sizing: border-box;
+  text-transform: uppercase;
+}
+.user-list ul li a.guestDocumentSkip.is-visible{display: flex !important;}
+.user-list ul li.sucess a.guestDocumentSkip,
+.user-list ul li.sucess a.guestDocumentSkip.is-visible{display: none !important;}
 .user-list ul li.sucess{background: #f0fff2;}
-.user-list ul li.sucess a {
+.user-list ul li.sucess a.fileUpload {
     background: #008080; /*#40E0D0;*/
 }
 .user-list ul li.skipped{background: #eaf0f5;}
@@ -479,16 +498,47 @@ width:150px;padding:58px 0;margin: 0 auto;content:''!important;word-break: break
 
 
 /*modal — typography aligned with portal form/body UI (labels/body ~13px, titles ~14px) */
-.cstm-modal .modal-content{border-radius:20px;font-size: 13px;line-height: 1.45;}
-.cstm-modal .modal-header{background: none;color:#000000;border-radius: 0;font-family: "Inter", Arial, sans-serif;font-weight: 600;text-transform: uppercase;}
+.cstm-modal .modal-content{border-radius:20px;font-size: 13px;line-height: 1.45;overflow: visible;}
+.cstm-modal .modal-header{
+  background: none;
+  color:#000000;
+  border-radius: 0;
+  font-family: "Inter", Arial, sans-serif;font-weight: 600;
+  text-transform: uppercase;
+  display: flex;
+  align-items: flex-start;
+  position: relative;
+  padding: 16px 48px 12px 16px;
+}
 .cstm-modal .modal-header h5,
 .cstm-modal .modal-title{
   font-size: 14px !important;
   line-height: 1.35;
   font-weight: 600;
+  flex: 1 1 auto;
+  margin: 0;
+  padding-right: 8px;
+  white-space: normal;
+  word-break: break-word;
 }
-.cstm-modal .close{opacity:1;}
-.cstm-modal .close_icon{background:url("../images/close_icon.png");height:23px;width: 23px;display: block;}
+.cstm-modal .close,
+.cstm-modal .doc-modal-close{
+  opacity:1;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 6;
+  margin: 0;
+  padding: 8px;
+  width: 40px;
+  height: 40px;
+  line-height: 1;
+  float: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.cstm-modal .close_icon{background:url("../images/close_icon.png") center / 23px 23px no-repeat;height:23px;width: 23px;display: block;}
 /*
   Alert/confirm bodies often use Bootstrap headings (h5 ~1.25rem / ~20px + semi-bold).
   Covers #exampleModal2 #messageContentFolio (invoice MESSAGE), #customMessageModalMessage,
@@ -792,6 +842,10 @@ body.modal-open {
   overflow-x: hidden;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+  z-index: 1055;
+}
+.modal-backdrop {
+  z-index: 1050;
 }
 
 /* Folio PDF viewer — desktop baseline; mobile scroll overrides below */
@@ -876,11 +930,11 @@ body.modal-open {
 .menu .logo{margin:0 50px 40px 0;}
 .menu ul{margin: 0;padding: 0;}
 .menu ul li{margin: 0 0 10px 0;padding: 0;list-style-type: none;display: block;position: relative;z-index: 1;border: 1px solid transparent;border-radius: 35px;}
-.menu ul li a{font-family: "Inter", Arial, sans-serif;font-weight: 600;display: block;color: #616365;padding:15px 20px;text-transform: uppercase;font-size: 14px;}
-.menu ul li a label{margin-bottom: 0;display: inline-block;}
+.menu ul li a{font-family: "Inter", Arial, sans-serif;font-weight: 600;display: flex;align-items: center;color: #616365;padding:12px 52px 12px 16px;text-transform: uppercase;font-size: 14px;position: relative;box-sizing: border-box;min-height: 57px;}
+.menu ul li a label{margin-bottom: 0;display: block;white-space: normal;word-break: break-word;line-height: 1.25;}
 .menu ul li a:hover{text-decoration: none;}
-.menu ul li a span{font-family: "Inter", Arial, sans-serif;font-weight: 600;display: inline-block;background: #fff;color: #161819;border-radius: 28px;min-width: 33px;height: 33px;font-size:18px;
-  text-align: center;margin-left: 10px;font-weight: 500;line-height:32px;border: 1px solid #acacac;position: absolute;right:15px;top:10px;
+.menu ul li a span{font-family: "Inter", Arial, sans-serif;font-weight: 600;display: inline-flex;align-items: center;justify-content: center;background: #fff;color: #161819;border-radius: 28px;min-width: 33px;height: 33px;font-size:18px;
+  text-align: center;margin: 0;font-weight: 500;line-height:1;border: 1px solid #acacac;position: absolute;right:12px;top: 50%;transform: translateY(-50%);
   -webkit-box-shadow: -3px 12px 15px -10px rgba(0,0,0,0.43);
   -moz-box-shadow: -3px 12px 15px -10px rgba(0,0,0,0.43);
   box-shadow: -3px 12px 15px -10px rgba(0,0,0,0.43);
@@ -1004,28 +1058,64 @@ body.modal-open {
 
 
 /* Support: replace assets/images/intro-bg.png to change splash / QR search background */
-.layout-inro1{height: 100vh;padding-top: 112px;background:#37697A url("../images/intro-bg.png") no-repeat top center;
+.layout-inro1{
+  height: 100vh;
+  height: 100dvh;
+  max-height: 100vh;
+  max-height: 100dvh;
+  box-sizing: border-box;
+  overflow: hidden;
+  padding-top: 0;
+  padding-bottom: 24px;
+  background:#37697A url("../images/intro-bg.png") no-repeat top center;
   background-size: cover;
-  padding-bottom:35px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-end;
   position: relative;
 }
+#divSplash{
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+}
 
-/* QR / SearchReservation page */
-.search-reservation-page{min-height:100vh;margin:0;background:#37697A;}
-.search-reservation-wrap{position:relative;min-height:100vh;display:flex;flex-direction:column;}
-.search-reservation-wrap .header{flex-shrink:0;}
+/* QR / SearchReservation page — one viewport, no page scroll */
+.search-reservation-page{
+  height:100vh;
+  height:100dvh;
+  max-height:100dvh;
+  margin:0;
+  overflow:hidden;
+  background:#37697A;
+}
+.search-reservation-wrap{
+  position:relative;
+  height:100%;
+  max-height:100dvh;
+  min-height:0;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+}
+.search-reservation-wrap .header{
+  flex-shrink:0;
+  position:relative;
+  height:auto;
+  padding:12px 16px;
+}
+.search-reservation-wrap .header img{max-height:56px;width:auto;}
 .search-reservation-bg.layout-inro1{
   flex:1 1 auto;
-  min-height:calc(100vh - 160px);
+  min-height:0;
   height:auto;
+  max-height:none;
+  overflow:hidden;
   align-items:center;
   justify-content:center;
-  padding-top:40px;
-  padding-bottom:80px;
+  padding-top:16px;
+  padding-bottom:52px;
   /* Same support-editable asset as intro splash */
   background:#37697A url("../images/intro-bg.png") no-repeat top center;
   background-size:cover;
@@ -1042,10 +1132,26 @@ body.modal-open {
   text-align:center;
   z-index:1;
 }
+.search-reservation-page .search-field-label{
+  display:block;
+  width:100%;
+  max-width:520px;
+  margin:0 auto 10px;
+  padding:0 4px;
+  box-sizing:border-box;
+  text-align:center;
+  font-family:Arial, Helvetica, sans-serif;
+  font-size:14px;
+  line-height:1.35;
+  font-weight:600;
+  color:#fff;
+  text-shadow:0 1px 3px rgba(0,0,0,0.7);
+  white-space:normal;
+}
 .search-reservation-page .search-input{
   font-family:Arial, Helvetica, sans-serif;
-  font-size:16px;
-  padding:14px 18px;
+  font-size:15px;
+  padding:12px 16px;
   border:1px solid #ccc;
   border-radius:4px;
   width:100%;
@@ -1056,24 +1162,29 @@ body.modal-open {
 }
 .search-reservation-page .search-input::placeholder{
   font-family:Arial, Helvetica, sans-serif;
+  font-size:inherit;
   color:#666;
+  opacity:1;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
 }
 .search-reservation-page .search-button{
   font-family:"Inter", Arial, Helvetica, sans-serif;
   text-align:center;
   display:inline-block;
-  padding:12px 28px;
+  padding:10px 22px;
   background-color:#37697A;
   border:1px solid #37697A;
-  border-radius:24px;
+  border-radius:22px;
   -webkit-box-shadow: -3px 9px 39px -3px rgba(0,0,0,0.45);
   -moz-box-shadow: -3px 9px 39px -3px rgba(0,0,0,0.45);
   box-shadow: -3px 9px 39px -3px rgba(0,0,0,0.45);
-  min-width:140px;
+  min-width:130px;
   color:#fff;
   text-transform:uppercase;
   font-weight:600;
-  font-size:18px;
+  font-size:16px;
   text-decoration:none;
   cursor:pointer;
 }
@@ -1211,16 +1322,17 @@ box-shadow: -1px 13px 13px -10px rgba(0,0,0,0.35);
   box-sizing: border-box;
 }
 .link-expiry-page .thank{
-  margin-top: 80px;
+  margin-top: 32px;
   margin-bottom: 40px;
+  max-width: 640px;
 }
 .link-expiry-footer{
   position: absolute;
 }
 .imge-thank{margin-bottom: 35px;}
 .imge-thank img{max-width: 220px; width: 100%; height: auto;}
-.thank{margin-top: 80px;padding:4em;border-radius: 30px;text-align: center;background: rgba(255, 255, 255, 0.95);}
-.thank p{font-size:20px;}
+.thank{margin-top: 32px;padding:24px 28px;border-radius: 20px;text-align: center;background: rgba(255, 255, 255, 0.95);}
+.thank p{font-size:16px;line-height:1.5;margin:0;font-family:Arial, Helvetica, sans-serif;color:#222;}
 .thank p span{font-weight: 600;}
 
 .menu .logo1{display: none;}
@@ -1244,20 +1356,25 @@ box-shadow: -1px 13px 13px -10px rgba(0,0,0,0.35);
 
     .signature-pad{min-height:200px;}
     .signature-pad--body canvas{height:150px;}
-    .menu ul li a{font-size: 14px;}
+    .menu ul li a{font-size: 12px;padding:12px 46px 12px 12px;}
+    .content-wrapper{margin-left: 8px;padding: 40px 28px;}
 
-    /* Tablet: larger, more usable QR search field */
-    .search-reservation-page .search-input{
-      font-size:18px;
-      padding:16px 20px;
+    /* Tablet: keep compact type; stretch the field */
+    .search-reservation-page .search-field-label{
+      font-size:14px;
       max-width:100%;
-      min-height:52px;
+    }
+    .search-reservation-page .search-input{
+      font-size:15px;
+      padding:12px 12px;
+      max-width:100%;
+      min-height:44px;
     }
     .search-reservation-page .search-button{
-      font-size:18px;
-      padding:14px 36px;
-      min-width:180px;
-      min-height:52px;
+      font-size:16px;
+      padding:12px 28px;
+      min-width:160px;
+      min-height:48px;
       line-height:1.2;
     }
     .search-reservation-page .search-container{
@@ -1265,8 +1382,8 @@ box-shadow: -1px 13px 13px -10px rgba(0,0,0,0.35);
       padding:0 24px;
     }
     .search-reservation-bg.layout-inro1{
-      padding-top:24px;
-      padding-bottom:96px;
+      padding-top:12px;
+      padding-bottom:48px;
     }
 }
 @media (max-width:767px){
@@ -1274,6 +1391,9 @@ box-shadow: -1px 13px 13px -10px rgba(0,0,0,0.35);
     .detail-wrapper ul li{border-right: 0;display: block;}
     .detail-wrapper ul li label{font-size: 16px;}
     h1{display: block;}
+    .thank{margin-top: 20px;padding:18px 16px;border-radius: 16px;}
+    .thank p{font-size:15px;line-height:1.45;}
+    .link-expiry-page .thank{margin-top: 20px;}
    .mb-none{display: none;}
 
    .hotel-details .image-wrap{margin-bottom: 25px;}
@@ -1289,22 +1409,80 @@ box-shadow: -1px 13px 13px -10px rgba(0,0,0,0.35);
         text-align: center;
         position: fixed;
         width: 100%;
-        z-index: 10000;
+        z-index: 1030;
         left: 0;
         top: 0;
         background: #37697A;
     }
    .menu .logo{margin:0;background: #ffffff;padding: 10px;}
    .menu .logo img{width: 150px;}
-  .menu ul{margin: 0;padding: 0;background: #37697A;}
-  .menu ul li{display: inline-block;margin:0 3px;}
-  .menu ul li a{padding: 12px;}
-  .menu ul li.active a{background: none;}
- .menu ul li.active a span{background:#A0D9D9;color: #000000;}
-  .menu ul li a:hover{background:none;border-radius:35px;color: #ffffff;}
+  .menu ul{
+      display: flex;
+      flex-wrap: nowrap;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin: 0;
+      padding: 6px 8px 8px;
+      background: #37697A;
+  }
+  .menu ul li,
+  .menu ul li.active{
+      display: block;
+      flex: 1 1 0;
+      width: auto;
+      max-width: none;
+      margin: 0;
+      padding: 0;
+      border: none !important;
+      border-radius: 0;
+      vertical-align: top;
+  }
+  .menu ul li a{
+      padding: 4px 2px 2px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      min-height: 0;
+      text-transform: none;
+      width: 100%;
+      box-sizing: border-box;
+  }
+  .menu ul li.active a{background: none;border: none;}
+  .menu ul li.active a span{background:#A0D9D9;color: #000000;}
+  .menu ul li a:hover{background:none;border-radius:0;color: #ffffff;}
   .menu ul li a:hover span{background:#A0D9D9;color: #080808;}
-  .menu ul li a span{position: inherit;margin-left: 0;}
-  .menu ul li a label{display: none;}
+  .menu ul li a span{
+      position: relative;
+      right: auto;
+      top: auto;
+      left: auto;
+      transform: none;
+      margin: 0 auto 6px;
+      width: 32px;
+      min-width: 32px;
+      height: 32px;
+      line-height: 30px;
+      font-size: 16px;
+      flex-shrink: 0;
+      box-sizing: border-box;
+  }
+  .menu ul li a label{
+      display: block;
+      font-size: 10px;
+      line-height: 1.2;
+      height: 2.4em;
+      font-weight: 600;
+      text-transform: none;
+      white-space: normal;
+      max-width: 100%;
+      color: #fff;
+      margin: 0;
+      overflow: hidden;
+      text-align: center;
+  }
+  .menu ul li.active a label{color: #A0D9D9;}
+  .room-bg{padding-top: 118px;}
 
   .no-menu .left-menu .space{height:0 !important;}
 
@@ -1317,26 +1495,42 @@ box-shadow: -1px 13px 13px -10px rgba(0,0,0,0.35);
    .menu .logo1 img{width: 150px;}
     .logo{display:none;}
 
+    .search-reservation-page .search-field-label{
+      font-size:13px;
+      line-height:1.35;
+      padding:0 2px;
+    }
+    .search-reservation-page .search-container{
+      padding:0 12px;
+    }
     .search-reservation-page .search-input{
-      font-size:16px;
-      min-height:48px;
+      font-size:15px;
+      min-height:44px;
       width:100%;
       max-width:100%;
+      padding:12px 12px;
     }
     .search-reservation-page .search-button{
       width:calc(100% - 16px);
       max-width:320px;
-      min-height:48px;
+      min-height:44px;
+      padding:10px 22px;
+      font-size:15px;
     }
     .search-reservation-footer{font-size:11px;padding:10px 12px;}
 
-    /* Checkout folio: allow page vertical scroll + PDF horizontal/vertical pan */
-    html, body {
+    /* Checkout folio: allow page vertical scroll + PDF pan (not QR/search landing) */
+    html, body:not(.search-reservation-page) {
       overflow-x: auto;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
       height: auto;
       min-height: 100%;
+    }
+    body.search-reservation-page {
+      overflow: hidden;
+      height: 100vh;
+      height: 100dvh;
     }
     body.modal-open {
       overflow: hidden;

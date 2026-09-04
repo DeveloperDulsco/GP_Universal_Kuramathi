@@ -1,4 +1,4 @@
-﻿@{
+@{
     Layout = null;
     ViewBag.Title = "Search Reservation";
     var asm = typeof(CheckinPortal.MvcApplication).Assembly;
@@ -22,7 +22,7 @@
     <link rel="shortcut icon" type="image/png" href="~/assets/images/logo.png">
     <link rel="stylesheet" href="~/assets/css/bootstrap.min.css">
     <link href="~/assets/css/all.css" rel="stylesheet">
-    <link rel="stylesheet" href="~/assets/css/custom.css">
+    <link rel="stylesheet" href="~/assets/css/custom.css?v=1.0.0.8">
     <title>Search Reservation</title>
 </head>
 <body class="search-reservation-page">
@@ -34,14 +34,15 @@
             <div class="search-container">
                 <div class="row justify-content-center">
                     <div class="col-12 col-md-10 col-lg-8">
+                        <label class="search-field-label" for="confirmation-number">Enter confirmation, reservation, or OTA booking number</label>
                         <input type="text"
-                               class="search-input m-2"
+                               class="search-input"
                                id="confirmation-number"
                                name="ConfirmationNo"
                                maxlength="40"
                                autocomplete="off"
                                spellcheck="false"
-                               placeholder="Enter confirmation, reservation, or OTA booking number" />
+                               placeholder="Booking number" />
                     </div>
                     <div class="col-12">
                         <a class="search-button m-2 align-middle" id="search-button" href="#" onclick="searchConfirmation(); return false;">SEARCH</a>
