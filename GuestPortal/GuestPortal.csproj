@@ -181,6 +181,7 @@
     <Compile Include="Controllers\BlinkIDController.cs" />
     <Compile Include="Controllers\CheckoutController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
+    <Compile Include="Controllers\HomeController.DocumentBackground.cs" />
     <Compile Include="Controllers\PaymentController.cs" />
     <Compile Include="Controllers\PortalServiceController.cs" />
     <Compile Include="DataAccess\CloudDBModel.Context.cs">
