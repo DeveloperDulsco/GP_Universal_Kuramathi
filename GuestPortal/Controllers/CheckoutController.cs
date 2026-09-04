@@ -33,6 +33,7 @@ namespace CheckinPortal.Controllers
         // GET: Checkout
         public async Task<ActionResult> Index(string id, string src = null)
         {
+            var rawQrHandoff = TempData[QrSearchHandoffHelper.TempDataKey];
             string ActionName = "Index", ActionGroup = "Pre-Checkout";
             ViewBag.id = id;
             if (!string.IsNullOrWhiteSpace(src))
@@ -67,6 +68,8 @@ namespace CheckinPortal.Controllers
                 return ShowLinkExpiry(LinkExpiryHelper.InvalidLink, id, ActionName, ActionGroup);
             }
 
+            var qrHandoff = QrSearchHandoffHelper.Parse(rawQrHandoff, ConfirmationNo, src);
+
             Helpers.FileHelpers.DeleteTempFiles();
             ViewBag.ReservationFound = false;
             ViewBag.PaymentProcessed = false;
@@ -75,11 +78,19 @@ namespace CheckinPortal.Controllers
 
             Models.CheckoutReservationModel checkoutReservation = new Models.CheckoutReservationModel();
 
-            var reservationsDt = await new CloudHelper().FetchReservationDetailsByReferenceNumber(ConfirmationNo, new APIRequestModel { RequestObject = ConfirmationNo }, "", ConfigurationManager.AppSettings["APIBaseUrl"].ToString());
-            var reservations = new CloudReservationModel();
-            if (reservationsDt != null)
+            var reservations = QrSearchHandoffHelper.TryCloud(qrHandoff);
+            if (reservations != null)
             {
-                reservations = JsonConvert.DeserializeObject<List<CloudReservationModel>>(reservationsDt.responseData.ToString()).FirstOrDefault();
+                new LogHelper().Log("Reservation details reused from QR search (skipped Cloud fetch)", ConfirmationNo, ActionName, ActionGroup);
+            }
+            else
+            {
+                var reservationsDt = await new CloudHelper().FetchReservationDetailsByReferenceNumber(ConfirmationNo, new APIRequestModel { RequestObject = ConfirmationNo }, "", ConfigurationManager.AppSettings["APIBaseUrl"].ToString());
+                reservations = new CloudReservationModel();
+                if (reservationsDt != null)
+                {
+                    reservations = JsonConvert.DeserializeObject<List<CloudReservationModel>>(reservationsDt.responseData.ToString()).FirstOrDefault();
+                }
             }
             if (reservations != null)
             {
@@ -93,7 +104,16 @@ namespace CheckinPortal.Controllers
                         return ShowLinkExpiry(LinkExpiryHelper.AlreadyPreCheckedOut, ConfirmationNo, ActionName, ActionGroup);
                     }
 
-                    var reservationfromopera = await new CloudHelper().fetchReservationFromPMS1(new OWSRequestModel()
+                    var operaReuse = QrSearchHandoffHelper.TryOpera(qrHandoff);
+                    List<Models.OWS.OperaReservation> reservationfromopera;
+                    if (operaReuse != null)
+                    {
+                        reservationfromopera = new List<Models.OWS.OperaReservation> { operaReuse };
+                        new LogHelper().Log("Opera reservation reused from QR search (skipped PMS fetch)", ConfirmationNo, ActionName, ActionGroup);
+                    }
+                    else
+                    {
+                        reservationfromopera = await new CloudHelper().fetchReservationFromPMS1(new OWSRequestModel()
                     {
                         ChainCode = ConfigurationManager.AppSettings["ChainCode"].ToString(),
                         DestinationEntityID = ConfigurationManager.AppSettings["DestinationEntityID"].ToString(),
@@ -111,6 +131,7 @@ namespace CheckinPortal.Controllers
 
                         }
                     }, ConfigurationManager.AppSettings["APIBaseUrl"].ToString(), "checkout", ActionGroup);
+                    }
                     if (reservationfromopera != null && reservationfromopera.Count > 0)
                     {
 
@@ -144,11 +165,11 @@ namespace CheckinPortal.Controllers
 
                 #region CheckFolio
                 #region Check Payment in Saavy
-                //Models.Local.LocalResponseModel localResponse = null;
+                Task<APIResponseModel> paymentTask = Task.FromResult<APIResponseModel>(null);
                 if (!IsPaymentDisabled)
                 {
                     new LogHelper().Log("Fetching payment details for reservation No. : " + SessionData.OperaReservation.ReservationNumber + " in Saavy Pay", SessionData.OperaReservation.ReservationNameID, "PushDueOutReservation", "Due-Out push");
-                    APIResponseModel localResponse = await new CloudHelper().FetchPaymentDetails(SessionData.OperaReservation.ReservationNameID, new Models.APIRequestModel()
+                    paymentTask = new CloudHelper().FetchPaymentDetails(SessionData.OperaReservation.ReservationNameID, new Models.APIRequestModel()
                     {
                         RequestObject = new Models.DueOut.FetchPaymentRequest()
                         {
@@ -157,11 +178,39 @@ namespace CheckinPortal.Controllers
                         }
                     }, "Due-Out push", ConfigurationManager.AppSettings
                         ["APIBaseUrl"].ToString());
+                }
+                #endregion
 
-                    if (!localResponse.result || localResponse.responseData == null)
+                #region FetchFolioItemsByWindow
+                new LogHelper().Log("Fetching reservation folio by window for reservation No. : " + SessionData.OperaReservation.ReservationNumber, SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
+                var folioWindowTask = new CloudHelper().GetFolioByWindow(SessionData.OperaReservation.ReservationNameID, new Models.OWS.OwsRequestModel()
+                {
+                    ChainCode = ConfigurationManager.AppSettings["ChainCode"].ToString(),
+                    DestinationEntityID = ConfigurationManager.AppSettings["DestinationEntityID"].ToString(),
+                    DestinationSystemType = ConfigurationManager.AppSettings["DestinationSystemType"].ToString(),
+                    HotelDomain = ConfigurationManager.AppSettings["HotelDomain"].ToString(),
+                    KioskID = ConfigurationManager.AppSettings["KioskID"].ToString(),
+                    LegNumber = "1",
+                    Language = ConfigurationManager.AppSettings["Language"].ToString(),
+                    Password = ConfigurationManager.AppSettings["Password"].ToString(),
+                    Username = ConfigurationManager.AppSettings["Username"].ToString(),
+                    SystemType = ConfigurationManager.AppSettings["SystemType"].ToString(),
+                    FetchFolioRequest = new Models.OWS.FetchFolioRequest()
                     {
-                        new LogHelper().Log("Failed to fetch payment details with reason :- " + localResponse.responseMessage, SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
-                        new LogHelper().Warn("Failed to fetch payment details with reason :- " + localResponse.responseMessage, SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
+                        ReservationNameID = SessionData.OperaReservation.ReservationNameID,
+                        ProfileID = (SessionData.OperaReservation.GuestProfiles != null && SessionData.OperaReservation.GuestProfiles.Count > 0) ? SessionData.OperaReservation.GuestProfiles[0].PmsProfileID : ""
+                    }
+                }, "Due-Out push", ConfigurationManager.AppSettings["APIBaseUrl"].ToString());
+
+                await Task.WhenAll(paymentTask, folioWindowTask);
+
+                if (!IsPaymentDisabled)
+                {
+                    APIResponseModel localResponse = paymentTask.Result;
+                    if (localResponse == null || !localResponse.result || localResponse.responseData == null)
+                    {
+                        new LogHelper().Log("Failed to fetch payment details with reason :- " + (localResponse != null ? localResponse.responseMessage : "null"), SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
+                        new LogHelper().Warn("Failed to fetch payment details with reason :- " + (localResponse != null ? localResponse.responseMessage : "null"), SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
 
                     }
                     else
@@ -182,28 +231,8 @@ namespace CheckinPortal.Controllers
                         }
                     }
                 }
-                #endregion
 
-                #region FetchFolioItemsByWindow
-                new LogHelper().Log("Fetching reservation folio by window for reservation No. : " + SessionData.OperaReservation.ReservationNumber, SessionData.OperaReservation.ReservationNameID, ActionName, ActionGroup);
-                Models.OWS.OwsResponseModel owsResponse1 = await new CloudHelper().GetFolioByWindow(SessionData.OperaReservation.ReservationNameID, new Models.OWS.OwsRequestModel()
-                {
-                    ChainCode = ConfigurationManager.AppSettings["ChainCode"].ToString(),
-                    DestinationEntityID = ConfigurationManager.AppSettings["DestinationEntityID"].ToString(),
-                    DestinationSystemType = ConfigurationManager.AppSettings["DestinationSystemType"].ToString(),
-                    HotelDomain = ConfigurationManager.AppSettings["HotelDomain"].ToString(),
-                    KioskID = ConfigurationManager.AppSettings["KioskID"].ToString(),
-                    LegNumber = "1",
-                    Language = ConfigurationManager.AppSettings["Language"].ToString(),
-                    Password = ConfigurationManager.AppSettings["Password"].ToString(),
-                    Username = ConfigurationManager.AppSettings["Username"].ToString(),
-                    SystemType = ConfigurationManager.AppSettings["SystemType"].ToString(),
-                    FetchFolioRequest = new Models.OWS.FetchFolioRequest()
-                    {
-                        ReservationNameID = SessionData.OperaReservation.ReservationNameID,
-                        ProfileID = (SessionData.OperaReservation.GuestProfiles != null && SessionData.OperaReservation.GuestProfiles.Count > 0) ? SessionData.OperaReservation.GuestProfiles[0].PmsProfileID : ""
-                    }
-                }, "Due-Out push", ConfigurationManager.AppSettings["APIBaseUrl"].ToString());
+                Models.OWS.OwsResponseModel owsResponse1 = folioWindowTask.Result;
 
                 if (!owsResponse1.result)
                 {

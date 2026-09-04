@@ -39,6 +39,7 @@ namespace CheckinPortal.Controllers
 
         public async Task<ActionResult> Index(string id, string src = null)
         {
+            var rawQrHandoff = TempData[QrSearchHandoffHelper.TempDataKey];
             Session.Clear();
             Session.Abandon();
             ViewBag.id = id;
@@ -77,6 +78,8 @@ namespace CheckinPortal.Controllers
                 return ShowLinkExpiry(LinkExpiryHelper.InvalidLink, id, ActionName, ActionGroup);
             }
 
+            var qrHandoff = QrSearchHandoffHelper.Parse(rawQrHandoff, confirmationNo, src);
+
             ViewBag.ReservationFound = false;
             ViewBag.PaymentProcessed = false;
             ViewBag.uploadedcompleted = false;
@@ -88,41 +91,65 @@ namespace CheckinPortal.Controllers
             OperaReservation operaReservation = new OperaReservation();
 
             MastersLogics mastersLogics = new MastersLogics();
+            string apiBaseUrl = ConfigurationManager.AppSettings["APIBaseUrl"].ToString();
+            var countryTask = new CloudHelper().fetchcountryMaster(apiBaseUrl, ActionGroup);
 
-            var CountryList = await new CloudHelper().fetchcountryMaster(ConfigurationManager.AppSettings
-                    ["APIBaseUrl"].ToString(), ActionGroup);
-
-            var reservationsDt = await new CloudHelper().FetchReservationDetailsByReferenceNumber(confirmationNo, new APIRequestModel { RequestObject = confirmationNo }, ActionGroup, ConfigurationManager.AppSettings
-                    ["APIBaseUrl"].ToString());
-            var reservations = new CloudReservationModel();
-            if (reservationsDt?.responseData != null)
+            var reservations = QrSearchHandoffHelper.TryCloud(qrHandoff);
+            if (reservations != null && reservations.ReservationDetailID > 0)
             {
-                reservations = JsonConvert.DeserializeObject<List<CloudReservationModel>>(reservationsDt.responseData.ToString()).FirstOrDefault();
-
+                Helpers.LogHelper.Instance.Log(
+                    "Reservation details reused from QR search (skipped Cloud fetch)",
+                    reservations.ReservationNameID ?? confirmationNo, ActionName, ActionGroup);
             }
+            else
+            {
+                var reservationsDtTask = new CloudHelper().FetchReservationDetailsByReferenceNumber(
+                    confirmationNo, new APIRequestModel { RequestObject = confirmationNo }, ActionGroup, apiBaseUrl);
+                await Task.WhenAll(countryTask, reservationsDtTask);
+                var reservationsDt = reservationsDtTask.Result;
+                reservations = new CloudReservationModel();
+                if (reservationsDt?.responseData != null)
+                {
+                    reservations = JsonConvert.DeserializeObject<List<CloudReservationModel>>(reservationsDt.responseData.ToString()).FirstOrDefault();
+                }
+            }
+
+            var CountryList = countryTask.IsCompleted ? countryTask.Result : await countryTask;
             if (reservations != null && reservations.ReservationDetailID > 0)
             {
 
                 Helpers.LogHelper.Instance.Log($"Reservation details fetched from DB {JsonConvert.SerializeObject(reservations, Formatting.Indented)} ", $"{reservations.ReservationNameID}", ActionName, ActionGroup);
 
-                var reservationfromopera = await new CloudHelper().fetchReservationFromPMS(new Models.OWS.OwsRequestModel()
+                var operaReuse = QrSearchHandoffHelper.TryOpera(qrHandoff);
+                System.Collections.Generic.List<OperaReservation> reservationfromopera;
+                if (operaReuse != null)
                 {
-                    ChainCode = ConfigurationManager.AppSettings["ChainCode"].ToString(),
-                    DestinationEntityID = ConfigurationManager.AppSettings["DestinationEntityID"].ToString(),
-                    DestinationSystemType = ConfigurationManager.AppSettings["DestinationSystemType"].ToString(),
-                    HotelDomain = ConfigurationManager.AppSettings["HotelDomain"].ToString(),
-                    KioskID = ConfigurationManager.AppSettings["KioskID"].ToString(),
-                    LegNumber = "1",
-                    Language = ConfigurationManager.AppSettings["Language"].ToString(),
-                    Password = ConfigurationManager.AppSettings["Password"].ToString(),
-                    Username = ConfigurationManager.AppSettings["Username"].ToString(),
-                    SystemType = ConfigurationManager.AppSettings["SystemType"].ToString(),
-                    FetchBookingRequest = new Models.OWS.FetchBookingRequestModel()
+                    reservationfromopera = new System.Collections.Generic.List<OperaReservation> { operaReuse };
+                    Helpers.LogHelper.Instance.Log(
+                        "Opera reservation reused from QR search (skipped PMS fetch)",
+                        reservations.ReservationNameID ?? confirmationNo, ActionName, ActionGroup);
+                }
+                else
+                {
+                    reservationfromopera = await new CloudHelper().fetchReservationFromPMS(new Models.OWS.OwsRequestModel()
                     {
-                        ReservationNumber = confirmationNo
+                        ChainCode = ConfigurationManager.AppSettings["ChainCode"].ToString(),
+                        DestinationEntityID = ConfigurationManager.AppSettings["DestinationEntityID"].ToString(),
+                        DestinationSystemType = ConfigurationManager.AppSettings["DestinationSystemType"].ToString(),
+                        HotelDomain = ConfigurationManager.AppSettings["HotelDomain"].ToString(),
+                        KioskID = ConfigurationManager.AppSettings["KioskID"].ToString(),
+                        LegNumber = "1",
+                        Language = ConfigurationManager.AppSettings["Language"].ToString(),
+                        Password = ConfigurationManager.AppSettings["Password"].ToString(),
+                        Username = ConfigurationManager.AppSettings["Username"].ToString(),
+                        SystemType = ConfigurationManager.AppSettings["SystemType"].ToString(),
+                        FetchBookingRequest = new Models.OWS.FetchBookingRequestModel()
+                        {
+                            ReservationNumber = confirmationNo
 
-                    }
-                }, ConfigurationManager.AppSettings["APIBaseUrl"].ToString(), "precheckin", ActionGroup);
+                        }
+                    }, apiBaseUrl, "precheckin", ActionGroup);
+                }
 
                 if (reservationfromopera != null && reservationfromopera.Count > 0)
                 {
@@ -200,15 +227,20 @@ namespace CheckinPortal.Controllers
                         }
                     }
 
-                    var PackageLists = await reservationLogics.GetPackages(reservations.RoomType);
-                    ViewBag.PackageList = PackageLists;
                     if (reservations.IsPreCheckedInPMS.HasValue && !reservations.IsPreCheckedInPMS.Value || isredirectfromPaymentPage)
                     {
                         ViewBag.ReservationFound = true;
 
                         #region Get the existing selected package and Upsells
 
-                        var ReservationPackagesList = await reservationLogics.GetReservationPackages(reservations.ReservationDetailID);
+                        var PackageListsTask = reservationLogics.GetPackages(reservations.RoomType);
+                        var ReservationPackagesListTask = reservationLogics.GetReservationPackages(reservations.ReservationDetailID);
+                        var ProfileListTask = reservationLogics.GetReservationProfileList(reservations.ReservationDetailID);
+                        await Task.WhenAll(PackageListsTask, ReservationPackagesListTask, ProfileListTask);
+                        var PackageLists = PackageListsTask.Result;
+                        ViewBag.PackageList = PackageLists;
+                        var ReservationPackagesList = ReservationPackagesListTask.Result;
+                        var ProfileList = ProfileListTask.Result;
 
                         if (ReservationPackagesList != null && ReservationPackagesList.Count > 0)
                         {
@@ -360,7 +392,6 @@ namespace CheckinPortal.Controllers
                         //push events to DB
                         reservationLogics.InsertEvent(reservations.ReservationDetailID, "Email Link Click");
                         Helpers.LogHelper.Instance.Log($"Getting prfile details", $"{reservations.ReservationNameID}", ActionName, ActionGroup);
-                        var ProfileList = await reservationLogics.GetReservationProfileList(reservations.ReservationDetailID);
 
                         ViewBag.Profiles = ProfileList;
                         ViewBag.CountryList = BuildCountryList(CountryList, ProfileList[0].CountryMasterID);
@@ -5992,6 +6023,7 @@ namespace CheckinPortal.Controllers
                     }
 
                     string checkoutUrl = appRoot + "/Checkout/Index?id=" + encryptedId + "&src=qr";
+                    QrSearchHandoffHelper.Save(TempData, reservationNumber, "precheckout", cloudRes, operaRes);
                     Helpers.LogHelper.Instance.Log(
                         $"Search routed to Pre Check-out. Status={status}, TrackHint={trackingHint ?? "none"}, Res#={reservationNumber}",
                         reservationNumber, ActionName, ActionGroup);
@@ -6056,6 +6088,7 @@ namespace CheckinPortal.Controllers
                     }
 
                     string precheckinUrl = appRoot + "/Home/Index?id=" + encryptedId + "&src=qr";
+                    QrSearchHandoffHelper.Save(TempData, reservationNumber, "precheckin", cloudRes, operaRes);
                     Helpers.LogHelper.Instance.Log(
                         $"Search routed to Pre Check-in. Status={status}, TrackHint={trackingHint ?? "none"}, Res#={reservationNumber}",
                         reservationNumber, ActionName, ActionGroup);

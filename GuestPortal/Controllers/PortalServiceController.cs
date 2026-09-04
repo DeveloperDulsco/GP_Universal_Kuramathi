@@ -21,6 +21,7 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web;
+using System.Web.Hosting;
 using System.Web.Http;
 using WebGrease.Configuration;
 
@@ -260,7 +261,7 @@ namespace CheckinPortal.Controllers
         [HttpPost]
         [ActionName("SendEmail")]
         [Route("api/portalservice/SendEmail")]
-        public async Task<IHttpActionResult> SendEmail(SendEmailModel sendEmail)
+        public IHttpActionResult SendEmail(SendEmailModel sendEmail)
         {
             const string actionName = "SendEmail";
             const string actionGroup = "Pre-Checkout";
@@ -286,6 +287,10 @@ namespace CheckinPortal.Controllers
                 if (string.IsNullOrWhiteSpace(emailID))
                 {
                     return Ok(new { result = false, responseMessage = "Please enter email address" });
+                }
+                if (!IsValidEmailAddress(emailID))
+                {
+                    return Ok(new { result = false, responseMessage = "Please enter a valid email address" });
                 }
 
                 if (string.IsNullOrWhiteSpace(SessionData.FolioBase64))
@@ -316,45 +321,14 @@ namespace CheckinPortal.Controllers
                 string reservationNameID = SessionData.OperaReservation.ReservationNameID ?? reservationID ?? "";
                 string apiBaseUrl = ConfigurationManager.AppSettings["APIBaseUrl"]?.ToString()
                     ?? "";
+                string fromEmail = ConfigurationManager.AppSettings["PreCheckoutFolioEmail"]?.ToString();
+                string subject = ConfigurationManager.AppSettings["PreCheckoutFolioEmailSubject"]?.ToString();
+                string displayFrom = ConfigurationManager.AppSettings["EmailDisplayName"]?.ToString();
+                string confirmationNumber = SessionData.OperaReservation.ReservationNumber;
+                string folioBase64 = SessionData.FolioBase64;
 
-                new LogHelper().Log("Sending guest folio email to " + emailID, reservationNameID, actionName, actionGroup);
+                new LogHelper().Log("Queueing guest folio email to " + emailID, reservationNameID, actionName, actionGroup);
 
-                Models.Emails.EmailResponse emailResponse = await new CloudHelper().SendEmail(reservationNameID, new Models.Emails.EmailRequest()
-                {
-                    FromEmail = ConfigurationManager.AppSettings["PreCheckoutFolioEmail"]?.ToString(),
-                    ToEmail = emailID,
-                    GuestName = guestName,
-                    Subject = ConfigurationManager.AppSettings["PreCheckoutFolioEmailSubject"]?.ToString(),
-                    confirmationNumber = SessionData.OperaReservation.ReservationNumber,
-                    displayFromEmail = ConfigurationManager.AppSettings["EmailDisplayName"]?.ToString(),
-                    EmailType = Models.Emails.EmailType.GuestFolio,
-                    AttchmentBase64 = SessionData.FolioBase64,
-                    AttachmentFileName = "Folio.pdf"
-                }, actionGroup, apiBaseUrl);
-
-                if (emailResponse == null || !emailResponse.result)
-                {
-                    string reason = emailResponse?.responseMessage ?? "Unknown email API failure";
-                    new LogHelper().Log("Failed to send guest folio email with reason :- " + reason, reservationNameID, actionName, actionGroup);
-                    new LogHelper().Warn("Failed to send guest folio email with reason :- " + reason, reservationNameID, actionName, actionGroup);
-                    AuditProgressHelper.Log(
-                        AuditProgressHelper.ModulePreCheckout,
-                        AuditProgressHelper.Actions.InvoiceEmailResendFailed,
-                        reservationID,
-                        reservationNameID,
-                        extraDetail: "from Thank you page, to " + emailID + " - " + reason);
-                    return Ok(new { result = false, responseMessage = "Unable to send the invoice email. Please try again or contact the front desk." });
-                }
-
-                new LogHelper().Log("Guest folio email sent successfully to " + emailID, reservationNameID, actionName, actionGroup);
-                AuditProgressHelper.Log(
-                    AuditProgressHelper.ModulePreCheckout,
-                    AuditProgressHelper.Actions.InvoiceEmailResent,
-                    reservationID,
-                    reservationNameID,
-                    extraDetail: "from Thank you page, to " + emailID);
-
-                // Best-effort: persist the address used for this send
                 try
                 {
                     if (!string.IsNullOrWhiteSpace(reservationID))
@@ -366,6 +340,57 @@ namespace CheckinPortal.Controllers
                 {
                     new LogHelper().Error(updateEx, reservationNameID, actionName, actionGroup);
                 }
+
+                HostingEnvironment.QueueBackgroundWorkItem(async cancellationToken =>
+                {
+                    try
+                    {
+                        Models.Emails.EmailResponse emailResponse = await new CloudHelper().SendEmail(reservationNameID, new Models.Emails.EmailRequest()
+                        {
+                            FromEmail = fromEmail,
+                            ToEmail = emailID,
+                            GuestName = guestName,
+                            Subject = subject,
+                            confirmationNumber = confirmationNumber,
+                            displayFromEmail = displayFrom,
+                            EmailType = Models.Emails.EmailType.GuestFolio,
+                            AttchmentBase64 = folioBase64,
+                            AttachmentFileName = "Folio.pdf"
+                        }, actionGroup, apiBaseUrl);
+
+                        if (emailResponse == null || !emailResponse.result)
+                        {
+                            string reason = emailResponse?.responseMessage ?? "Unknown email API failure";
+                            new LogHelper().Log("Failed to send guest folio email with reason :- " + reason, reservationNameID, actionName, actionGroup);
+                            new LogHelper().Warn("Failed to send guest folio email with reason :- " + reason, reservationNameID, actionName, actionGroup);
+                            AuditProgressHelper.Log(
+                                AuditProgressHelper.ModulePreCheckout,
+                                AuditProgressHelper.Actions.InvoiceEmailResendFailed,
+                                reservationID,
+                                reservationNameID,
+                                extraDetail: "from Thank you page (background), to " + emailID + " - " + reason);
+                            return;
+                        }
+
+                        new LogHelper().Log("Guest folio email sent successfully to " + emailID, reservationNameID, actionName, actionGroup);
+                        AuditProgressHelper.Log(
+                            AuditProgressHelper.ModulePreCheckout,
+                            AuditProgressHelper.Actions.InvoiceEmailResent,
+                            reservationID,
+                            reservationNameID,
+                            extraDetail: "from Thank you page, to " + emailID);
+                    }
+                    catch (Exception bgEx)
+                    {
+                        new LogHelper().Error(bgEx, reservationNameID, actionName, actionGroup);
+                        AuditProgressHelper.Log(
+                            AuditProgressHelper.ModulePreCheckout,
+                            AuditProgressHelper.Actions.InvoiceEmailResendFailed,
+                            reservationID,
+                            reservationNameID,
+                            extraDetail: "from Thank you page (background), to " + emailID + " - " + bgEx.Message);
+                    }
+                });
 
                 return Ok(new { result = true });
             }
@@ -801,6 +826,33 @@ namespace CheckinPortal.Controllers
                 return image.Substring(comma + 1);
             }
             return image;
+        }
+
+        private static bool IsValidEmailAddress(string email)
+        {
+            if (string.IsNullOrWhiteSpace(email) || email.IndexOf(' ') >= 0)
+            {
+                return false;
+            }
+            try
+            {
+                var parsed = new System.Net.Mail.MailAddress(email);
+                if (!string.Equals(parsed.Address, email, StringComparison.OrdinalIgnoreCase))
+                {
+                    return false;
+                }
+            }
+            catch
+            {
+                return false;
+            }
+            int at = email.IndexOf('@');
+            if (at <= 0 || at != email.LastIndexOf('@'))
+            {
+                return false;
+            }
+            string domain = email.Substring(at + 1);
+            return domain.IndexOf('.') > 0 && !domain.StartsWith(".") && !domain.EndsWith(".");
         }
 
     }

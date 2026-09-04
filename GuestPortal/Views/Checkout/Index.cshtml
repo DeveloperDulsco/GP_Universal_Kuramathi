@@ -806,9 +806,22 @@
 
         function sendEmail() {
             var email = ($('#emailID').val() || '').trim();
+            var $btn = $('.thank-you-invoice button');
+            var emailFormat = new RegExp('^[^\\s@@]+@@[^\\s@@]+\\.[^\\s@@]+$');
 
-            if (email) {
-                fetch(BaseURL + '/api/portalservice/SendEmail', {
+            if (!email) {
+                $('#messageContentFolio').html('Please enter email address');
+                $('#exampleModal2').modal('show');
+                return;
+            }
+            if (!emailFormat.test(email)) {
+                $('#messageContentFolio').html('Please enter a valid email address');
+                $('#exampleModal2').modal('show');
+                return;
+            }
+
+            $btn.prop('disabled', true);
+            fetch(BaseURL + '/api/portalservice/SendEmail', {
                     method: "POST",
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -827,12 +840,9 @@
                 }).catch(function () {
                     $('#messageContentFolio').html('Unable to send the invoice email. Please try again or contact the front desk.');
                     $('#exampleModal2').modal('show');
+                }).then(function () {
+                    $btn.prop('disabled', false);
                 });
-            }
-            else {
-                $('#messageContentFolio').html('Please enter email address');
-                $('#exampleModal2').modal('show');
-            }
         }
 
         // Full multi-tab lock per reservation (BroadcastChannel + localStorage heartbeat)
