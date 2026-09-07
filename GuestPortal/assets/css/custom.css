@@ -888,6 +888,7 @@ body.modal-open {
   height:auto;
   margin:0 0 8px;
   background:#fff;
+  image-rendering:auto;
 }
 
 /*timepicker*/

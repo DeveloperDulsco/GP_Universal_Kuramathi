@@ -1298,7 +1298,7 @@ namespace CheckinPortal.Controllers
 
                     try
                     {
-                        reservationLogics.UpdateReservationByStage("Guest Details", resUpdateModel);
+                        await reservationLogics.ExecuteUpdateReservationByStage("Guest Details", resUpdateModel);
                         Helpers.LogHelper.Instance.Debug($"Guest details updated successfully: {Newtonsoft.Json.JsonConvert.SerializeObject(resUpdateModel)}", $"{reservationModel.ReservationNumber}", ActionName, ActionGroup);
 
                         // Local nationality audit when Opera nationality was not attempted (no ProfileID)

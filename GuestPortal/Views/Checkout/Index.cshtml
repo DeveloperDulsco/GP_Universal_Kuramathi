@@ -429,8 +429,17 @@
             var workerSrc = '@Url.Content("~/assets/js/pdfjs/pdf.worker.min.js")';
             var libSrc = '@Url.Content("~/assets/js/pdfjs/pdf.min.js")';
 
+            function cssWidth() {
+                var w = pagesEl.clientWidth || wrap.clientWidth;
+                if (!(w > 40)) {
+                    w = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0) - 32;
+                }
+                return w > 40 ? w : 320;
+            }
+
             function renderAllPages(pdf) {
-                var width = pagesEl.clientWidth || wrap.clientWidth || 320;
+                var width = cssWidth();
+                var outputScale = Math.min(Math.max(window.devicePixelRatio || 1, 2), 3);
                 var chain = Promise.resolve();
                 var pageNo;
                 for (pageNo = 1; pageNo <= pdf.numPages; pageNo++) {
@@ -443,11 +452,17 @@
                                 var viewport = page.getViewport({ scale: scale });
                                 var canvas = document.createElement('canvas');
                                 canvas.className = 'folio-pdfjs-page';
-                                canvas.width = viewport.width;
-                                canvas.height = viewport.height;
+                                canvas.width = Math.floor(viewport.width * outputScale);
+                                canvas.height = Math.floor(viewport.height * outputScale);
+                                canvas.style.width = '100%';
+                                canvas.style.height = 'auto';
                                 pagesEl.appendChild(canvas);
+                                var ctx = canvas.getContext('2d', { alpha: false });
+                                ctx.setTransform(outputScale, 0, 0, outputScale, 0, 0);
+                                ctx.imageSmoothingEnabled = true;
+                                ctx.imageSmoothingQuality = 'high';
                                 return page.render({
-                                    canvasContext: canvas.getContext('2d', { alpha: false }),
+                                    canvasContext: ctx,
                                     viewport: viewport
                                 }).promise;
                             });
@@ -462,8 +477,15 @@
                 pdfjsLib.GlobalWorkerOptions.workerSrc = workerSrc;
                 pagesEl.innerHTML = '<p class="folio-open-hint" style="display:block">Loading invoice…</p>';
                 pdfjsLib.getDocument({ url: pdfUrl }).promise.then(function (pdf) {
-                    pagesEl.innerHTML = '';
-                    return renderAllPages(pdf);
+                    function paint() {
+                        pagesEl.innerHTML = '';
+                        return renderAllPages(pdf);
+                    }
+                    return paint().then(function () {
+                        if (pagesEl.querySelectorAll('canvas').length && pagesEl.clientWidth < 80) {
+                            window.setTimeout(paint, 250);
+                        }
+                    });
                 }).catch(function () {
                     pagesEl.innerHTML = '';
                 });
