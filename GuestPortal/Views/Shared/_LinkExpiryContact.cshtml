@@ -1,0 +1,12 @@
+@{
+    var propertyName = CheckinPortal.Helpers.LinkExpiryHelper.PropertyName;
+    var phone = CheckinPortal.Helpers.LinkExpiryHelper.PropertyPhone;
+    var email = CheckinPortal.Helpers.LinkExpiryHelper.PropertyEmail;
+    var website = CheckinPortal.Helpers.LinkExpiryHelper.PropertyWebsite;
+}
+<div class="link-expiry-contact">
+    <p class="link-expiry-contact-title">@propertyName</p>
+    <p>T <a href="tel:@phone.Replace(" ", "")">@phone</a></p>
+    <p>E <a href="mailto:@email">@email</a></p>
+    <p><a href="@website" target="_blank" rel="noopener noreferrer">@website</a></p>
+</div>

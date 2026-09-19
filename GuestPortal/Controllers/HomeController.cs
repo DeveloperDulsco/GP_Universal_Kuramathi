@@ -4416,6 +4416,12 @@ namespace CheckinPortal.Controllers
                     ViewBag.IsPaymentSuccess = IsPaymentSuccess;
                     ViewBag.PaymentFailureMessage = PaymentFailureMessage;
 
+                    string paymentLinkStatus = NormalizeReservationStatus(operaReservation);
+                    if (!isredirectfromPaymentPage && IsNoShowStatus(paymentLinkStatus))
+                    {
+                        return ShowLinkExpiry(LinkExpiryHelper.NoShow, confirmationNo, ActionName, ActionGroup);
+                    }
+
                     if (operaReservation != null && operaReservation.Infant.HasValue && operaReservation.Infant.Value > 0)
                     {
                         if (!reservations.InfantCount.HasValue || reservations.InfantCount.Value < operaReservation.Infant.Value)
@@ -5158,21 +5164,28 @@ namespace CheckinPortal.Controllers
                 CloudReservationModel cloudRes = null;
                 Models.OWS.OperaReservation operaRes = null;
 
-                // 1) Cloud lookup (reservation # or confirmation/reference #)
-                var cloudResponse = await new CloudHelper().FetchReservationDetailsByReferenceNumber(
+                // 1) Cloud lookup (reservation # or confirmation/reference #) and
+                // 2) Opera lookup WITHOUT process filter — status decides precheckin vs precheckout
+                // These two lookups are independent, so run them concurrently instead of one after
+                // another — each is a slow external call (local API / Opera OWS), and awaiting them
+                // in sequence was doubling the wait for no reason.
+                var cloudLookupTask = new CloudHelper().FetchReservationDetailsByReferenceNumber(
                     ConfirmationNo,
                     new APIRequestModel { RequestObject = ConfirmationNo },
                     ActionGroup,
                     apiBaseUrl);
+                var pmsLookupTask = reservationLogics.FetchReservationDetailFromPMS(ConfirmationNo);
 
+                await Task.WhenAll(cloudLookupTask, pmsLookupTask);
+
+                var cloudResponse = cloudLookupTask.Result;
                 if (cloudResponse?.responseData != null)
                 {
                     cloudList = JsonConvert.DeserializeObject<List<CloudReservationModel>>(cloudResponse.responseData.ToString());
                     cloudRes = cloudList?.FirstOrDefault();
                 }
 
-                // 2) Opera lookup WITHOUT process filter — status decides precheckin vs precheckout
-                var pmsList = await reservationLogics.FetchReservationDetailFromPMS(ConfirmationNo);
+                var pmsList = pmsLookupTask.Result;
                 if (pmsList != null && pmsList.Count > 0)
                 {
                     operaRes = pmsList[0];
@@ -5228,15 +5241,15 @@ namespace CheckinPortal.Controllers
 
                 if (IsNoShowStatus(status))
                 {
-                    string noShowMsg = "This reservation was recorded as a no-show.";
+                    string noShowMsg = LinkExpiryHelper.GetGuestMessage(LinkExpiryHelper.NoShow).Replace("\n", " ");
                     Helpers.LogHelper.Instance.Warn(
-                        $"Search reservation failed. Reason={noShowMsg}. Status={status}. Res#={reservationNumber}",
+                        $"Search reservation expired. Reason={noShowMsg}. Status={status}. Res#={reservationNumber}",
                         reservationNumber, ActionName, ActionGroup);
                     return Json(new
                     {
-                        result = false,
-                        redirectUrl = string.Empty,
-                        errorMessage = noShowMsg
+                        result = true,
+                        redirectUrl = Url.Action("LinkExpired", "Home", new { reason = LinkExpiryHelper.NoShow }),
+                        flow = "expired"
                     });
                 }
 
@@ -5662,7 +5675,16 @@ namespace CheckinPortal.Controllers
 
         private static bool IsNoShowStatus(string status)
         {
-            return status == "NOSHOW" || status == "NO SHOW";
+            return LinkExpiryHelper.IsNoShowStatus(status);
+        }
+
+        public ActionResult LinkExpired(string reason)
+        {
+            return ShowLinkExpiry(
+                string.IsNullOrWhiteSpace(reason) ? LinkExpiryHelper.Default : reason,
+                "0",
+                "LinkExpired",
+                "Search");
         }
 
         [HttpPost]

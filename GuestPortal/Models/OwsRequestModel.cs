@@ -23,7 +23,7 @@ namespace CheckinPortal.Models
         public FetchBookedPackagesRequestModel FetchBookedPackagesRequest { get; set; }
         public PaymentMethods paymentMethod { get; set; }
         public OperaReservationModel OperaReservation { get; set; }
-        public PreregisterReservationRequest PreregisterReservationRequest { get; set; }
+        public OWS.PreregisterReservationRequest PreregisterReservationRequest { get; set; }
         public UpdateProfile UpdateProileRequest { get; set; }
         public FetchRoomList FetchRoomList { get; set; }
         public ModifyBookingRequest modifyBookingRequest { get; set; }
@@ -59,12 +59,6 @@ namespace CheckinPortal.Models
     {
         public string ReservationNumber { get; set; }
 
-    }
-    public class PreregisterReservationRequest
-    {
-        public string ReservationNameID { get; set; }
-        public string ReservationNumber { get; set; }
-        public string LegNumber { get; set; }
     }
     public class FetchRoomList
     {

@@ -138,6 +138,14 @@ namespace CheckinPortal.Controllers
                         if (reservation != null && !(reservation.IsPrecheckOutPMS ?? false))
                         {
                             var operaFirst = reservationfromopera.First();
+                            string checkoutStatus = LinkExpiryHelper.NormalizeReservationStatus(operaFirst.ComputedReservationStatus, operaFirst.ReservationStatus);
+                            if (LinkExpiryHelper.IsNoShowStatus(checkoutStatus))
+                            {
+                                Helpers.LogHelper.Instance.Warn(
+                                    $"Blocked precheckout — reservation status is no-show. Status={checkoutStatus}. Res#={ConfirmationNo}",
+                                    reservation.ReservationNameID ?? ConfirmationNo, ActionName, ActionGroup);
+                                return ShowLinkExpiry(LinkExpiryHelper.NoShow, ConfirmationNo, ActionName, ActionGroup);
+                            }
                             int? adultCount = LinkExpiryHelper.ResolveAdultCount(operaFirst.Adults, reservation.Adultcount);
                             if (LinkExpiryHelper.HasEligibleAdultCount(adultCount))
                             {
@@ -545,6 +553,11 @@ namespace CheckinPortal.Controllers
                 if (reservationfromopera != null && reservationfromopera.Count > 0)
                 {
                     operaReservation = reservationfromopera.FirstOrDefault();
+                    string paymentCheckoutStatus = LinkExpiryHelper.NormalizeReservationStatus(operaReservation != null ? operaReservation.ComputedReservationStatus : null, operaReservation != null ? operaReservation.ReservationStatus : null);
+                    if (LinkExpiryHelper.IsNoShowStatus(paymentCheckoutStatus))
+                    {
+                        return ShowLinkExpiry(LinkExpiryHelper.NoShow, ConfirmationNo, ActionName, ActionGroup);
+                    }
                     if (reservation != null)
                     {
                         ViewBag.PaymentProcessed = true;

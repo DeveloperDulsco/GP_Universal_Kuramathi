@@ -93,7 +93,7 @@
                                     </p>
                                 }
                                 <div class="row">
-                                    <div class="col-md-4 offset-md-4">
+                                    <div class="col-12 folio-sign-wrap">
                                         <div class="sign" id="signbox" style="display:none">
                                             <div id="signature-pad" class="signature-pad">
                                                 <div class="signature-pad--body">
@@ -421,7 +421,11 @@
             var wrap = document.getElementById('folioScrollWrap');
             var pagesEl = document.getElementById('folioPdfjsPages');
             if (!wrap || !pagesEl) { return; }
-            if (!window.matchMedia || !window.matchMedia('(max-width: 767px)').matches) { return; }
+            // iPhone is <=767. iPad (e.g. Air 820 / landscape ~1180) used the Safari PDF iframe,
+            // which often scrolls without painting page 2. Use PDF.js on tablets too.
+            var usePdfJs = window.matchMedia && window.matchMedia('(max-width: 1366px)').matches;
+            var iPadOs = navigator.maxTouchPoints > 1 && /Mac|iPad/.test(navigator.platform || navigator.userAgent || '');
+            if (!usePdfJs && !iPadOs) { return; }
 
             var pdfUrl = wrap.getAttribute('data-pdf-url');
             if (!pdfUrl) { return; }

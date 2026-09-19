@@ -39,7 +39,7 @@
     <!--font-awsome -->
     <link href="~/assets/css/all.css" rel="stylesheet">
     <!-- custom CSS -->
-    <link rel="stylesheet" href="~/assets/css/custom.css?v=1.0.0.9">
+    <link rel="stylesheet" href="~/assets/css/custom.css?v=1.0.1.0">
     <link href="~/assets/css/paymentIcons.css" rel="stylesheet" />
     <link href="~/assets/css/signature-pad.css" rel="stylesheet" />
     <script>
@@ -109,6 +109,7 @@
                         <br />
                         <div class="button-wrapper1">
                             <button class="btn_ok yes" data-dismiss="modal" data-toggle="modal">CONTINUE</button>
+                            <button id="customMessageModalOkBtn" class="btn_ok yes" style="display:none;">OK</button>
                         </div>
                     </div>
                 </div>
@@ -132,8 +133,9 @@
     <script>
         window.GP_PORTAL_IDLE_MS = @(portalIdleMin * 60 * 1000);
         window.GP_PORTAL_REQUEST_MS = @(portalReqSec * 1000);
+        window.GP_HOME_URL = '@Url.Action("SearchReservation", "Home")';
     </script>
-    <script src="~/assets/js/portalIdleTimeout.js?v=20260902idle1"></script>
+    <script src="~/assets/js/portalIdleTimeout.js?v=20260902idle2"></script>
     <script src="~/assets/js/bootstrap.bundle.js"></script>
     <script src="~/assets/js/bootstrap-select.min.js"></script>
     <script src="~/assets/js/moment.js"></script>

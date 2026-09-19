@@ -24,7 +24,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <link rel="stylesheet" href="~/assets/css/bootstrap.min.css">
     <link href="~/assets/css/all.css" rel="stylesheet">
-    <link rel="stylesheet" href="~/assets/css/custom.css">
+    <link rel="stylesheet" href="~/assets/css/custom.css?v=1.0.1.0">
     <link rel="icon" type="image/png" href="~/assets/images/logo.png?v=@appVersion" sizes="32x32">
     <link rel="shortcut icon" type="image/png" href="~/assets/images/logo.png?v=@appVersion">
     <title>Link Expired</title>
@@ -36,9 +36,10 @@
     </div>
     <div class="container thank">
         <p style="white-space: pre-line;">@expiryMessage</p>
+        @Html.Partial("~/Views/Shared/_LinkExpiryContact.cshtml")
     </div>
     <footer class="search-reservation-footer link-expiry-footer">
-        Powered by Dots &middot; &copy; 2026. All rights reserved. Version @appVersion
+        Powered by DOTS &middot; &copy; 2026. All rights reserved. Version @appVersion
     </footer>
 
     <script src="~/assets/js/jquery-3.5.1.slim.min.js"></script>

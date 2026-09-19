@@ -64,6 +64,7 @@ ul {
 }
 
 body{background: #f8f8f8; font-family: "Inter", Arial, sans-serif; font-weight:400;overflow: auto;}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%;}
 h1{font-size: 18px;font-family: "Inter", Arial, sans-serif;font-weight: 600;color: #000000;text-transform: uppercase;position: relative;padding-bottom: 10px;margin-bottom: 15px;display: none;}
 h1::after{content:''; width:20px;height: 3px;background:#acacac;position: absolute ;bottom: 0;left: 0;}
 h2{font-size: 16px;font-family: "Inter", Arial, sans-serif;font-weight: 600;color: #000000;text-transform: uppercase;}
@@ -208,6 +209,39 @@ position: fixed;width: 100%;z-index:5;height: 110px;
 .plcy-wrapper span.required{display: inline;color: #c00;}
 .plcy-wrapper .form-check-label{font-size: 16px;font-weight: 500;text-transform: none;color: #000000;font-family: 'Agenda-Light';}
 .plcy-wrapper .form-check-label a{font-size: inherit;font-weight: inherit;font-family: inherit;color: #000000;text-decoration: underline;}
+#policies .form-check,
+#policies .form-check-inline{
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    margin: 0 12px 8px 0;
+    padding: 6px 8px;
+}
+#policies .form-check-input[type="radio"],
+#policies .custom-control-input[type="radio"]{
+    width: 22px;
+    height: 22px;
+    min-width: 22px;
+    min-height: 22px;
+    margin-top: 0;
+    margin-right: 8px;
+    flex-shrink: 0;
+    -webkit-appearance: radio;
+    -moz-appearance: radio;
+    appearance: radio;
+}
+#policies .form-check-label,
+#policies .custom-control-label{
+    padding: 10px 8px 10px 4px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: rgba(55,105,122,0.2);
+}
+#policies .custom-control.custom-radio{
+    min-height: 44px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+    margin-right: 12px;
+}
 .plcy-wrapper .form-check-label span{display: inline;font-size: inherit;}
 .plcy-wrapper .total label{font-size: 13px;}
 .plcy-wrapper .total p{font-size: 14px;}
@@ -959,8 +993,8 @@ body.modal-open {
 .menu .logo{margin:0 50px 40px 0;}
 .menu ul{margin: 0;padding: 0;}
 .menu ul li{margin: 0 0 10px 0;padding: 0;list-style-type: none;display: block;position: relative;z-index: 1;border: 1px solid transparent;border-radius: 35px;}
-.menu ul li a{font-family: "Inter", Arial, sans-serif;font-weight: 600;display: flex;align-items: center;color: #616365;padding:12px 52px 12px 16px;text-transform: uppercase;font-size: 14px;position: relative;box-sizing: border-box;min-height: 57px;}
-.menu ul li a label{margin-bottom: 0;display: block;white-space: normal;word-break: break-word;line-height: 1.25;}
+.menu ul li a{font-family: "Inter", Arial, sans-serif;font-weight: 600;display: flex;align-items: center;color: #e8e8e8;padding:12px 52px 12px 16px;text-transform: uppercase;font-size: 14px;position: relative;box-sizing: border-box;min-height: 57px;}
+.menu ul li a label{margin-bottom: 0;display: block;white-space: normal;word-break: break-word;line-height: 1.25;color: inherit;}
 .menu ul li a:hover{text-decoration: none;}
 .menu ul li a span{font-family: "Inter", Arial, sans-serif;font-weight: 600;display: inline-flex;align-items: center;justify-content: center;background: #fff;color: #161819;border-radius: 28px;min-width: 33px;height: 33px;font-size:18px;
   text-align: center;margin: 0;font-weight: 500;line-height:1;border: 1px solid #acacac;position: absolute;right:12px;top: 50%;transform: translateY(-50%);
@@ -973,7 +1007,7 @@ body.modal-open {
   .menu ul li.active a{background: #37697A;border-radius:35px;color: #ffffff;border: 2px solid #222222;}
   .menu ul li.active a span{color: #ffffff;color: #000;}
   .min-height{min-height:548px;}
-  .content-wrapper{background: #ffffff;padding:65px;border-radius: 30px;margin:50px 0 25px -51px;}
+  .content-wrapper{background: #ffffff;padding:65px;border-radius: 30px;margin:50px 0 25px -51px;-webkit-overflow-scrolling:touch;}
 
   .no-menu .left-menu .space{height:150px;}
 /*loader*/
@@ -1355,6 +1389,20 @@ box-shadow: -1px 13px 13px -10px rgba(0,0,0,0.35);
   margin-bottom: 40px;
   max-width: 640px;
 }
+.link-expiry-contact{
+  margin-top: 24px;
+  padding-top: 18px;
+  border-top: 1px solid #d7d7d7;
+  font-size: 15px;
+  line-height: 1.55;
+  color: #333;
+}
+.link-expiry-contact-title{
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+.link-expiry-contact p{margin: 0 0 4px;font-size: 15px;}
+.link-expiry-contact a{color: #37697A;word-break: break-word;}
 .link-expiry-footer{
   position: absolute;
 }
@@ -1368,6 +1416,30 @@ box-shadow: -1px 13px 13px -10px rgba(0,0,0,0.35);
 .label-head{color: #5f6062;font-size: 13px;}
 .check-bx{margin-top:20px;}
 .check-bx .form-check-input{height: 18px;width: 18px;}
+
+/* Checkout folio signature: centered, capped width (not full iPad, not Bootstrap 1/3 column) */
+#folio .folio-sign-wrap{
+    max-width: 480px;
+    margin-left: auto;
+    margin-right: auto;
+    float: none;
+    width: 100%;
+}
+#folio .signature-pad{
+    width: 100%;
+    max-width: 100%;
+}
+@media (min-width: 768px){
+    #folio .signature-pad{
+        min-height: 280px;
+        height: 280px;
+    }
+    #folio .signature-pad--body canvas{
+        width: 100%;
+        height: 210px;
+        min-height: 210px;
+    }
+}
 
 /*start*/
 
@@ -1385,6 +1457,15 @@ box-shadow: -1px 13px 13px -10px rgba(0,0,0,0.35);
 
     .signature-pad{min-height:200px;}
     .signature-pad--body canvas{height:150px;}
+    #folio .signature-pad{
+        min-height: 280px;
+        height: 280px;
+    }
+    #folio .signature-pad--body canvas{
+        width: 100%;
+        height: 210px;
+        min-height: 210px;
+    }
     .menu ul li a{font-size: 12px;padding:12px 46px 12px 12px;}
     .content-wrapper{margin-left: 8px;padding: 40px 28px;}
 
@@ -1597,6 +1678,28 @@ box-shadow: -1px 13px 13px -10px rgba(0,0,0,0.35);
     .thank-you-invoice{max-width:100%;padding:0 8px;}
     .thank-you-invoice .mail-form{flex-direction:column;align-items:stretch;}
     .thank-you-invoice .mail-form .btnstyle{width:100%;}
+}
+
+/* iPad / small laptop: same folio viewer as phone (PDF.js pages, hide Safari iframe) */
+@media (max-width: 1366px) {
+    #folio .folio-open-hint{
+      display: block;
+    }
+    #folio .folio-scroll-wrap {
+      display: block;
+      max-height: min(70vh, 640px);
+      overflow: auto;
+      -webkit-overflow-scrolling: touch;
+      margin-bottom: 12px;
+      background: #f3f3f3;
+    }
+    #folio .folio-iframe {
+      display: none !important;
+    }
+    #folio .folio-pdfjs-pages {
+      display: block;
+      padding: 6px;
+    }
 }
 
 @media (max-width:767px) {

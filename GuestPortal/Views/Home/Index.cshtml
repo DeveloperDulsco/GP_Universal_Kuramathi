@@ -1013,7 +1013,7 @@ new { @class = "text-danger" }
             </div>
             <div class="modal-body">
                 <p style="font-size:13px; line-height:1.45;">
-                    Milaidhoo makes every attempt to identify ingredients that may cause allergic reactions to those with allergies such as,
+                    Niva Kuramathi makes every attempt to identify ingredients that may cause allergic reactions to those with allergies such as,
                     but not limited to food allergy, skin allergy, dust allergy, insect sting allergy, and mould allergy.
                     Every effort is made by the Milaidhoo Resort to instruct the staff of all departments on the type and severity of guest
                     allergies when they are communicated in advance by guests or travel agents/tour operators through the Reservations and/or Front office teams.
@@ -2958,7 +2958,7 @@ new { @class = "text-danger" }
     function frontSlotInvalidMessage(response) {
         var typeName = describeOcrDocumentType(response);
         if (typeName) {
-            return DOCUMENT_ACCEPT_MSG + ' (' + typeName + ' is not accepted. ' + DOCUMENT_FRONT_FIRST_HINT + ')';
+            return typeName + ' is not accepted. (' + DOCUMENT_ACCEPT_MSG + ' -' + DOCUMENT_FRONT_FIRST_HINT + ')';
         }
         return DOCUMENT_ACCEPT_MSG + ' (' + DOCUMENT_FRONT_FIRST_HINT + ')';
     }

@@ -29,7 +29,8 @@ namespace CheckinPortal.Controllers
                 LegNumber = "1",
                 Password = ConfigurationManager.AppSettings["Password"],
                 SystemType = ConfigurationManager.AppSettings["SystemType"],
-                Username = ConfigurationManager.AppSettings["Username"]
+                Username = ConfigurationManager.AppSettings["Username"],
+                DeviceName="MCI"
             };
         }
 
@@ -325,13 +326,47 @@ namespace CheckinPortal.Controllers
                 new LogHelper().Error(ex, reservationNameId, ActionName, ActionGroup);
             }
 
+            if (!alreadyPrecheckinCompleted)
+            {
+                try
+                {
+                    var preregOws = BuildOwsCredentials();
+                    preregOws.LegNumber = string.IsNullOrWhiteSpace(operaReservation?.LegNumber)
+                        ? "1"
+                        : operaReservation.LegNumber;
+                    preregOws.PreregisterReservationRequest = new CheckinPortal.Models.OWS.PreregisterReservationRequest
+                    {
+                        ReservationNumber = reservationNumber,
+                        ReservationNameID = reservationNameId,
+                        LegNumber = preregOws.LegNumber
+                    };
+
+                    var preregResponse = await new CloudHelper().PreregisterReservation(
+                        reservationNameId,
+                        preregOws,
+                        ActionGroup,
+                        apiUrl);
+
+                    if (preregResponse != null && preregResponse.result)
+                        new LogHelper().Log("Opera PreregisterReservation succeeded (background)", reservationNameId, ActionName, ActionGroup);
+                    else
+                        new LogHelper().Log(
+                            "Opera PreregisterReservation failed (background): " + (preregResponse != null ? preregResponse.responseMessage : "null"),
+                            reservationNameId, ActionName, ActionGroup);
+                }
+                catch (Exception ex)
+                {
+                    new LogHelper().Error(ex, reservationNameId, ActionName, ActionGroup);
+                }
+            }
+
             if (operaReservation != null)
             {
                 try
                 {
                     new LogHelper().Log("Generating registration card (background)", reservationNameId, ActionName, ActionGroup);
                     var ows = BuildOwsCredentials();
-                    ows.OperaReservation = operaReservation;
+                    ows.OperaReservation = operaReservation;                  
                     var regcardResponse = await new CloudHelper().GetRegistrationCard(reservationNameId, ows, ActionGroup, apiUrl);
                     if (regcardResponse != null && regcardResponse.result && regcardResponse.responseData != null)
                     {

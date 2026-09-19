@@ -269,6 +269,7 @@ namespace CheckinPortal.Models.OWS
         public string DocumentType { get; set; }
         public DateTime? IssueDate { get; set; }
         public bool? isFieldMandatory { get; set; }
+        public DateTime? ExpiryDate { get; set; }
     }
 
     public class FetchProfileRequest

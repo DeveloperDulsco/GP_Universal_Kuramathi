@@ -437,7 +437,8 @@ namespace CheckinPortal.BusinessLayer
                             Gender = !string.IsNullOrEmpty(documentModel.Gender) ? (documentModel.Gender.ToUpper().Equals("M") ? "Male" : (documentModel.Gender.ToUpper().Equals("F") ? "Female" : null)) : null,
                             IssueCountry = documentModel.IssueCountry,
                             IssueDate = documentModel.IssueDate,
-                            Nationality = documentModel.Nationality
+                            Nationality = documentModel.Nationality,
+                            ExpiryDate = documentModel.ExpiryDate
 
                         }
                     }, "pre checked-in fetch", AppSettingsManager.GetDecryptedSetting("APIBaseUrl"));
@@ -477,7 +478,8 @@ namespace CheckinPortal.BusinessLayer
                             Gender = !string.IsNullOrEmpty(documentModel.Gender) ? (documentModel.Gender.ToUpper().Equals("M") ? "Male" : (documentModel.Gender.ToUpper().Equals("F") ? "Female" : null)) : null,
                             IssueCountry = documentModel.IssueCountry,
                             IssueDate = documentModel.IssueDate,
-                            Nationality = documentModel.Nationality
+                            Nationality = documentModel.Nationality,
+                            ExpiryDate=documentModel.ExpiryDate
 
                         }
                     }, "pre checked-in fetch", AppSettingsManager.GetDecryptedSetting("APIBaseUrl"));

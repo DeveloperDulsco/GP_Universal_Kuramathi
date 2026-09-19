@@ -5,7 +5,7 @@
     <!-- Required meta tags -->
     <meta charset="utf-8">
     @*<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">*@
-    <meta name="viewport" content="minimal-ui, width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
 
     @* <script src="https://checkoutshopper-live.adyen.com/checkoutshopper/sdk/3.8.1/adyen.js"
@@ -42,7 +42,7 @@
 
     <link href="~/assets/css/all.css" rel="stylesheet">
     <!-- custom CSS -->
-    <link rel="stylesheet" href="~/assets/css/custom.css?v=1.0.0.9">
+    <link rel="stylesheet" href="~/assets/css/custom.css?v=1.0.1.0">
     <link href="~/assets/css/signature-pad.css" rel="stylesheet" />
 
     <link href="~/assets/css/animatedCheck.css" rel="stylesheet" />
@@ -160,8 +160,9 @@
     <script>
         window.GP_PORTAL_IDLE_MS = @(portalIdleMin * 60 * 1000);
         window.GP_PORTAL_REQUEST_MS = @(portalReqSec * 1000);
+        window.GP_HOME_URL = '@Url.Action("SearchReservation", "Home")';
     </script>
-    <script src="~/assets/js/portalIdleTimeout.js?v=20260902idle1"></script>
+    <script src="~/assets/js/portalIdleTimeout.js?v=20260902idle2"></script>
 
     <script src="~/assets/js/bootstrap.bundle.js"></script>
     <script src="~/assets/js/bootstrap-select.min.js"></script>
@@ -344,6 +345,7 @@
                         <br />
                         <div class="button-wrapper1">
                             <button class="btn_ok yes" data-dismiss="modal" data-toggle="modal">CONTINUE</button>
+                            <button id="customMessageModalOkBtn" class="btn_ok yes" style="display:none;">OK</button>
                         </div>
                     </div>
                 </div>

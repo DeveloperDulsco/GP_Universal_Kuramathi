@@ -1,3 +1,6 @@
+using System;
+using System.Configuration;
+
 namespace CheckinPortal.Helpers
 {
     /// <summary>
@@ -91,6 +94,46 @@ namespace CheckinPortal.Helpers
         public static bool HasEligibleAdultCount(int? adultCount)
         {
             return adultCount.HasValue && adultCount.Value > 0;
+        }
+
+        public static string PropertyName
+        {
+            get { return AppSetting("PropertyName", "Niva Kuramathi Maldives"); }
+        }
+
+        public static string PropertyPhone
+        {
+            get { return AppSetting("PropertyPhone", "+960 6660527"); }
+        }
+
+        public static string PropertyEmail
+        {
+            get { return AppSetting("PropertyEmail", "info@nivakuramathi.com"); }
+        }
+
+        public static string PropertyWebsite
+        {
+            get { return AppSetting("PropertyWebsite", "https://www.nivakuramathi.com"); }
+        }
+
+        public static string NormalizeReservationStatus(string computedStatus, string reservationStatus)
+        {
+            string status = !string.IsNullOrWhiteSpace(computedStatus) ? computedStatus : reservationStatus;
+            return (status ?? string.Empty).Trim().ToUpperInvariant();
+        }
+
+        public static bool IsNoShowStatus(string status)
+        {
+            if (string.IsNullOrWhiteSpace(status))
+                return false;
+            string compact = status.Replace(" ", "").Replace("-", "").Replace("_", "");
+            return compact == "NOSHOW";
+        }
+
+        private static string AppSetting(string key, string fallback)
+        {
+            string value = ConfigurationManager.AppSettings[key];
+            return string.IsNullOrWhiteSpace(value) ? fallback : value.Trim();
         }
     }
 }

@@ -7,7 +7,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <link rel="stylesheet" href="~/assets/css/bootstrap.min.css">
-    <link rel="stylesheet" href="~/assets/css/custom.css">
+    <link rel="stylesheet" href="~/assets/css/custom.css?v=1.0.1.0">
     <link rel="icon" type="image/png" href="~/assets/images/logo.png" sizes="32x32">
     <link rel="shortcut icon" type="image/png" href="~/assets/images/logo.png">
     <title>Something went wrong</title>
@@ -18,9 +18,10 @@
     </div>
     <div class="container thank">
         <p>Something went wrong while processing your request.<br>Please try again later, or contact the front desk if you need help.</p>
+        @Html.Partial("~/Views/Shared/_LinkExpiryContact.cshtml")
     </div>
     <footer class="search-reservation-footer link-expiry-footer">
-        Powered by Dots &middot; &copy; 2026. All rights reserved.
+        Powered by DOTS &middot; &copy; 2026. All rights reserved.
     </footer>
 </body>
 </html>

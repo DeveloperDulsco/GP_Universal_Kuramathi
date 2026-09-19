@@ -34,6 +34,15 @@
         } catch (e) { }
     }
 
+    // Session-expired popup reuses the shared #customMessageModal (also used for plain
+    // validation messages elsewhere), so only THIS path swaps CONTINUE for OK + redirect —
+    // the button is reset back to CONTINUE whenever the modal closes (see hidden.bs.modal below),
+    // so every other caller of #customMessageModal keeps its original CONTINUE/dismiss behavior.
+    function goHomeNoReservation() {
+        var url = window.GP_HOME_URL || '/';
+        try { window.location.href = url; } catch (e) { window.location = url; }
+    }
+
     function showTimeout(customMsg) {
         hideLoader();
         if (shown) {
@@ -44,11 +53,14 @@
         try {
             if (window.jQuery && window.jQuery('#customMessageModal').length) {
                 window.jQuery('#customMessageModalMessage').html(text);
+                window.jQuery('#customMessageModal .btn_ok.yes').not('#customMessageModalOkBtn').hide();
+                window.jQuery('#customMessageModalOkBtn').show();
                 window.jQuery('#customMessageModal').modal({ backdrop: 'static', keyboard: false, show: true });
                 return;
             }
         } catch (e) { }
         try { window.alert(text); } catch (e2) { }
+        goHomeNoReservation();
     }
 
     window.gpPortalIdleExpired = isIdle;
@@ -111,6 +123,21 @@
                 throw err;
             });
         };
+    }
+
+    if (window.jQuery) {
+        // Delegated (not .on at bind time) since #customMessageModal is defined later in the
+        // layout markup than this script tag — delegation works regardless of load order.
+        window.jQuery(document).on('click', '#customMessageModalOkBtn', function () {
+            window.jQuery('#customMessageModal').modal('hide');
+            goHomeNoReservation();
+        });
+        // Always restore the modal to its default CONTINUE-only state on close, so unrelated
+        // validation popups elsewhere in the app are never left showing the OK button.
+        window.jQuery(document).on('hidden.bs.modal', '#customMessageModal', function () {
+            window.jQuery('#customMessageModalOkBtn').hide();
+            window.jQuery('#customMessageModal .btn_ok.yes').not('#customMessageModalOkBtn').show();
+        });
     }
 
     if (window.jQuery) {
